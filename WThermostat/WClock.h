@@ -155,7 +155,7 @@ class WClock : public WDevice {
         TIME_T tmpTime;
         const int ntpRetryMinutes = 1;
         const int ntpResyncMinutes = 30;
-        const int ntpInvalidateHours = 30;
+        const int ntpInvalidateHours = 2;
         bool notify=false;
         //Invalid after 3 hours
         if (isValidTime() && !(now - lastNtpSync < (ntpInvalidateHours * 60 * 60 * 1000) )){
