@@ -1,3 +1,13 @@
+## Version 1.07-fas
+* Device goes to AP-Mode if Wifi is not available/fails and switches back after 5 Minutes
+* enabled WLAN auto-reconnect
+* current Passwords not outputted to websites
+* config page opens automatically as captive Portal on android devices if in AP mode
+* Clock NTP Resync fix
+* uptime in clock status
+* fixed several memleaks
+* by Folke Ashberg <folke@ashberg.de>
+
 ## Version 1.06b
 * fixed json buffer size (WebThings)
 * by Folke Ashberg <folke@ashberg.de>
