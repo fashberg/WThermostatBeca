@@ -128,8 +128,6 @@ class WClock : public WDevice {
         Rtc.utc_time = 0;
         BreakTime(Rtc.utc_time, RtcTime);
 
-
-
         this->epochTime = new WLongProperty("epochTime");
         this->epochTime->setReadOnly(true);
         this->epochTime->setOnValueRequest([this](WProperty* p) {
@@ -148,26 +146,37 @@ class WClock : public WDevice {
         this->offset->setInteger(0);
         this->offset->setReadOnly(true);
         this->addProperty(offset);
+
+        this->uptime = new WLongProperty("uptime");
+        this->uptime->setReadOnly(true);
+        this->uptime->setOnValueRequest([this](WProperty* p) {
+            p->setLong(getUptime());
+        });
+        this->addProperty(uptime);
         lastTry = lastNtpSync = ntpTime =  lastRun = 0;
     }
 
     void loop(unsigned long now) {
         TIME_T tmpTime;
         const int ntpRetryMinutes = 1;
-        const int ntpResyncMinutes = 30;
-        const int ntpInvalidateHours = 2;
+        const int ntpResyncMinutes = 5;
+        const int ntpInvalidateHours = 48;
         bool notify=false;
-        //Invalid after 3 hours
+        //Invalid after 48 hours failed sync
         if (isValidTime() && !(now - lastNtpSync < (ntpInvalidateHours * 60 * 60 * 1000) )){
             network->log()->error(F("No valid NTP Time since %d hours -> invalidating"), ntpInvalidateHours);
         }
         validTime->setBoolean((lastNtpSync > 0) && (now - lastNtpSync < (ntpInvalidateHours * 60 * 60 * 1000)));
 
         Rtc.utc_time=getEpochTime();
-
-        if (((!isValidTime()) && ((lastTry == 0) 
-            || ( (now - lastNtpSync > ntpResyncMinutes * 60 * 1000) || (now - lastTry > ntpRetryMinutes * 60 * 1000) ) ))
-            && (WiFi.status() == WL_CONNECTED)) {
+        // calc retry - faster 3 minutes after boot
+        unsigned long nextSync=(lastTry > lastNtpSync  
+            ? lastTry+(ntpRetryMinutes * ( now < 3 * 60 * 1000 ? 20 : 60) * 1000)
+            : lastNtpSync + (ntpResyncMinutes * 60 * 1000));
+        if ((
+                (!isValidTime() && lastTry == 0) 
+                || (now > nextSync) 
+            ) && (WiFi.status() == WL_CONNECTED)) {
             network->log()->trace(F("Time via NTP server '%s'"), ntpServer->c_str());
             WiFiUDP ntpUDP;
             NTPClient ntpClient(ntpUDP, ntpServer->c_str());
@@ -185,9 +194,9 @@ class WClock : public WDevice {
                     RtcTime.year = tmpTime.year;
                     Rtc.daylight_saving_time = RuleToTime(this->timeRuleDst, RtcTime.year);
                     Rtc.standard_time = RuleToTime(this->timeRuleStd, RtcTime.year);
-                    network->log()->notice(F("NTP time synced: (%04d-%02d-%02d %02d:%02d:%02d, Weekday: %d, Epoch: %d, Dst: %d, Std: %d, Diff: %d)"),
+                    network->log()->notice(F("NTP time synced: (%04d-%02d-%02d %02d:%02d:%02d, Weekday: %d, Epoch: %d, Dst: %d, Std: %d, Diff: %d, Uptime: %d)"),
                             tmpTime.year, tmpTime.month, tmpTime.day_of_month, tmpTime.hour, tmpTime.minute, tmpTime.second, tmpTime.day_of_week,
-                            ntpTime, Rtc.daylight_saving_time, Rtc.standard_time, ntpTime - oldutc );
+                            ntpTime, Rtc.daylight_saving_time, Rtc.standard_time, ntpTime - oldutc, getUptime() );
 
                     validTime->setBoolean(true);
                     notify=true;
@@ -202,10 +211,11 @@ class WClock : public WDevice {
         }
 
         // -------------
-        if (!notify && lastRun > millis()-1000) return;
-        lastRun=millis();
+        if (!notify && lastRun > now-1000) return;
+        lastRun=now;
 
-        network->log()->verbose(F("Clock %d / %d / %d:%d"), getEpochTime(),  Rtc.utc_time,  this->timezone_hours, this->timezone_minutes);
+        network->log()->verbose(F("Clock: epoch: %d,timezone_diff: %d, millis: %d, nextSync: %d, lastTry: %d, lastSync: %d"),
+            getEpochTime(), Rtc.time_timezone, now, nextSync, lastTry, lastNtpSync);
 
         Rtc.local_time = Rtc.utc_time + Rtc.time_timezone;
         BreakTime(Rtc.local_time, RtcTime);
@@ -281,6 +291,10 @@ class WClock : public WDevice {
 
     unsigned long getEpochTimeLocal() {
         return (lastNtpSync > 0 ? ntpTime + getOffset() + ((millis() - lastNtpSync) / 1000) : 0);
+    }
+
+    unsigned long getUptime() {
+        return millis() / 1000;
     }
 
     byte getWeekDay() {
@@ -453,6 +467,7 @@ class WClock : public WDevice {
     WProperty* epochTime;
     WProperty* epochTimeLocalFormatted;
     WProperty* validTime;
+    WProperty* uptime;
     WProperty* ntpServer;
     WProperty* timeZoneConfig;
     WProperty* timeDST;
