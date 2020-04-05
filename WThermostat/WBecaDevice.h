@@ -51,6 +51,7 @@ const static char HTTP_CONFIG_SCHTAB_FOOT[]         PROGMEM = R"=====(
 const unsigned char COMMAND_START[] = {0x55, 0xAA};
 const char AR_COMMAND_END = '\n';
 const String SCHEDULES = "schedules"; 
+const String MCUCOMMAND = "mcucommand"; 
 const char* SCHEDULES_MODE_OFF = "off";
 const char* SCHEDULES_MODE_AUTO = "auto";
 const char* SYSTEM_MODE_NONE = "none";
@@ -78,6 +79,17 @@ const byte STORED_FLAG_BECA = 0x36;
 const char SCHEDULES_PERIODS[] = "123456";
 const char SCHEDULES_DAYS[] = "wau";
 
+//typedef 
+typedef enum mcuNetworkMode
+{
+	MCU_NETWORKMODE_SMARTCONFIG = 0,
+	MCU_NETWORKMODE_APCONFIG = 1,
+	MCU_NETWORKMODE_NOTCONNECTED = 2,
+	MCU_NETWORKMODE_CONNECTED = 3,
+	MCU_NETWORKMODE_CONNECTEDCLOUD = 4,
+	MCU_NETWORKMODE_POWERSAVE = 5
+} mcuNetworkMode_t;
+
 class WBecaDevice: public WDevice {
 public:
     typedef std::function<bool()> THandlerFunction;
@@ -94,6 +106,8 @@ public:
     	this->systemMode = nullptr;
 		this->mqttRetain=true;
 		this->stateNotifyInterval=60000;
+		this->mcuId="";
+		startMcuInitialize();
 		/* properties */
     	this->actualTemperature = new WTemperatureProperty("temperature", "Actual");
     	this->actualTemperature->setReadOnly(true);
@@ -317,6 +331,8 @@ public:
     				processSerialCommand();
     			}
     			resetAll();
+
+
     		}
     	}
     	//Heartbeat
@@ -338,6 +354,9 @@ public:
     			lastScheduleNotify = now;
     		}
     	}
+		if (isDeviceStateComplete() && !isMcuInitialized()){
+			mcuInitialize();
+		}
     }
 
     unsigned char* getCommand() {
@@ -398,26 +417,31 @@ public:
     	}
     }
 
-    void queryState() {
+    void queryAllDPs() {
     	//55 AA 00 08 00 00
     	unsigned char queryStateCommand[] = { 0x55, 0xAA, 0x00, 0x08, 0x00, 0x00 };
     	commandCharsToSerial(6, queryStateCommand);
     }
 
     void cancelConfiguration() {
-    	unsigned char cancelConfigCommand[] = { 0x55, 0xaa, 0x00, 0x03, 0x00, 0x01,
-    			0x02 };
-    	commandCharsToSerial(7, cancelConfigCommand);
+    	reportNetworkToMcu(mcuNetworkMode::MCU_NETWORKMODE_NOTCONNECTED);
     }
+	void reportNetworkToMcu(mcuNetworkMode state) {
+		network->log()->trace(F("sending networkMode to Mcu: %d"), state);
+    
+		unsigned char mcuCommand[] = { 0x55, 0xaa, 0x00, 0x03, 0x00, 0x01,
+				state };
+		commandCharsToSerial(7, mcuCommand);
+	}
 
-    void sendActualTimeToBeca() {
+    void sendActualTimeToBeca(bool localtime) {
     	//Command: Set date and time
     	//                       OK YY MM DD HH MM SS Weekday
     	//DEC:                   01 19 02 15 16 04 18 05
     	//HEX: 55 AA 00 1C 00 08 01 13 02 0F 10 04 12 05
     	//DEC:                   01 19 02 20 17 51 44 03
     	//HEX: 55 AA 00 1C 00 08 01 13 02 14 11 33 2C 03
-    	unsigned long epochTime = wClock->getEpochTimeLocal();
+    	unsigned long epochTime = (localtime ? wClock->getEpochTimeLocal() : wClock->getEpochTime());
     	epochTime = epochTime + (getSchedulesDayOffset() * 86400);
     	byte year = wClock->getYear(epochTime) % 100;
     	byte month = wClock->getMonth(epochTime);
@@ -428,9 +452,9 @@ public:
     	byte dayOfWeek = getDayOfWeek();
 
 
-		network->log()->trace(F("sendActualTimeToBeca %d: %02d.%02d.%02d %02d:%02d:%02d (%d)" ),
-		epochTime, year, month, dayOfMonth, hours, minutes, seconds, dayOfWeek );
-    	unsigned char cancelConfigCommand[] = { 0x55, 0xaa, 0x00, 0x1c, 0x00, 0x08,
+		network->log()->trace(F("sendActual%sTimeToBeca %d + %d days: %02d.%02d.%02d %02d:%02d:%02d (dow: %d)" ),
+		(localtime ? "Local" : "GMT"), epochTime, getSchedulesDayOffset(), year, month, dayOfMonth, hours, minutes, seconds, dayOfWeek );
+    	unsigned char cancelConfigCommand[] = { 0x55, 0xaa, 0x00, (localtime ?  (char)0x1c : (char)0x0c), 0x00, 0x08,
     											0x01, year, month, dayOfMonth,
     											hours, minutes, seconds, dayOfWeek};
     	commandCharsToSerial(14, cancelConfigCommand);
@@ -446,7 +470,7 @@ public:
 
     void handleUnknownMqttCallback(String stat_topic, String partialTopic, String payload, unsigned int length) {
 		network->log()->notice(F("handleUnknownMqttCallback %s|%s|%s" ), stat_topic.c_str(), partialTopic.c_str(), payload.c_str());
-		// {"log":"handleUnknownMqttCallback home/bad/stat/things/thermostat/properties / schedules / "}
+		// {"log":"handleUnknownMqttCallback home/test/stat/things/thermostat/properties / schedules / "}
     	if (partialTopic.startsWith(SCHEDULES)) {
     		partialTopic = partialTopic.substring(SCHEDULES.length() + 1);
     		if (partialTopic.equals("")) {
@@ -474,7 +498,12 @@ public:
     			network->log()->warning(PSTR("Longer topic for schedules -> not supported yet..."));
 
     		}
-    	}
+    	} else if (partialTopic.equals(MCUCOMMAND)) {
+			//send to MCU
+			network->log()->notice(PSTR("Received %s: %s"), MCUCOMMAND.c_str(), payload.c_str());
+			commandHexStrToSerial(payload);
+
+		}
     }
 
 	void sendSchedulesToMqtt(){
@@ -707,6 +736,68 @@ public:
     	}
     }
 
+	bool isMcuInitialized(){
+		return this->mcuInitialized;
+	}
+
+
+	void startMcuInitialize(){
+		this->mcuInitialized=false;
+		this->mcuInitializeState=1;
+	}
+
+	void mcuInitialize(){
+		if (!this->receivingDataFromMcu) {
+			switch (mcuInitializeState){
+			case 1:
+				network->log()->notice(F("Query Product Information"));
+				//send to device 
+				//Query Product Information:   55 aa 00 01 00 00
+				{
+					unsigned char mcuCommand[] = { 0x55, 0xAA, 0x00, 0x01, 0x00, 0x00 };
+					commandCharsToSerial(6, mcuCommand);
+				}
+				mcuInitializeState++;
+				break;
+			case 2:
+				/* wait for answer of 1 */
+				break;
+			case 3:
+				network->log()->notice(F("Query the MCU working mode."));
+				//send to device 
+				//Query Product Information:   55 aa 00 02 00 00
+				{
+					unsigned char mcuCommand[] = { 0x55, 0xAA, 0x00, 0x02, 0x00, 0x00 };
+					commandCharsToSerial(6, mcuCommand);
+				}
+				mcuInitializeState++;
+				break;
+			case 4:
+				/* wait for answer of 3 */
+				break;
+			case 5:
+				network->log()->notice(F("Query all DPs."));
+				//send to device 
+				//Query Product Information:   55 aa 00 08 00 00
+				queryAllDPs();
+				mcuInitializeState++;
+				break;
+			case 6:
+				/* wait for answer of 5 */
+				break;
+
+			case 7:
+				/* all done */
+				mcuInitialized=true;
+				this->mcuInitializeState=0;
+				network->log()->notice(F("mcuInitialized"));
+				break;
+
+			}
+		}
+
+	}
+
     bool isDeviceStateComplete() {
     	if (network->isDebug()) {
     		return true;
@@ -768,6 +859,10 @@ private:
     unsigned long lastNotify, lastScheduleNotify;
     bool schedulesChanged;
 
+	bool mcuInitialized;
+	int mcuInitializeState;
+	String mcuId;
+
     int getIndex(unsigned char c) {
     	const char HEX_DIGITS[] = { '0', '1', '2', '3', '4', '5', '6', '7', '8',
     			'9', 'a', 'b', 'c', 'd', 'e', 'f' };
@@ -795,229 +890,274 @@ private:
     	return ((dayOfWeek == 6) || (dayOfWeek == 7));
     }
 
-	void logIncomingCommand(const char * message, bool verbose=false){
-		network->log()->printLevel((verbose ? LOG_LEVEL_VERBOSE : LOG_LEVEL_TRACE), F("MCU: %s;%s"), message,
+	void logIncomingCommand(const char * message, int logLevel=LOG_LEVEL_TRACE){
+		network->log()->printLevel(logLevel, F("MCU: %s;%s"), message,
 		this->getIncomingCommandAsString().c_str());
 	}
 
     void processSerialCommand() {
     	if (commandLength > -1) {
+			bool knownCommand = false;
     		//unknown
     		//55 aa 00 00 00 00
     		this->receivingDataFromMcu = true;
+			// header 
+			if (receivedCommand[0] == 0x55 && receivedCommand[1] == 0xaa) {
+				//version
+				if (receivedCommand[2] == 0x00 || receivedCommand[2] == 0x01 ){
+					if (receivedCommand[3] == 0x00) {
+						switch (receivedCommand[6]) {
+						case 0x00:
+						case 0x01:
+							knownCommand = true;
+							//ignore, heartbeat MCU
+							//55 aa 01 00 00 01 01
+							//55 aa 01 00 00 01 00
+							break;
+						//default:
+							//notifyUnknownCommand();
+						}
+					} else if (receivedCommand[3] == 0x02) {
+						//ignore, MCU response to working mode
+						//55 aa 01 02 00 00
+						network->log()->trace(F("MCU working mode %d %d"), receivedCommand[4] , receivedCommand[5] );
+						if (mcuInitializeState==4) mcuInitializeState++;
+						knownCommand = true;
+					} else if (receivedCommand[3] == 0x03) {
+						//ignore, MCU response to wifi state
+						//55 aa 01 03 00 00
+						network->log()->trace(F("MCU wifi state response"));
+						knownCommand = true;
+					} else if (receivedCommand[3] == 0x04) {
+						//Setup initialization request
+						//received: 55 aa 01 04 00 00
+						knownCommand = true;
+						if (onConfigurationRequest) {
+							//send answer: 55 aa 00 03 00 01 00
+							unsigned char configCommand[] = { 0x55, 0xAA, 0x00, 0x03, 0x00,
+									0x01, 0x00 };
+							commandCharsToSerial(7, configCommand);
+							onConfigurationRequest();
+						}
 
-    		if (receivedCommand[3] == 0x00) {
-    			switch (receivedCommand[6]) {
-    			case 0x00:
-    			case 0x01:
-    				//ignore, heartbeat MCU
-    				//55 aa 01 00 00 01 01
-    				//55 aa 01 00 00 01 00
-    				break;
-    			//default:
-    				//notifyUnknownCommand();
-    			}
-    		} else if (receivedCommand[3] == 0x03) {
-    			//ignore, MCU response to wifi state
-    			//55 aa 01 03 00 00
-    		} else if (receivedCommand[3] == 0x04) {
-    			//Setup initialization request
-    			//received: 55 aa 01 04 00 00
-    			if (onConfigurationRequest) {
-    				//send answer: 55 aa 00 03 00 01 00
-    				unsigned char configCommand[] = { 0x55, 0xAA, 0x00, 0x03, 0x00,
-    						0x01, 0x00 };
-    				commandCharsToSerial(7, configCommand);
-    				onConfigurationRequest();
-    			}
+					} else if (receivedCommand[3] == 0x07) {
+						bool changed = false;
+						bool newChanged = false;
+						bool schedulesChanged = false;
+						bool newB;
+						float newValue;
+						byte newByte;
+						byte commandLength = receivedCommand[5];
+						if (mcuInitializeState==6) mcuInitializeState++;
+						//Status report from MCU
+						switch (receivedCommand[6]) {
+						case 0x01:
+							if (commandLength == 0x05) {
+								//device On/Off
+								//55 aa 00 06 00 05 01 01 00 01 00|01
+								newB = (receivedCommand[10] == 0x01);
+								changed = ((changed) || (newChanged=(newB != deviceOn->getBoolean())));
+								deviceOn->setBoolean(newB);
+								receivedStates[0] = true;
+								logIncomingCommand("deviceOn_x01", (newChanged ? LOG_LEVEL_TRACE : LOG_LEVEL_VERBOSE));
+								knownCommand = true;
+							}
+							break;
+						case 0x02:
+							if (commandLength == 0x08) {
+								//target Temperature for manual mode
+								//e.g. 24.5C: 55 aa 01 07 00 08 02 02 00 04 00 00 00 31
+								newValue = (float) receivedCommand[13] / 2.0f;
+								changed = ((changed) || (newChanged=!WProperty::isEqual(targetTemperatureManualMode, newValue, 0.01)));
+								targetTemperatureManualMode = newValue;
+								targetTemperature->setDouble(targetTemperatureManualMode);
+								receivedStates[1] = true;
+								logIncomingCommand(((String)"targetTemperature_x02:"+(String)targetTemperatureManualMode+"/"+(String)newValue).c_str(), (newChanged ? LOG_LEVEL_TRACE : LOG_LEVEL_VERBOSE));
+								knownCommand = true;
+							}
+							break;
 
-    		} else if (receivedCommand[3] == 0x07) {
-				bool changed = false;
-				bool newChanged = false;
-    			bool schedulesChanged = false;
-    			bool newB;
-    			float newValue;
-    			byte newByte;
-    			byte commandLength = receivedCommand[5];
-    			bool knownCommand = false;
-    			//Status report from MCU
-    			switch (receivedCommand[6]) {
-    			case 0x01:
-    				if (commandLength == 0x05) {
-    					//device On/Off
-    					//55 aa 00 06 00 05 01 01 00 01 00|01
-    					newB = (receivedCommand[10] == 0x01);
-    					changed = ((changed) || (newChanged=(newB != deviceOn->getBoolean())));
-    					deviceOn->setBoolean(newB);
-    					receivedStates[0] = true;
-						logIncomingCommand("deviceOn_x01", !newChanged);
-    					knownCommand = true;
-    				}
-    				break;
-    			case 0x02:
-    				if (commandLength == 0x08) {
-    					//target Temperature for manual mode
-    					//e.g. 24.5C: 55 aa 01 07 00 08 02 02 00 04 00 00 00 31
-    					newValue = (float) receivedCommand[13] / 2.0f;
-    					changed = ((changed) || (newChanged=!WProperty::isEqual(targetTemperatureManualMode, newValue, 0.01)));
-    					targetTemperatureManualMode = newValue;
-    					targetTemperature->setDouble(targetTemperatureManualMode);
-    					receivedStates[1] = true;
-						logIncomingCommand(((String)"targetTemperature_x02:"+(String)targetTemperatureManualMode+"/"+(String)newValue).c_str(), !newChanged);
-    					knownCommand = true;
-    				}
-    				break;
+						case 0x03:
+							if (commandLength == 0x08) {
+								//actual Temperature
+								//e.g. 23C: 55 aa 01 07 00 08 03 02 00 04 00 00 00 2e
+								newValue = (float) receivedCommand[13] / 2.0f;
+								changed = ((changed) || (newChanged=!actualTemperature->equalsDouble(newValue)));
+								actualTemperature->setDouble(newValue);
+								logIncomingCommand("actualTemperature_x03", (newChanged ? LOG_LEVEL_TRACE : LOG_LEVEL_VERBOSE));
+								knownCommand = true;
+							}
+							break;
+						case 0x04:
+							if (commandLength == 0x05) {
+								//manualMode?
+								newB = (receivedCommand[10] == 0x01);
+								changed = ((changed) || (newChanged=((newB) && (!schedulesMode->equalsString(SCHEDULES_MODE_OFF))) || ((!newB) && (!schedulesMode->equalsString(SCHEDULES_MODE_AUTO)))));
+								schedulesMode->setString(newB ? SCHEDULES_MODE_OFF : SCHEDULES_MODE_AUTO);
+								receivedStates[2] = true;
+								logIncomingCommand("manualMode_x04", (newChanged ? LOG_LEVEL_TRACE : LOG_LEVEL_VERBOSE));
+								knownCommand = true;
+							}
+							break;
+						case 0x05:
+							if (commandLength == 0x05) {
+								//ecoMode
+								newB = (receivedCommand[10] == 0x01);
+								changed = ((changed) || (newChanged=(newB != ecoMode->getBoolean())));
+								ecoMode->setBoolean(newB);
+								receivedStates[3] = true;
+								logIncomingCommand("ecoMode_x05", (newChanged ? LOG_LEVEL_TRACE : LOG_LEVEL_VERBOSE));
+								knownCommand = true;
+							}
+							break;
+						case 0x06:
+							if (commandLength == 0x05) {
+								//locked
+								newB = (receivedCommand[10] == 0x01);
+								changed = ((changed) || (newChanged=(newB != locked->getBoolean())));
+								locked->setBoolean(newB);
+								receivedStates[4] = true;
+								logIncomingCommand("locked_x06", (newChanged ? LOG_LEVEL_TRACE : LOG_LEVEL_VERBOSE));
+								knownCommand = true;
+							}
+							break;
+						case 0x65: //MODEL_BHT_002_GBLW
+						case 0x68: //MODEL_BAC_002_ALW
+							if (commandLength == 0x3A) {
+								//schedules 0x65 at heater model, 0x68 at fan model, example
+								//55 AA 00 06 00 3A 65 00 00 36
+								//00 07 28 00 08 1E 1E 0B 1E 1E 0D 1E 00 11 2C 00 16 1E
+								//00 06 28 00 08 28 1E 0B 28 1E 0D 28 00 11 28 00 16 1E
+								//00 06 28 00 08 28 1E 0B 28 1E 0D 28 00 11 28 00 16 1E
+								this->schedulesDataPoint = receivedCommand[6];
+								//this->thermostatModel->setByte(this->schedulesDataPoint == 0x65 ? MODEL_BHT_002_GBLW : MODEL_BAC_002_ALW);
+								for (int i = 0; i < 54; i++) {
+									newByte = receivedCommand[i + 10];
+									schedulesChanged = (newChanged=((schedulesChanged) || (newByte != schedules[i])));
+									schedules[i] = newByte;
+								}
+								logIncomingCommand(this->thermostatModel == MODEL_BHT_002_GBLW ? "schedules_x65" : "schedules_x68", (newChanged ? LOG_LEVEL_TRACE : LOG_LEVEL_VERBOSE));
+								knownCommand = true;
+							} else if (receivedCommand[5] == 0x05) {
+								//Unknown permanently sent from MCU
+								//55 aa 01 07 00 05 68 01 00 01 01
+								knownCommand = true;
+							}
+							break;
+						case 0x66:
+							if (commandLength == 0x08) {
+								//MODEL_BHT_002_GBLW - actualFloorTemperature
+								//55 aa 01 07 00 08 66 02 00 04 00 00 00 00
+								newValue = (float) receivedCommand[13] / 2.0f;
+								if (actualFloorTemperature != nullptr) {
+									changed = ((changed) || (newChanged=!actualFloorTemperature->equalsDouble(newValue)));
+									actualFloorTemperature->setDouble(newValue);
+								}
+								logIncomingCommand("actualFloorTemperature_x66", (newChanged ? LOG_LEVEL_TRACE : LOG_LEVEL_VERBOSE));
+								knownCommand = true;
+							} else if (commandLength == 0x05) {
+								//MODEL_BAC_002_ALW - systemMode
+								//cooling:     55 AA 00 06 00 05 66 04 00 01 00
+								//heating:     55 AA 00 06 00 05 66 04 00 01 01
+								//ventilation: 55 AA 00 06 00 05 66 04 00 01 02
+								//this->thermostatModel->setByte(MODEL_BAC_002_ALW);
+								changed = ((changed) || (newChanged=(receivedCommand[10] != this->getSystemModeAsByte())));
+								if (systemMode != nullptr) {
+									switch (receivedCommand[10]) {
+									case 0x00 :
+										systemMode->setString(SYSTEM_MODE_COOL);
+										break;
+									case 0x01 :
+										systemMode->setString(SYSTEM_MODE_HEAT);
+										break;
+									case 0x02 :
+										systemMode->setString(SYSTEM_MODE_FAN);
+										break;
+									}
+								}
+								logIncomingCommand("systemMode_x66", (newChanged ? LOG_LEVEL_TRACE : LOG_LEVEL_VERBOSE));
+								knownCommand = true;
+							}
+							break;
+						case 0x67:
+							if (commandLength == 0x05) {
+								//fanSpeed
+								//auto   - 55 aa 01 07 00 05 67 04 00 01 00
+								//low    - 55 aa 01 07 00 05 67 04 00 01 03
+								//medium - 55 aa 01 07 00 05 67 04 00 01 02
+								//high   - 55 aa 01 07 00 05 67 04 00 01 01
+								changed = ((changed) || (newChanged=(receivedCommand[10] != this->getFanModeAsByte())));
+								if (fanMode != nullptr) {
+									switch (receivedCommand[10]) {
+									case 0x00 :
+										fanMode->setString(FAN_MODE_AUTO);
+										break;
+									case 0x03 :
+										fanMode->setString(FAN_MODE_LOW);
+										break;
+									case 0x02 :
+										fanMode->setString(FAN_MODE_MEDIUM);
+										break;
+									case 0x01 :
+										fanMode->setString(FAN_MODE_HIGH);
+										break;
+									}
+								}
+								logIncomingCommand("fanSpeed_x67", (newChanged ? LOG_LEVEL_TRACE : LOG_LEVEL_VERBOSE));
+								knownCommand = true;
+							}
+							break;
+						}
+						if (knownCommand) {							
+							if (changed) {
+								network->log()->notice(F("ReceivedSerial/Changed"));
+								notifyState();
+							} else if (schedulesChanged) {
+								network->log()->notice(F("ReceivedSerial/schedulesChanged"));
+								notifySchedules();
+							}
+						}
+					} else if (receivedCommand[3] == 0x01) {
+						// Product ID Answer
+						// 55 aa 01 01 00 15
+						// HE AD VR CM LENGT 
+						network->log()->notice(F("Product ID Answer from MCU (commandLength: %d)"), commandLength);
+						logIncomingCommand("productId" , LOG_LEVEL_NOTICE);
+						knownCommand=true;
+						if (commandLength>=5){
+							unsigned int len=0;
+							len = ((byte)receivedCommand[4] <<8) + (byte)receivedCommand[5];
+							char buf[len+1];
+							for (int i=0;i<len;i++){
+								buf[i]=receivedCommand[6+i];
+							}
+							buf[len]=0;
+							this->mcuId=(String)buf;
+							if (mcuInitializeState==2) mcuInitializeState++;
+							network->log()->notice(F("Product ID: '%s'"), buf);
 
-    			case 0x03:
-    				if (commandLength == 0x08) {
-    					//actual Temperature
-    					//e.g. 23C: 55 aa 01 07 00 08 03 02 00 04 00 00 00 2e
-    					newValue = (float) receivedCommand[13] / 2.0f;
-    					changed = ((changed) || (newChanged=!actualTemperature->equalsDouble(newValue)));
-    					actualTemperature->setDouble(newValue);
-						logIncomingCommand("actualTemperature_x03", !newChanged);
-    					knownCommand = true;
-    				}
-    				break;
-    			case 0x04:
-    				if (commandLength == 0x05) {
-    					//manualMode?
-    					newB = (receivedCommand[10] == 0x01);
-    					changed = ((changed) || (newChanged=((newB) && (!schedulesMode->equalsString(SCHEDULES_MODE_OFF))) || ((!newB) && (!schedulesMode->equalsString(SCHEDULES_MODE_AUTO)))));
-    					schedulesMode->setString(newB ? SCHEDULES_MODE_OFF : SCHEDULES_MODE_AUTO);
-    					receivedStates[2] = true;
-						logIncomingCommand("manualMode_x04", !newChanged);
-    					knownCommand = true;
-    				}
-    				break;
-    			case 0x05:
-    				if (commandLength == 0x05) {
-    					//ecoMode
-    					newB = (receivedCommand[10] == 0x01);
-    					changed = ((changed) || (newChanged=(newB != ecoMode->getBoolean())));
-    					ecoMode->setBoolean(newB);
-    					receivedStates[3] = true;
-						logIncomingCommand("ecoMode_x05", !newChanged);
-    					knownCommand = true;
-    				}
-    				break;
-    			case 0x06:
-    				if (commandLength == 0x05) {
-    					//locked
-    					newB = (receivedCommand[10] == 0x01);
-    					changed = ((changed) || (newChanged=(newB != locked->getBoolean())));
-    					locked->setBoolean(newB);
-    					receivedStates[4] = true;
-						logIncomingCommand("locked_x06", !newChanged);
-    					knownCommand = true;
-    				}
-    				break;
-    			case 0x65: //MODEL_BHT_002_GBLW
-    			case 0x68: //MODEL_BAC_002_ALW
-    				if (commandLength == 0x3A) {
-    					//schedules 0x65 at heater model, 0x68 at fan model, example
-    					//55 AA 00 06 00 3A 65 00 00 36
-    					//00 07 28 00 08 1E 1E 0B 1E 1E 0D 1E 00 11 2C 00 16 1E
-    					//00 06 28 00 08 28 1E 0B 28 1E 0D 28 00 11 28 00 16 1E
-    					//00 06 28 00 08 28 1E 0B 28 1E 0D 28 00 11 28 00 16 1E
-    					this->schedulesDataPoint = receivedCommand[6];
-    					//this->thermostatModel->setByte(this->schedulesDataPoint == 0x65 ? MODEL_BHT_002_GBLW : MODEL_BAC_002_ALW);
-    					for (int i = 0; i < 54; i++) {
-    						newByte = receivedCommand[i + 10];
-    						schedulesChanged = (newChanged=((schedulesChanged) || (newByte != schedules[i])));
-    						schedules[i] = newByte;
-    					}
-						logIncomingCommand(this->thermostatModel == MODEL_BHT_002_GBLW ? "schedules_x65" : "schedules_x68", !newChanged);
-    					knownCommand = true;
-    				} else if (receivedCommand[5] == 0x05) {
-    					//Unknown permanently sent from MCU
-    					//55 aa 01 07 00 05 68 01 00 01 01
-    					knownCommand = true;
-    				}
-    				break;
-    			case 0x66:
-    				if (commandLength == 0x08) {
-    					//MODEL_BHT_002_GBLW - actualFloorTemperature
-    					//55 aa 01 07 00 08 66 02 00 04 00 00 00 00
-    					newValue = (float) receivedCommand[13] / 2.0f;
-    					if (actualFloorTemperature != nullptr) {
-    						changed = ((changed) || (newChanged=!actualFloorTemperature->equalsDouble(newValue)));
-    						actualFloorTemperature->setDouble(newValue);
-    					}
-						logIncomingCommand("actualFloorTemperature_x66", !newChanged);
-    					knownCommand = true;
-    				} else if (commandLength == 0x05) {
-    					//MODEL_BAC_002_ALW - systemMode
-    					//cooling:     55 AA 00 06 00 05 66 04 00 01 00
-    					//heating:     55 AA 00 06 00 05 66 04 00 01 01
-    					//ventilation: 55 AA 00 06 00 05 66 04 00 01 02
-    					//this->thermostatModel->setByte(MODEL_BAC_002_ALW);
-    					changed = ((changed) || (newChanged=(receivedCommand[10] != this->getSystemModeAsByte())));
-    					if (systemMode != nullptr) {
-    						switch (receivedCommand[10]) {
-    						case 0x00 :
-    							systemMode->setString(SYSTEM_MODE_COOL);
-    							break;
-    						case 0x01 :
-    							systemMode->setString(SYSTEM_MODE_HEAT);
-    							break;
-    						case 0x02 :
-    							systemMode->setString(SYSTEM_MODE_FAN);
-    							break;
-    						}
-    					}
-						logIncomingCommand("systemMode_x66", !newChanged);
-    					knownCommand = true;
-    				}
-    				break;
-    			case 0x67:
-    				if (commandLength == 0x05) {
-    					//fanSpeed
-    					//auto   - 55 aa 01 07 00 05 67 04 00 01 00
-    					//low    - 55 aa 01 07 00 05 67 04 00 01 03
-    					//medium - 55 aa 01 07 00 05 67 04 00 01 02
-    					//high   - 55 aa 01 07 00 05 67 04 00 01 01
-    					changed = ((changed) || (newChanged=(receivedCommand[10] != this->getFanModeAsByte())));
-    					if (fanMode != nullptr) {
-    						switch (receivedCommand[10]) {
-    						case 0x00 :
-    							fanMode->setString(FAN_MODE_AUTO);
-    							break;
-    						case 0x03 :
-    							fanMode->setString(FAN_MODE_LOW);
-    							break;
-    						case 0x02 :
-    							fanMode->setString(FAN_MODE_MEDIUM);
-    							break;
-    						case 0x01 :
-    							fanMode->setString(FAN_MODE_HIGH);
-    							break;
-    						}
-    					}
-						logIncomingCommand("fanSpeed_x67", !newChanged);
-    					knownCommand = true;
-    				}
-    				break;
-    			}
-    			if (!knownCommand) {
-					logIncomingCommand("unknown");
-    			} else if (changed) {
-					network->log()->notice(F("ReceivedSerial/Changed"));
-    				notifyState();
-    			} else if (schedulesChanged) {
-					network->log()->notice(F("ReceivedSerial/schedulesChanged"));
-    				notifySchedules();
-    			}
+						}
+					} else if (receivedCommand[3] == 0x0C) {
+						//Request for time sync from MCU : 55 aa 01 0c 00 00
+						network->log()->notice(F("Request for GMT time sync from MCU"));
+						this->sendActualTimeToBeca(false);
+						knownCommand=true;
+					} else if (receivedCommand[3] == 0x1C) {
+						//Request for time sync from MCU : 55 aa 01 1c 00 00
+						network->log()->notice(F("Request for local time sync from MCU"));
+						this->sendActualTimeToBeca(true);
+						knownCommand=true;
+					}
 
-    		} else if (receivedCommand[3] == 0x1C) {
-    			//Request for time sync from MCU : 55 aa 01 1c 00 00
-				network->log()->notice(F("Request for time sync from MCU"));
-    			this->sendActualTimeToBeca();
-    		} else {
-				logIncomingCommand("unknown");
-    		}
-    		this->receivingDataFromMcu = false;
-    	}
+				} //55 aa 00|01
+			} // 55 aa
+			this->receivingDataFromMcu = false;
+			if (!knownCommand){
+				logIncomingCommand("unknown", LOG_LEVEL_WARNING);
+			}
+    	} // command length
+
+		
     }
 
     void deviceOnToMcu(WProperty* property) {
@@ -1118,7 +1258,6 @@ private:
 			} else {
 				this->deviceOn->setBoolean(true);
 				if (this->mode->equalsString(MODE_AUTO)){
-					this->schedulesMode->setString(SCHEDULES_MODE_AUTO);
 					this->schedulesMode->setString(SCHEDULES_MODE_AUTO);
 				} else if (this->mode->equalsString(MODE_HEAT)){
 					this->schedulesMode->setString(SCHEDULES_MODE_OFF);

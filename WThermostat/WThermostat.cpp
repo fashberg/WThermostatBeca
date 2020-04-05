@@ -34,9 +34,12 @@ void setup() {
     network = new WNetwork(SERIALDEBUG, APPLICATION, VERSION, NO_LED);
     network->setOnNotify([]() {
         if (network->isWifiConnected()) {
+            becaDevice->reportNetworkToMcu(mcuNetworkMode::MCU_NETWORKMODE_CONNECTEDCLOUD);
+        } else {
+            becaDevice->reportNetworkToMcu(mcuNetworkMode::MCU_NETWORKMODE_NOTCONNECTED);
         }
         if (network->isMqttConnected()) {
-            becaDevice->queryState();
+            becaDevice->queryAllDPs();
             if (becaDevice->isDeviceStateComplete()) {
                 // sendMqttStatus();
             }
@@ -53,7 +56,7 @@ void setup() {
     wClock = new WClock(network, APPLICATION);
     network->log()->trace(F("Loading ClockDevice"));
     network->addDevice(wClock);
-    wClock->setOnTimeUpdate([]() { becaDevice->sendActualTimeToBeca(); });
+    wClock->setOnTimeUpdate([]() { becaDevice->sendActualTimeToBeca(true); });
     wClock->setOnError([](const char *error) {
         network->log()->error(F("Clock Error: %s"), error);
     });
