@@ -82,12 +82,12 @@ const char SCHEDULES_DAYS[] = "wau";
 //typedef 
 typedef enum mcuNetworkMode
 {
-	MCU_NETWORKMODE_SMARTCONFIG = 0,
-	MCU_NETWORKMODE_APCONFIG = 1,
-	MCU_NETWORKMODE_NOTCONNECTED = 2,
-	MCU_NETWORKMODE_CONNECTED = 3,
-	MCU_NETWORKMODE_CONNECTEDCLOUD = 4,
-	MCU_NETWORKMODE_POWERSAVE = 5
+	MCU_NETWORKMODE_SMARTCONFIG = 0x00,
+	MCU_NETWORKMODE_APCONFIG = 0x01,
+	MCU_NETWORKMODE_NOTCONNECTED = 0x02,
+	MCU_NETWORKMODE_CONNECTED = 0x03,
+	MCU_NETWORKMODE_CONNECTEDCLOUD = 0x04,
+	MCU_NETWORKMODE_POWERSAVE = 0x05
 } mcuNetworkMode_t;
 
 class WBecaDevice: public WDevice {
@@ -107,6 +107,8 @@ public:
 		this->mqttRetain=true;
 		this->stateNotifyInterval=60000;
 		this->mcuId="";
+		this->onConfigurationRequest=nullptr;
+		this->onPowerButtonOn=nullptr;
 		startMcuInitialize();
 		/* properties */
     	this->actualTemperature = new WTemperatureProperty("temperature", "Actual");
@@ -389,24 +391,21 @@ public:
     	command.trim();
     	command.replace(" ", "");
     	command.toLowerCase();
-		network->log()->notice(F("commandHexStrToSerial: %s"), command.c_str());
-    	int chkSum = 0;
+		unsigned char cmd[command.length()/2];
     	if ((command.length() > 1) && (command.length() % 2 == 0)) {
-    		for (int i = 0; i < (command.length() / 2); i++) {
+			int i;
+    		for (i = 0; i < (command.length() / 2); i++) {
     			unsigned char chValue = getIndex(command.charAt(i * 2)) * 0x10
     					+ getIndex(command.charAt(i * 2 + 1));
-    			chkSum += chValue;
-    			Serial.print((char) chValue);
+    			cmd[i]=(unsigned char)chValue;
     		}
-    		unsigned char chValue = chkSum % 0x100;
-    		Serial.print((char) chValue);
+			commandCharsToSerial(i, cmd);
     	}
     }
 
     void commandCharsToSerial(unsigned int length, unsigned char* command) {
     	int chkSum = 0;
     	if (length > 2) {
-			network->log()->trace(F("commandCharsToSerial: %s" ), getCommandAsString(length, command).c_str());
     		for (int i = 0; i < length; i++) {
     			unsigned char chValue = command[i];
     			chkSum += chValue;
@@ -414,6 +413,8 @@ public:
     		}
     		unsigned char chValue = chkSum % 0x100;
     		Serial.print((char) chValue);
+			network->log()->trace(F("commandCharsToSerial: %s, ChckSum 0x%02hhx" ),
+			getCommandAsString(length, command).c_str(), chValue);
     	}
     }
 
@@ -428,10 +429,11 @@ public:
     }
 	void reportNetworkToMcu(mcuNetworkMode state) {
 		network->log()->trace(F("sending networkMode to Mcu: %d"), state);
-    
 		unsigned char mcuCommand[] = { 0x55, 0xaa, 0x00, 0x03, 0x00, 0x01,
-				state };
+				(unsigned char)state };
 		commandCharsToSerial(7, mcuCommand);
+		//  unsigned char configCommand[] = { 0x55, 0xAA, 0x00, 0x03, 0x00,
+		//		0x01, 0x00 };
 	}
 
     void sendActualTimeToBeca(bool localtime) {
@@ -502,7 +504,15 @@ public:
 			//send to MCU
 			network->log()->notice(PSTR("Received %s: %s"), MCUCOMMAND.c_str(), payload.c_str());
 			commandHexStrToSerial(payload);
-
+		} else if (partialTopic.equals("wifiap")) {
+			network->log()->notice(PSTR("setDesiredModeAp"));
+			network->setDesiredModeAp();
+		} else if (partialTopic.equals("wififallback")) {
+			network->log()->notice(PSTR("setDesiredModeAp"));
+			network->setDesiredModeFallback();
+		} else if (partialTopic.equals("wfistation")) {
+			network->log()->notice(PSTR("setDesiredModeStation"));
+			network->setDesiredModeStation();
 		}
     }
 
@@ -628,9 +638,13 @@ public:
     	delete[] buffer;
     }
 
-    void setOnConfigurationRequest(THandlerFunction onConfigurationRequest) {
-    	this->onConfigurationRequest = onConfigurationRequest;
-    }
+	void setOnConfigurationRequest(THandlerFunction onConfigurationRequest) {
+		this->onConfigurationRequest = onConfigurationRequest;
+	}
+	
+	void setOnPowerButtonOn(THandlerFunction onPowerButtonOn) {
+		this->onPowerButtonOn = onPowerButtonOn;
+	}
 
     void schedulesToMcu() {
     	if (receivedSchedules()) {
@@ -856,6 +870,7 @@ private:
     WProperty* ntpServer;
     WProperty* schedulesDayOffset;
     THandlerFunction onConfigurationRequest;
+	THandlerFunction onPowerButtonOn;
     unsigned long lastNotify, lastScheduleNotify;
     bool schedulesChanged;
 
@@ -913,6 +928,9 @@ private:
 							//ignore, heartbeat MCU
 							//55 aa 01 00 00 01 01
 							//55 aa 01 00 00 01 00
+							if (receivedCommand[6] == 0x00){
+								network->log()->notice(F("MCU sent first heart beat") );
+							}
 							break;
 						//default:
 							//notifyUnknownCommand();
@@ -930,16 +948,33 @@ private:
 						knownCommand = true;
 					} else if (receivedCommand[3] == 0x04) {
 						//Setup initialization request
+						// long press DOWN-button during state off
+						// long press DOWN+POWER-buttons during state on
+						// in second mode no WifiModeCommands (reportNetworkToMcu) are accepted
 						//received: 55 aa 01 04 00 00
+						
 						knownCommand = true;
+						network->log()->trace(F("MCU sent wifi reset"));
 						if (onConfigurationRequest) {
-							//send answer: 55 aa 00 03 00 01 00
-							unsigned char configCommand[] = { 0x55, 0xAA, 0x00, 0x03, 0x00,
-									0x01, 0x00 };
-							commandCharsToSerial(7, configCommand);
+							//send answer: 55 aa 00 04 00 01 00
+							unsigned char configCommand[] = { 0x55, 0xAA, 0x00, 0x04, 0x00,
+									0x00 };
+							commandCharsToSerial(6, configCommand);
 							onConfigurationRequest();
 						}
-
+					} else if (receivedCommand[3] == 0x05) {
+						// select AP mode
+						//received: 55 aa 01 05 00 01 XX   ( 00 = smartconfig, 01 = AP mode)
+						// not currently sent my MCU
+						knownCommand = true;
+						network->log()->trace(F("MCU requests wifi mode %d"), receivedCommand[6] );
+						if (onConfigurationRequest) {
+							//send answer: 55 aa 00 04 00 01 00
+							unsigned char configCommand[] = { 0x55, 0xAA, 0x00, 0x05, 0x00,
+									0x00, 0x04 };
+							commandCharsToSerial(6, configCommand);
+							onConfigurationRequest();
+						}
 					} else if (receivedCommand[3] == 0x07) {
 						bool changed = false;
 						bool newChanged = false;
@@ -961,6 +996,7 @@ private:
 								receivedStates[0] = true;
 								logIncomingCommand("deviceOn_x01", (newChanged ? LOG_LEVEL_TRACE : LOG_LEVEL_VERBOSE));
 								knownCommand = true;
+								if (newChanged && newB && onPowerButtonOn) onPowerButtonOn();
 							}
 							break;
 						case 0x02:

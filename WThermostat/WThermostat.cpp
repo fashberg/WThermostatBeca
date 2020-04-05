@@ -6,7 +6,7 @@
 #include "WLogDevice.h"
 
 #define APPLICATION "Thermostat Beca"
-#define VERSION "1.07b"
+#define VERSION "1.08b"
 
 #ifdef DEBUG // use platform.io environment to activate/deactive 
 #define SERIALDEBUG true  // enables logging to serial console
@@ -33,15 +33,16 @@ void setup() {
     // Wifi and Mqtt connection
     network = new WNetwork(SERIALDEBUG, APPLICATION, VERSION, NO_LED);
     network->setOnNotify([]() {
-        if (network->isWifiConnected()) {
-            becaDevice->reportNetworkToMcu(mcuNetworkMode::MCU_NETWORKMODE_CONNECTEDCLOUD);
-        } else {
-            becaDevice->reportNetworkToMcu(mcuNetworkMode::MCU_NETWORKMODE_NOTCONNECTED);
-        }
-        if (network->isMqttConnected()) {
-            becaDevice->queryAllDPs();
-            if (becaDevice->isDeviceStateComplete()) {
-                // sendMqttStatus();
+        if (network->isSoftAPDesired()){
+            becaDevice->reportNetworkToMcu(mcuNetworkMode::MCU_NETWORKMODE_SMARTCONFIG);
+        } else if (network->isStation()){
+            if (network->isWifiConnected()) {
+                becaDevice->reportNetworkToMcu(mcuNetworkMode::MCU_NETWORKMODE_CONNECTEDCLOUD);
+                if (network->isMqttConnected()) {
+                    becaDevice->queryAllDPs();
+                }
+            } else {
+                becaDevice->reportNetworkToMcu(mcuNetworkMode::MCU_NETWORKMODE_NOTCONNECTED);
             }
         }
     });
@@ -68,7 +69,14 @@ void setup() {
     network->addDevice(becaDevice);
 
     becaDevice->setOnConfigurationRequest([]() {
-        //network->startWebServer();
+        network->setDesiredModeAp();
+        return true;
+    });
+    becaDevice->setOnPowerButtonOn([]() {
+        // try to go to Station mode if we should be in any other state
+        // example: long press power + down for 8 seconds switches to 
+        // WiFi reset mode, but blinking mode is not accepted
+        network->setDesiredModeStation();
         return true;
     });
     network->log()->trace(F("Loading BecaDevice Done"));
