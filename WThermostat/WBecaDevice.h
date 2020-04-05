@@ -8,15 +8,7 @@
 #include "../lib/WAdapter/Wadapter/WPage.h"
 #include "WClock.h"
 
-const static char HTTP_CONFIG_CHECKBOX_RELAY[]         PROGMEM = R"=====(					
-		<div>
-			<label>
-				<input type="checkbox" name="rs" value="true" %s>Relay at GPIO 5
-			</label>
-			<br>
-			<small>* Hardware modification is needed at Thermostat to make this work.</small>
-		</div>
-)=====";
+const static char HTTP_SELECTED[] PROGMEM = "selected=\"selected\"";
 
 const static char HTTP_CONFIG_SCHTAB_HEAD[]         PROGMEM = R"=====(
 	<h2>Schedules</h2>
@@ -187,10 +179,14 @@ public:
     	this->addProperty(mode);
     	//Heating Relay and State property
     	this->state = nullptr;
-    	this->supportingHeatingRelay = network->getSettings()->setBoolean("supportingHeatingRelay", true);
+    	this->supportingHeatingRelay = network->getSettings()->setBoolean("supportingHeatingRelay", false);
     	this->supportingCoolingRelay = network->getSettings()->setBoolean("supportingCoolingRelay", false);
-    	if (isSupportingHeatingRelay()) pinMode(PIN_STATE_HEATING_RELAY, INPUT);
-    	if (isSupportingCoolingRelay()) pinMode(PIN_STATE_COOLING_RELAY, INPUT);
+		if (getThermostatModel() == MODEL_BHT_002_GBLW) {
+			//disable Cooling Relay if enabled on heating-thermostat
+			this->supportingCoolingRelay->setBoolean(false);
+		}
+		if (isSupportingHeatingRelay()) pinMode(PIN_STATE_HEATING_RELAY, INPUT);
+    	else if (isSupportingCoolingRelay()) pinMode(PIN_STATE_COOLING_RELAY, INPUT);
     	if ((isSupportingHeatingRelay()) || (isSupportingCoolingRelay())) {
     		this->state = new WProperty("state", "State", STRING);
     		this->state->setAtType("HeatingCoolingProperty");
@@ -200,6 +196,7 @@ public:
     		this->state->addEnumString(STATE_COOLING);
     		this->addProperty(state);
     	}
+
 
     	//schedulesDayOffset
     	this->schedulesDayOffset = network->getSettings()->setByte("schedulesDayOffset", 0);
@@ -272,8 +269,30 @@ public:
     	page->printAndReplace(FPSTR(HTTP_COMBOBOX_ITEM), "0", (getThermostatModel() == 0 ? "selected" : ""), "Floor heating (BHT-002-GBLW)");
     	page->printAndReplace(FPSTR(HTTP_COMBOBOX_ITEM), "1", (getThermostatModel() == 1 ? "selected" : ""), "Heating, Cooling, Ventilation (BAC-002-ALW)");
     	page->print(FPSTR(HTTP_COMBOBOX_END));
-    	//Checkbox with support for relay
-    	page->printAndReplace(FPSTR(HTTP_CONFIG_CHECKBOX_RELAY), (this->isSupportingHeatingRelay() ? "checked" : ""));
+
+
+
+		const static char HTTP_CONFIG_CHECKBOX_RELAY[]         PROGMEM = R"=====(					
+				<div>
+					Relais to GPIO:
+					<select name="rs">
+						<option value="" %s></option>
+						<option value="h" %s></option>
+						<option value="c" %s></option>
+					</select>
+					<br>
+					<small>* Hardware modification is needed at Thermostat to make this work.</small>
+				</div>
+		)=====";
+
+		//Checkbox with support for relay
+		int rsMode=(this->isSupportingHeatingRelay() ? 1 :  (this->isSupportingCoolingRelay() ? 2 : 0));
+		page->printAndReplace(FPSTR(HTTP_COMBOBOX_BEGIN), "Relais to GPIO Support:", "rs");
+		page->printAndReplace(FPSTR(HTTP_COMBOBOX_ITEM), "_", (rsMode == 0 ? "selected" : ""), "No Hardware Hack");
+		page->printAndReplace(FPSTR(HTTP_COMBOBOX_ITEM), "h", (rsMode == 1 ? "selected" : ""), "Heating-Relay at GPIO 5");
+		page->printAndReplace(FPSTR(HTTP_COMBOBOX_ITEM), "c", (rsMode == 2 ? "selected" : ""), "Cooling-Relay at GPIO 5");
+		page->print(FPSTR(HTTP_COMBOBOX_END));
+
     	//ComboBox with weekday
     	page->printAndReplace(FPSTR(HTTP_COMBOBOX_BEGIN), "Workday schedules:", "ws");
     	page->printAndReplace(FPSTR(HTTP_COMBOBOX_ITEM), "0", (getSchedulesDayOffset() == 0 ? "selected" : ""), "Workday (1-5): Mon-Fri; Weekend (6 - 7): Sat-Sun");
@@ -292,7 +311,16 @@ public:
         network->log()->notice(PSTR("Save Beca config page"));
         this->thermostatModel->setByte(webServer->arg("tm").toInt());
         this->schedulesDayOffset->setByte(webServer->arg("ws").toInt());
-        this->supportingHeatingRelay->setBoolean(webServer->arg("rs") == "true");
+		if (webServer->arg("rs") == "h"){
+			this->supportingHeatingRelay->setBoolean(true);
+			this->supportingCoolingRelay->setBoolean(false);
+		} else if (webServer->arg("rs") == "c"){
+			this->supportingHeatingRelay->setBoolean(false);
+			this->supportingCoolingRelay->setBoolean(true);
+		} else {
+			this->supportingHeatingRelay->setBoolean(false);
+			this->supportingCoolingRelay->setBoolean(false);
+		}
     }
 
     void loop(unsigned long now) {
