@@ -1,4 +1,7 @@
 # ThermostatBecaWifi
+
+Fork of https://github.com/klausahrenberg/WThermostatBeca with some new features
+
 Replaces original Tuya firmware on Beca thermostat with ESP8266 wifi module. The firmware is tested with following devices:
 * BHT-002-GBLW, BHT-6000 (floor heating)
 * BHT-002-GALW (Water/Gas heating)
@@ -10,14 +13,22 @@ Also selled by Moes or Qiumi.
 ![homeassistant](docs/bac-002-wifi.jpg)  
 
 ## Features
-* Enables thermostat to communicate via MQTT and/or Mozilla Webthings
+* No Cloud dependencies!
+* Enables thermostat to communicate via MQTT and/or Mozilla WebThings
+* Autodiscovery for Home Assistant via MQTT _(fas)_
+* Autodiscovery for WebThings via mDNS
 * Configuration of connection, device parameters and schedules via web interface
-* Provides NTP, time zone handling and Daylight-Saving-Calculation to set the clock of thermostat
+* Provides NTP, time zone handling and Daylight-Saving-Calculation _(fas)_ to set the clock of thermostat
+* Provides Fallback to Access Point mode if requested using panel-buttons _(fas)_
 * Reading and setting of all parameters via MQTT
-* Reading and setting of main parameters via Webthings
+* Reading and setting of main parameters via WebThings
 * Only BHT-002-GxLW: actualFloorTemperature (external temperature sensor)
 * Only BAC-002-ALW: fanSpeed:auto|low|medium|high; systemMode:cooling|heating|ventilation
 * Reading and setting of time schedules via MQTT
+* Reading and setting of Schedules via Web-GUI _(fas)_
+* Logging to MQTT _(fas)_
+
+_(fas)_: Only available in -fas version
 
 ## Hardware
 The Hardware itself has two Microcontrollers:
@@ -62,11 +73,15 @@ To setup the device model, network options and other parameters, follow instrcut
 Configuration.md  
 After initial setup, the device configuration is still available via `http://<device_ip>/` 
 
-
+Main Screen:
 ![homeassistant](docs/Setup_Main.png)  
+Network Screen:
+![homeassistant](docs/Setup_Network.png)  
+Schedule Screen:
+![homeassistant](docs/Setup_Schedules.png)  
 
-## Integration in Webthings
-Since version 0.96 this firmware supports Mozilla Webthings directly. With webthings you can control the thermostat via the Gateway - inside and also outside of your home network. No clunky VPN, dynDNS solutions needed to access your home devices. I recommend to run the gateway in parallel to an MQTT server and for example Node-Red. Via MQTT you can control the thermostat completely and logic can be done by Node-Red. Webthings is used for outside control of main parameters.  
+## Integration in WebThings
+Since version 0.96 this firmware supports Mozilla WebThings directly. With webthings you can control the thermostat via the Gateway - inside and also outside of your home network. No clunky VPN, dynDNS solutions needed to access your home devices. I recommend to run the gateway in parallel to an MQTT server and for example Node-Red. Via MQTT you can control the thermostat completely and logic can be done by Node-Red. WebThings is used for outside control of main parameters.  
 Add the device to the gateway via '+' icon. After that you have the new nice and shiny icon in the dashboard:  
 ![webthing_icon](docs/Webthing_Icon.png)  
 The icon shows the actual temperature and heating state.  
@@ -75,7 +90,16 @@ There is also a detailed view available:
 
 ## Integration in Home Assisant
 ![homeassistant](docs/homeassistant.png)  
-Here is an example for your configuration.yaml file:
+ThermostatBecaWifi supports optional HASS-Autodiscovery since Version 1.08-fas (currently only for heating devices).
+You have to enable it at Thermostate (settings network) and of course it must be enabled in your HASS configuration.yaml file:
+```yaml
+mqtt:
+  broker: <ip of broker>
+  discovery: true
+  discovery_prefix: homeassistant
+```
+
+For manual Configuration here is an example for your configuration.yaml file:
 ```yaml
 climate:
   - platform: mqtt
@@ -183,26 +207,42 @@ Also you can change single values by sending the value to `<your_topic>/cmnd/thi
 Examples:
 ```
 # set device on
-mosquitto_pub  -h mqtt  -t home/test/cmnd/things/thermostat/properties/deviceOn  -m "true"
+mosquitto_pub -h mqtt -t home/test/cmnd/things/thermostat/properties/deviceOn  -m "true"
+
 # set device to heating
-mosquitto_pub  -h mqtt  -t home/test/cmnd/things/thermostat/properties/mode  -m "heat"
+mosquitto_pub -h mqtt -t home/test/cmnd/things/thermostat/properties/mode  -m "heat"
+
 # set target temperature
-mosquitto_pub  -h mqtt  -t home/test/cmnd/things/thermostat/properties/targetTemperature  -m "23.5"
+mosquitto_pub -h mqtt -t home/test/cmnd/things/thermostat/properties/targetTemperature  -m "23.5"
+
 # set target temperature (json)
-mosquitto_pub  -h mqtt  -t home/test/cmnd/things/thermostat/properties -m '{"targetTemperature":23.00}'
+mosquitto_pub -h mqtt -t home/test/cmnd/things/thermostat/properties -m '{"targetTemperature":23.00}'
+
 # set target temperature and mode (json)
-mosquitto_pub  -h mqtt  -t home/test/cmnd/things/thermostat/properties -m '{"targetTemperature":22.00,"mode":heat}'
+mosquitto_pub -h mqtt -t home/test/cmnd/things/thermostat/properties -m '{"targetTemperature":22.00,"mode":heat}'
+
 # set device to auto (target temperature controlled by MCU-Scheduler)
-mosquitto_pub  -h mqtt  -t home/test/cmnd/things/thermostat/properties/mode -m "auto"
+mosquitto_pub -h mqtt -t home/test/cmnd/things/thermostat/properties/mode -m "auto"
+
 # just request properties
-mosquitto_pub  -h mqtt  -t home/test/cmnd/things/thermostat/properties -n
+mosquitto_pub -h mqtt  -t home/test/cmnd/things/thermostat/properties -n
+
 # request properties and show answer directly
-mosquitto_rr  -h mqtt  -t home/test/cmnd/things/thermostat/properties  -n -e home/test/stat/things/thermostat/properties
-{"idx":"test","ip":"10.10.200.69","firmware":"1.04b","temperature":0.00,"targetTemperature":22.00,"deviceOn":true,"schedulesMode":"off","ecoMode":false,"locked":false,"systemMode":"heat","fanMode":"auto","mode":"heat"}
+mosquitto_rr -h mqtt -t home/test/cmnd/things/thermostat/properties  -n -e home/test/stat/things/thermostat/properties
+
+
+# Change Schedules (here: weekday schedules)
+mosquitto_pub -h mqtt -t home/test/cmnd/things/thermostat/schedules -m \
+'{"w1h":"06:00","w1t":20.00,"w2h":"08:00","w2t":15.00,"w3h":"11:30","w3t":15.00,"w4h":"13:30","w4t":15.00,"w5h":"17:00","w5t":23.00,"w6h":"23:00","w6t":15.00}'
+
 # disable MQTT logging
-mosquitto_pub  -h mqtt  -t home/test/cmnd/things/logging/properties/logLevel -m "silent"
+mosquitto_pub -h mqtt -t home/test/cmnd/things/logging/properties/logLevel -m "silent"
+
 # set to level trace (available: silent|fatal|error|warning|notice|trace|verbose)
-mosquitto_pub  -h mqtt  -t home/test/cmnd/things/logging/properties/logLevel -m "trace"
+mosquitto_pub -h mqtt -t home/test/cmnd/things/logging/properties/logLevel -m "trace"
+
+# show logs
+mosquitto_sub -h mqtt -v -t "home/test/tele/log/#"
 
 ```
 
@@ -210,4 +250,6 @@ mosquitto_pub  -h mqtt  -t home/test/cmnd/things/logging/properties/logLevel -m 
 Flash the original firmware (see installation). Write me a message with your exact model and which parameter was not correct. Maybe your MQTT-server received some unknown messages - this would be also helpful for me. Again: I have tested this only with model BHT-002-GBLW. If you have another device, don't expect that this is working directly.
 
 ### Build this firmware from source
-For build from sources you can use the Arduino-IDE, Sloeber or other. All sources needed are inside the folder 'WThermostat' and my other library: https://github.com/klausahrenberg/WAdapter. Additionally you will need some other libraries: DNSServer, EEPROM (for esp8266), ESP8266HTTPClient, ESP8266mDNS, ESP8266WebServer, ESP8266WiFi, Hash, NTPClient, Time - It's all available via board and library manager inside of ArduinoIDE
+For build from sources i suggest <a href="https://code.visualstudio.com/">Visual Studio Code</a> and <a href="https://platformio.org/">Platform.IO</a>.
+ All sources needed are inside the folder 'WThermostat', also you need the WAdapter library from https://github.com/fashberg/WAdapter.
+ Additionally you will need some other libraries: DNSServer, EEPROM (for esp8266), ESP8266HTTPClient, ESP8266mDNS, ESP8266WebServer, ESP8266WiFi, Hash, NTPClient, Time.

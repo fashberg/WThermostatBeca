@@ -1,3 +1,12 @@
+## Version 1.08-fas
+* New Feature: Supports now Climate Autoconfiguration for Home Assistant (optional)
+* New Feature: Switch Off (middle-button), then Longpress Down-Button, Beca switches to AP-Mode with default Password
+* Automatic Wifi Fallback now optional
+* Bugfix state cooling (wrong setting in EPROM, was not configurable)
+* Temperature Precision 0.5/1.0
+* some upstream fixes from klausahrenberg 1.03
+* by Folke Ashberg <folke@ashberg.de>
+
 ## Version 1.07-fas
 * Device goes to AP-Mode if Wifi is not available/fails and switches back after 5 Minutes
 * enabled WLAN auto-reconnect

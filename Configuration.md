@@ -25,6 +25,7 @@ Steps are in general:
 * Leave 'Support Mozilla WebThings' checked (recommended). If this is checked, the thermostat will always run the web interface. 
 You don't need to use Webthings itself.
 * If you don't want to use MQTT, press 'Save Configuration' and wait for reboot of device.
+![homeassistant](docs/Setup_Network.png)  
 
 ## 3. Configure MQTT (optional)
 * Stay at page 'Network configuration'
@@ -64,3 +65,20 @@ Normally you don't need to change options here.
   | Europe/Berlin | 99 |  0,3,0,2,120 | 0,10,0,3,60 |
   | Europe/London | 99 |  0,3,0,2,60 | 0,10,0,3,0 |
   | America/New_York | 99 | 2,3,0,2,-240 | 1,11,0,2,-300
+
+## 5. Troubleshooting
+
+### Logging
+If anything wents wrong set MQTT-Logging to "trace" and monitor with MQTT-Client:
+```
+mosquitto_sub  -h  <mqttserver> -v -t "<MQTT-TOPIC>/tele/log/#"
+```
+
+### Network Recovery
+If you cannot access your device, try to switch to Access-Point mode:
+* Power off the device by Pressing the button in the middle.
+* Then press the "down" button (most right) for about 8 seconds.
+* The Screen starts to blink and shows a WiFi-Icon.
+* The thermostat is now an Access Point named `Thermostat-Beca_xxxxxx`. Default password is `12345678`
+* Now you can fix network settings.
+* Saving settings or pressing power button switches back to Station mode

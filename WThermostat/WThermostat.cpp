@@ -6,7 +6,7 @@
 #include "WLogDevice.h"
 
 #define APPLICATION "Thermostat Beca"
-#define VERSION "1.08b"
+#define VERSION "1.08-fas"
 
 #ifdef DEBUG // use platform.io environment to activate/deactive 
 #define SERIALDEBUG true  // enables logging to serial console
@@ -87,6 +87,12 @@ void setup() {
     network->addDevice(logDevice);
     network->log()->trace(F("Loading LogDevice Done"));
 
+    network->setOnMqttHassAutodiscover([]() {
+        // gets fired if MqttHassAutotiscovery is enabled repeatedly
+        network->log()->trace(F("onMqttHassAutodiscover"));
+        // https://www.home-assistant.io/integrations/climate.mqtt/
+        return becaDevice->sendMqttHassAutodiscover();
+    });
 
     network->startWebServer();
 

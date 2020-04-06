@@ -28,7 +28,7 @@ const static char* DEFAULT_TIME_STD = "0,10,0,3,60";
 const static char HTTP_TEXT_CLOCK_HOWTO[] PROGMEM = R"=====(
 <div style="max-width: 400px">
 See <a href="https://github.com/fashberg/WThermostatBeca/blob/master/Configuration.md#4-configure-clock-settings"
-target="_blank">https://github.com/fashberg/WThermostatBeca/blob/master/Configuration.md#4-configure-clock-settings</a> 
+target="_blank">github.com/fashberg/WThermostatBeca/blob/master/Configuration.md</a> 
 for Howto set Timezone and Daylight-Savings
 </div>
 )=====";
