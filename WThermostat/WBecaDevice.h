@@ -90,6 +90,8 @@ const char* SYSTEM_MODE_FAN = "fan_only";
 const char* STATE_OFF = "off";
 const char* STATE_HEATING = "heating";
 const char* STATE_COOLING = "cooling";
+const char* STATE_TRUE  = "true";
+const char* STATE_FALSE  = "false";
 const char* FAN_MODE_NONE = "none";
 const char* FAN_MODE_AUTO = "auto";
 const char* FAN_MODE_LOW  = "low";
@@ -397,6 +399,11 @@ public:
     		bool cooling = false;
     		if ((isSupportingHeatingRelay()) && (state != nullptr)) {
     			heating = digitalRead(PIN_STATE_HEATING_RELAY);
+				if (heating != oldValue) {
+    				oldValue = heating;
+    				String stat_topic = network->getMqttTopic() + (String)"/" + String(MQTT_STAT) + (String)"/things/" + String(getId()) + (String)"/properties/";
+					network->publishMqtt((stat_topic + (String)"state").c_str(), String(String(heating ? STATE_TRUE : STATE_FALSE)).c_str());
+    			}
     		}
     		if ((isSupportingCoolingRelay()) && (state != nullptr)) {
     			cooling = digitalRead(PIN_STATE_COOLING_RELAY);
@@ -998,6 +1005,8 @@ private:
     unsigned char receivedCommand[1024];
     boolean receivingDataFromMcu;
     double targetTemperatureManualMode;
+    bool oldValue;
+    String oldMode;
     WProperty* deviceOn;
     WProperty* state;
     WProperty* targetTemperature;
@@ -1145,6 +1154,10 @@ private:
 								changed = ((changed) || (newChanged=(newB != deviceOn->getBoolean())));
 								deviceOn->setBoolean(newB);
 								receivedStates[0] = true;
+								if (changed) {
+									String stat_topic = network->getMqttTopic() + (String)"/" + String(MQTT_STAT) + (String)"/things/" + String(getId()) + (String)"/properties/";
+									network->publishMqtt((stat_topic + (String)"deviceOn").c_str(), String(newB ? STATE_TRUE : STATE_FALSE).c_str());
+								}
 								logIncomingCommand("deviceOn_x01", (newChanged ? LOG_LEVEL_TRACE : LOG_LEVEL_VERBOSE));
 								knownCommand = true;
 								if (newChanged && newB && onPowerButtonOn) onPowerButtonOn();
@@ -1160,6 +1173,10 @@ private:
 								targetTemperatureManualMode = newValue;
 								if (changed) updateTargetTemperature();
 								receivedStates[1] = true;
+								if (changed) {
+									String stat_topic = network->getMqttTopic() + (String)"/" + String(MQTT_CMND) + (String)"/things/" + String(getId()) + (String)"/properties/";
+									network->publishMqtt((stat_topic + (String)"targetTemperature").c_str(), String(newValue).c_str());
+								}
 								logIncomingCommand(((String)"targetTemperature_x02:"+(String)targetTemperatureManualMode+"/"+(String)newValue).c_str(), (newChanged ? LOG_LEVEL_TRACE : LOG_LEVEL_VERBOSE));
 								knownCommand = true;
 							}
@@ -1172,6 +1189,10 @@ private:
 								newValue = (float) receivedCommand[13] / getTemperatureFactor();
 								changed = ((changed) || (newChanged=!actualTemperature->equalsDouble(newValue)));
 								actualTemperature->setDouble(newValue);
+								if (changed) {
+									String stat_topic = network->getMqttTopic() + (String)"/" + String(MQTT_STAT) + (String)"/things/" + String(getId()) + (String)"/properties/";
+									network->publishMqtt((stat_topic + (String)"Temperature").c_str(), String(newValue).c_str());
+								}
 								logIncomingCommand("actualTemperature_x03", (newChanged ? LOG_LEVEL_TRACE : LOG_LEVEL_VERBOSE));
 								knownCommand = true;
 							}
@@ -1195,6 +1216,10 @@ private:
 								changed = ((changed) || (newChanged=(newB != ecoMode->getBoolean())));
 								ecoMode->setBoolean(newB);
 								receivedStates[3] = true;
+								if (changed) {
+									String stat_topic = network->getMqttTopic() + (String)"/" + String(MQTT_CMND) + (String)"/things/" + String(getId()) + (String)"/properties/";
+									network->publishMqtt((stat_topic + (String)"ecoMode").c_str(), String(newB ? STATE_TRUE : STATE_FALSE).c_str());
+								}
 								logIncomingCommand("ecoMode_x05", (newChanged ? LOG_LEVEL_TRACE : LOG_LEVEL_VERBOSE));
 								knownCommand = true;
 							}
@@ -1206,6 +1231,10 @@ private:
 								changed = ((changed) || (newChanged=(newB != locked->getBoolean())));
 								locked->setBoolean(newB);
 								receivedStates[4] = true;
+								if (changed) {
+									String stat_topic = network->getMqttTopic() + (String)"/" + String(MQTT_CMND) + (String)"/things/" + String(getId()) + (String)"/properties/";
+									network->publishMqtt((stat_topic + (String)"locked").c_str(), String(newB ? STATE_TRUE : STATE_FALSE).c_str());
+								}
 								logIncomingCommand("locked_x06", (newChanged ? LOG_LEVEL_TRACE : LOG_LEVEL_VERBOSE));
 								knownCommand = true;
 							}
@@ -1241,6 +1270,10 @@ private:
 								if (actualFloorTemperature != nullptr) {
 									changed = ((changed) || (newChanged=!actualFloorTemperature->equalsDouble(newValue)));
 									actualFloorTemperature->setDouble(newValue);
+									if (changed) {
+										String stat_topic = network->getMqttTopic() + (String)"/" + String(MQTT_STAT) + (String)"/things/" + String(getId()) + (String)"/properties/";
+										network->publishMqtt((stat_topic + (String)"FloorTemperature").c_str(), String(newValue).c_str());
+									}
 								}
 								logIncomingCommand("actualFloorTemperature_x66", (newChanged ? LOG_LEVEL_TRACE : LOG_LEVEL_VERBOSE));
 								knownCommand = true;
@@ -1491,6 +1524,11 @@ private:
     void updateMode() {
 		if (!this->deviceOn->getBoolean()){
 			this->mode->setString(MODE_OFF);
+			if (oldMode != MODE_OFF) {
+				oldMode = MODE_OFF;
+				String stat_topic = network->getMqttTopic() + (String)"/" + String(MQTT_CMND) + (String)"/things/" + String(getId()) + (String)"/properties/";
+				network->publishMqtt((stat_topic + (String)"mode").c_str(), MODE_OFF);
+			}
 		} else if (this->schedulesMode->equalsString(SCHEDULES_MODE_AUTO)){
 			if (getThermostatModel() == MODEL_BAC_002_ALW){
 				if (this->systemMode->equalsString(SYSTEM_MODE_HEAT)){
@@ -1502,6 +1540,11 @@ private:
 				} 
 			} else if (getThermostatModel() == MODEL_BHT_002_GBLW) {
 				this->mode->setString(MODE_AUTO);
+				if (oldMode != MODE_AUTO) {
+					oldMode = MODE_AUTO;
+					String stat_topic = network->getMqttTopic() + (String)"/" + String(MQTT_CMND) + (String)"/things/" + String(getId()) + (String)"/properties/";
+					network->publishMqtt((stat_topic + (String)"mode").c_str(), MODE_AUTO);
+				}
 			} else {
 				network->log()->error(F("Bug. Can't find mode (on+auto+?)"));
 			}
@@ -1515,6 +1558,11 @@ private:
 			}
 		} else if (getThermostatModel() == MODEL_BHT_002_GBLW){
 			this->mode->setString(MODE_HEAT);
+			if (oldMode != MODE_HEAT) {
+				oldMode = MODE_HEAT;
+				String stat_topic = network->getMqttTopic() + (String)"/" + String(MQTT_CMND) + (String)"/things/" + String(getId()) + (String)"/properties/";
+				network->publishMqtt((stat_topic + (String)"mode").c_str(), MODE_HEAT);
+			}
 		} else {
 			network->log()->error(F("Bug. Can't find mode (on+noauto+?)"));
 		}
