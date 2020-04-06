@@ -71,16 +71,17 @@ Follow instructions here: Flashing.md
 ## Initial configuration
 To setup the device model, network options and other parameters, follow instrcution here:  
 Configuration.md  
-After initial setup, the device configuration is still available via `http://<device_ip>/` 
+After initial setup, the device configuration is available via `http://<device_ip>/` 
 
+## Screenshots
 Main Screen:
-![homeassistant](docs/Setup_Main.png)  
+![setup_main](docs/Setup_Main.png)  
 Network Screen:
-![homeassistant](docs/Setup_Network.png)  
+![setup_network](docs/Setup_Network.png)  
 Schedule Screen:
-![homeassistant](docs/Setup_Schedules.png)  
+![setup_schedules](docs/Setup_Schedules.png)  
 
-## Integration in WebThings
+# Integration in WebThings
 Since version 0.96 this firmware supports Mozilla WebThings directly. With webthings you can control the thermostat via the Gateway - inside and also outside of your home network. No clunky VPN, dynDNS solutions needed to access your home devices. I recommend to run the gateway in parallel to an MQTT server and for example Node-Red. Via MQTT you can control the thermostat completely and logic can be done by Node-Red. WebThings is used for outside control of main parameters.  
 Add the device to the gateway via '+' icon. After that you have the new nice and shiny icon in the dashboard:  
 ![webthing_icon](docs/Webthing_Icon.png)  
@@ -88,8 +89,8 @@ The icon shows the actual temperature and heating state.
 There is also a detailed view available:  
 <img src="docs/Webthing_Complete.png" width="400">
 
-## Integration in Home Assisant
-![homeassistant](docs/homeassistant.png)  
+# Integration in Home Assisant
+![homeassistant](docs/homeassistant.png)  ![hass_discovery](docs/hass_discovery.png)  
 ThermostatBecaWifi supports optional HASS-Autodiscovery since Version 1.08-fas (currently only for heating devices).
 You have to enable it at Thermostate (settings network) and of course it must be enabled in your HASS configuration.yaml file:
 ```yaml
