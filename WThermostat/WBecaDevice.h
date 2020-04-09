@@ -138,7 +138,7 @@ public:
 		this->targetTemperatureManualMode = 0.0;
     	this->wClock = wClock;
     	this->systemMode = nullptr;
-		this->mqttRetain=true;
+		this->setMqttRetain(true);
 		this->stateNotifyInterval=60000;
 		this->mcuId="";
 		this->onConfigurationRequest=nullptr;
@@ -173,28 +173,34 @@ public:
 
     	this->actualTemperature = new WTemperatureProperty("temperature", "Actual");
     	this->actualTemperature->setReadOnly(true);
+		this->actualTemperature->setMqttSendChangedValues(true);
     	this->addProperty(actualTemperature);
     	this->targetTemperature = new WTargetTemperatureProperty("targetTemperature", "Target");//, 12.0, 28.0);
     	this->targetTemperature->setMultipleOf(getTemperaturePrecision());
     	this->targetTemperature->setOnChange(std::bind(&WBecaDevice::setTargetTemperature, this, std::placeholders::_1));
     	this->targetTemperature->setOnValueRequest([this](WProperty* p) {updateTargetTemperature();});
+		this->targetTemperature->setMqttSendChangedValues(true);
     	this->addProperty(targetTemperature);
     	this->deviceOn = new WOnOffProperty("deviceOn", "Power");
     	this->deviceOn->setOnChange(std::bind(&WBecaDevice::deviceOnToMcu, this, std::placeholders::_1));
+		this->deviceOn->setMqttSendChangedValues(true);
     	this->addProperty(deviceOn);
     	this->schedulesMode = new WProperty("schedulesMode", "Schedules", STRING);
     	this->schedulesMode->setAtType("ThermostatSchedulesModeProperty");
     	this->schedulesMode->addEnumString(SCHEDULES_MODE_OFF);
     	this->schedulesMode->addEnumString(SCHEDULES_MODE_AUTO);
     	this->schedulesMode->setOnChange(std::bind(&WBecaDevice::schedulesModeToMcu, this, std::placeholders::_1));
+		this->schedulesMode->setMqttSendChangedValues(true);
     	this->addProperty(schedulesMode);
     	this->ecoMode = new WOnOffProperty("ecoMode", "Eco");
     	this->ecoMode->setOnChange(std::bind(&WBecaDevice::ecoModeToMcu, this, std::placeholders::_1));
     	this->ecoMode->setVisibility(MQTT);
+		this->ecoMode->setMqttSendChangedValues(true);
     	this->addProperty(ecoMode);
     	this->locked = new WOnOffProperty("locked", "Lock");
     	this->locked->setOnChange(std::bind(&WBecaDevice::lockedToMcu, this, std::placeholders::_1));
     	this->locked->setVisibility(MQTT);
+		this->locked->setMqttSendChangedValues(true);
     	this->addProperty(locked);
     	//Model
     	this->actualFloorTemperature = nullptr;
@@ -203,6 +209,7 @@ public:
     		this->actualFloorTemperature = new WTemperatureProperty("floorTemperature", "Floor");
     		this->actualFloorTemperature->setReadOnly(true);
     		this->actualFloorTemperature->setVisibility(MQTT);
+			this->actualFloorTemperature->setMqttSendChangedValues(true);
     		this->addProperty(actualFloorTemperature);
     	} else if (getThermostatModel() == MODEL_BAC_002_ALW) {
     		this->systemMode = new WProperty("systemMode", "System Mode", STRING);
@@ -212,6 +219,7 @@ public:
         	this->systemMode->addEnumString(SYSTEM_MODE_HEAT);
         	this->systemMode->addEnumString(SYSTEM_MODE_FAN);
 			this->systemMode->setOnChange(std::bind(&WBecaDevice::systemModeToMcu, this, std::placeholders::_1));
+			this->systemMode->setMqttSendChangedValues(true);
         	this->addProperty(systemMode);
     		this->fanMode = new WProperty("fanMode", "Fan", STRING);
         	this->fanMode->setAtType("FanModeProperty");
@@ -220,6 +228,7 @@ public:
         	this->fanMode->addEnumString(FAN_MODE_MEDIUM);
         	this->fanMode->addEnumString(FAN_MODE_HIGH);
 			this->fanMode->setOnChange(std::bind(&WBecaDevice::fanModeToMcu, this, std::placeholders::_1));
+			this->fanMode->setMqttSendChangedValues(true);
         	this->addProperty(fanMode);
     	}
 		/* 
@@ -244,6 +253,7 @@ public:
 		this->mode->addEnumString(MODE_HEAT);
     	this->mode->setOnChange(std::bind(&WBecaDevice::modeToMcu, this, std::placeholders::_1));
 		this->mode->setOnValueRequest([this](WProperty* p) {updateMode();});
+		this->mode->setMqttSendChangedValues(true);
     	this->addProperty(mode);
 
 
@@ -261,6 +271,7 @@ public:
     		this->state->addEnumString(STATE_OFF);
     		this->state->addEnumString(STATE_HEATING);
     		this->state->addEnumString(STATE_COOLING);
+			this->state->setMqttSendChangedValues(true);
     		this->addProperty(state);
     	}
 

@@ -6,7 +6,7 @@
 #include "WLogDevice.h"
 
 #define APPLICATION "Thermostat Beca"
-#define VERSION "1.08-fas"
+#define VERSION "1.09-fas"
 
 #ifdef DEBUG // use platform.io environment to activate/deactive 
 #define SERIALDEBUG true  // enables logging to serial console
@@ -66,6 +66,7 @@ void setup() {
     // Communication between ESP and Beca-Mcu
     network->log()->trace(F("Loading BecaDevice"));
     becaDevice = new WBecaDevice(network, wClock);
+    becaDevice->setMqttSendChangedValues(true);
     network->addDevice(becaDevice);
 
     becaDevice->setOnConfigurationRequest([]() {

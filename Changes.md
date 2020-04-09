@@ -1,3 +1,8 @@
+## Version 1.09-fas
+* WebThings back working (/things) - thanks erelor
+* Optional sending of changed values to its own MQTT topic with no JSON - thanks Bettman66 
+* by Folke Ashberg <folke@ashberg.de>
+
 ## Version 1.08-fas
 * New Feature: Supports now Climate Autoconfiguration for Home Assistant (optional)
 * New Feature: Switch Off (middle-button), then Longpress Down-Button, Beca switches to AP-Mode with default Password
