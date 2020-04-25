@@ -1,3 +1,11 @@
+## Version 1.10-fas
+* introduced -minimal version for interim-upgrade on small sketch size
+* new "action" property for hass - thanks austwhite
+* keep only WLAN settings from compatibility Firmware
+* Fix too less page-buffor for startpage (reboot button missing)
+* Uptime seconds fix
+* by Folke Ashberg <folke@ashberg.de>
+
 ## Version 1.09-fas
 * WebThings back working (/things) - thanks erelor
 * Optional sending of changed values to its own MQTT topic with no JSON - thanks Bettman66 

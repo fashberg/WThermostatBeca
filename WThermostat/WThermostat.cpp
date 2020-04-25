@@ -1,12 +1,21 @@
 #include <Arduino.h>
 
 #include "../lib/WAdapter/WAdapter/WNetwork.h"
+#ifndef MINIMAL
 #include "WBecaDevice.h"
 #include "WClock.h"
 #include "WLogDevice.h"
-
+#endif
 #define APPLICATION "Thermostat Beca"
-#define VERSION "1.09-fas"
+#define VERSION "1.10-fas"
+
+#ifdef MINIMAL
+#define FULLVERSION VERSION "-minimal"
+#elif DEBUG
+#define FULLVERSION VERSION "-debug"
+#else
+#define FULLVERSION VERSION
+#endif
 
 #ifdef DEBUG // use platform.io environment to activate/deactive 
 #define SERIALDEBUG true  // enables logging to serial console
@@ -23,15 +32,18 @@
 #endif
 
 WNetwork *network;
+#ifndef MINIMAL
 WLogDevice *logDevice;
 WBecaDevice *becaDevice;
 WClock *wClock;
+#endif
 
 void setup() {
     Serial.begin(SERIALSPEED);
 
     // Wifi and Mqtt connection
-    network = new WNetwork(SERIALDEBUG, APPLICATION, VERSION, NO_LED);
+    network = new WNetwork(SERIALDEBUG, APPLICATION, FULLVERSION, NO_LED);
+#ifndef MINIMAL
     network->setOnNotify([]() {
         if (network->isSoftAPDesired()){
             becaDevice->reportNetworkToMcu(mcuNetworkMode::MCU_NETWORKMODE_SMARTCONFIG);
@@ -94,7 +106,7 @@ void setup() {
         // https://www.home-assistant.io/integrations/climate.mqtt/
         return becaDevice->sendMqttHassAutodiscover();
     });
-
+#endif
     network->startWebServer();
 
 }

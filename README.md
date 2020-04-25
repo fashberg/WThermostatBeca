@@ -73,6 +73,18 @@ To setup the device model, network options and other parameters, follow instrcut
 Configuration.md  
 After initial setup, the device configuration is available via `http://<device_ip>/` 
 
+## Upgrading
+You can Upgrade over the Air from other versions of ThermostatBecaWifi on the Web-GUI.
+Please check all settings after Upgrade!
+
+If you upgrade from original Klaus-Ahrenberg's Original-Version please note:
+* Only WLAN settings are kept
+* If you get "Not Enough Space" you can use WThermostat_1.xx-fas-minial.bin as interim-version.
+  * WLAN settings are kept
+  * no MQTT, no Beca-control, no Clock in -minimal
+  * Then Upgrade to normal-version
+  * Not neccessary when upgrading from fas to fas versions
+
 ## Screenshots
 Main Screen:
 ![setup_main](docs/Setup_Main.png)  
@@ -105,6 +117,8 @@ For manual Configuration here is an example for your configuration.yaml file:
 climate:
   - platform: mqtt
     name: Room_Thermostat
+    action_topic: "home/room/stat/things/thermostat/properties"
+    action_template: "{{ value_json['action'] }}"
     temperature_command_topic: "home/room/cmnd/things/thermostat/properties/targetTemperature"
     temperature_state_topic: "home/room/stat/things/thermostat/properties"
     temperature_state_template: "{{ value_json['targetTemperature'] }}"
@@ -148,12 +162,13 @@ The state report is sent with MQTT-retain-flag enabled.
   "schedulesMode":"off|auto",
   "ecoMode":false,
   "locked":false,
-  "state":"off|heating", //only_available,_if_hardware_modified
+  "state":"off|heating", //only_available, if hardware is modified
   "floorTemperature":20, //only_BHT-002-GBLW
   "fanMode":"auto|low|medium|high", //only_BAC-002-ALW
   "systemMode":"cool|heat|fan_only", //only_BAC-002-ALW
   "mode":"off|auto|heat" // BHT-002: combined Mode for better home assistant support. 
   "mode":"off|autoheat|autocool|autofan|heat|cool|fan_only" // BAC-002-ALW
+  "action":"off|idle|heating|cooling|fan" // read only current action, idle only available if hardware is modified, cooling/fan only BAC-002
 }
 ```
 

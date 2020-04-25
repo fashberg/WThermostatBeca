@@ -37,6 +37,8 @@ const static char MQTT_HASS_AUTODISCOVERY_CLIMATE[]         PROGMEM = R"=====(
 "unique_id": "%s",
 "dev":{"ids":["%s"],"name":"%s","mdl":"%s","sw":"%s","mf":"WThermostatBeca"},
 "~": "%s",
+"action_stat_t":"~/stat/things/thermostat/properties",
+"action_stat_tpl":"{{value_json.action}}",
 "mode_cmd_t":"~/cmnd/things/thermostat/properties/mode",
 "mode_stat_t":"~/stat/things/thermostat/properties",
 "mode_stat_tpl":"{{value_json.mode}}",
@@ -103,6 +105,11 @@ const char* MODE_AUTOFAN = "autofan";
 const char* MODE_HEAT = "heat";
 const char* MODE_COOL = "cool";
 const char* MODE_FAN  = "fan_only";
+const char* ACTION_OFF  = "off";
+const char* ACTION_COOLING  = "cooling";
+const char* ACTION_HEATING  = "heating";
+const char* ACTION_IDLE  = "idle";
+const char* ACTION_FAN = "fan";
 
 const byte STORED_FLAG_BECA = 0x36;
 const char SCHEDULES_PERIODS[] = "123456";
@@ -252,9 +259,24 @@ public:
 		}
 		this->mode->addEnumString(MODE_HEAT);
     	this->mode->setOnChange(std::bind(&WBecaDevice::modeToMcu, this, std::placeholders::_1));
-		this->mode->setOnValueRequest([this](WProperty* p) {updateMode();});
+		this->mode->setOnValueRequest([this](WProperty* p) {updateModeAndAction();});
 		this->mode->setMqttSendChangedValues(true);
     	this->addProperty(mode);
+
+		this->action = new WProperty("action", "action", STRING);
+		this->action->setAtType("ThermostatactionProperty"); 
+		this->action->addEnumString(ACTION_OFF);
+		this->action->addEnumString(ACTION_HEATING);
+		if (isSupportingHeatingRelay() || isSupportingCoolingRelay()) this->action->addEnumString(ACTION_IDLE);
+		if (getThermostatModel() == MODEL_BHT_002_GBLW) {
+		}
+		if (getThermostatModel() == MODEL_BAC_002_ALW) {
+			this->action->addEnumString(ACTION_COOLING);
+			this->action->addEnumString(ACTION_FAN);
+		}
+		this->action->setMqttSendChangedValues(true);
+		this->action->setReadOnly(true);
+		this->addProperty(action);
 
 
 		if (getThermostatModel() == MODEL_BHT_002_GBLW) {
@@ -272,6 +294,7 @@ public:
     		this->state->addEnumString(STATE_HEATING);
     		this->state->addEnumString(STATE_COOLING);
 			this->state->setMqttSendChangedValues(true);
+			this->state->setOnValueRequest([this](WProperty* p) {updateModeAndAction();});
     		this->addProperty(state);
     	}
 
@@ -1014,7 +1037,8 @@ private:
     WProperty* targetTemperature;
     WProperty* actualTemperature;
     WProperty* actualFloorTemperature;
-    WProperty* mode;
+	WProperty* mode;
+	WProperty* action;
     WProperty* schedulesMode;
     WProperty* systemMode;
     WProperty* fanMode;
@@ -1498,8 +1522,7 @@ private:
 		}
 	}
 
-
-    void updateMode() {
+    void updateModeAndAction() {
 		if (!this->deviceOn->getBoolean()){
 			this->mode->setString(MODE_OFF);
 		} else if (this->schedulesMode->equalsString(SCHEDULES_MODE_AUTO)){
@@ -1528,6 +1551,24 @@ private:
 			this->mode->setString(MODE_HEAT);
 		} else {
 			network->log()->error(F("Bug. Can't find mode (on+noauto+?)"));
+		}
+
+		// mode to action
+		if (this->mode->equalsString(MODE_OFF)) this->action->setString(ACTION_OFF);
+		else if (getThermostatModel() == MODEL_BAC_002_ALW) {
+			if ((isSupportingCoolingRelay() || isSupportingHeatingRelay()) && this->state->equalsString(STATE_OFF)){
+				this->action->setString(ACTION_IDLE);
+			} else	if (this->systemMode->equalsString(SYSTEM_MODE_HEAT)){
+				this->action->setString(ACTION_HEATING);
+			} else if (this->systemMode->equalsString(SYSTEM_MODE_COOL)){
+				this->action->setString(ACTION_COOLING);
+			} else if (this->systemMode->equalsString(SYSTEM_MODE_FAN)){
+				this->action->setString(ACTION_FAN);
+			} 
+		} else if (getThermostatModel() == MODEL_BHT_002_GBLW){
+			if ((isSupportingCoolingRelay() || isSupportingHeatingRelay()) && this->state->equalsString(STATE_OFF)){
+				this->action->setString(ACTION_IDLE);
+			} else this->action->setString(ACTION_HEATING);
 		}
 	}
 

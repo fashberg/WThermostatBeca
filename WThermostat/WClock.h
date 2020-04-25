@@ -214,8 +214,8 @@ class WClock : public WDevice {
         if (!notify && lastRun > now-1000) return;
         lastRun=now;
 
-        network->log()->verbose(F("Clock: epoch: %d,timezone_diff: %d, millis: %d, nextSync: %d, lastTry: %d, lastSync: %d"),
-            getEpochTime(), Rtc.time_timezone, now, nextSync, lastTry, lastNtpSync);
+        //network->log()->verbose(F("Clock: epoch: %d,timezone_diff: %d, millis: %d, nextSync: %d, lastTry: %d, lastSync: %d"),
+        //    getEpochTime(), Rtc.time_timezone, now, nextSync, lastTry, lastNtpSync);
 
         Rtc.local_time = Rtc.utc_time + Rtc.time_timezone;
         BreakTime(Rtc.local_time, RtcTime);
