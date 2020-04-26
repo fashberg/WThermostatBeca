@@ -1,3 +1,7 @@
+## Version 1.11-fas
+* HASS Autodiscovery Fix and Improvements
+* by https://github.com/austwhite
+
 ## Version 1.10-fas
 * introduced -minimal version for interim-upgrade on small sketch size
 * new "action" property for hass - thanks austwhite
