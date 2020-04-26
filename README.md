@@ -61,7 +61,7 @@ The HBT-002-GA/GB/GC versions only differs in relais-wiring.
   * Product Spec says Max Power: 3 A
 
 ## Download binaries
-Pre-built binaries can be downloaded at <a href="releases">releases-page</a>.
+Pre-built binaries can be downloaded at <a href="https://github.com/fashberg/WThermostatBeca/releases">releases-page</a>.
 
 ## Installation
 You can install the firmware either
