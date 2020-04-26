@@ -43,7 +43,7 @@ const static char MQTT_HASS_AUTODISCOVERY_CLIMATE[]         PROGMEM = R"=====(
 "mode_stat_t":"~/stat/things/thermostat/properties",
 "mode_stat_tpl":"{{value_json.mode}}",
 "away_mode_cmd_t":"~/cmnd/things/thermostat/properties/ecoMode",
-"pl_on":"true"
+"pl_on":"true",
 "pl_off":"false",
 "away_mode_stat_t":"~/stat/things/thermostat/properties",
 "away_mode_stat_tpl":"{{ value_json.ecoMode }}",
