@@ -1,6 +1,20 @@
-Import('env')
 import os
 import shutil
+try:
+    import configparser
+except ImportError:
+    import ConfigParser as configparser
+
+Import("env", "projenv")
+
+# Dump construction environments (for debug purpose)
+#print(env.Dump())
+#print(projenv.Dump())
+
+config = configparser.ConfigParser()
+config.read("platformio.ini")
+appversion = config.get("common", "appversion")
+config.get
 
 OUTPUT_DIR = "build_output{}".format(os.path.sep)
 
@@ -17,8 +31,8 @@ def bin_map_copy(source, target, env):
             os.mkdir("{}{}".format(OUTPUT_DIR, d))
 
     # create string with location and file names based on variant
-    map_file = "{}map{}{}.map".format(OUTPUT_DIR, os.path.sep, variant)
-    bin_file = "{}firmware{}{}.bin".format(OUTPUT_DIR, os.path.sep, variant)
+    map_file = "{}map{}{}-{}.map".format(OUTPUT_DIR, os.path.sep, variant, appversion)
+    bin_file = "{}firmware{}{}-{}.bin".format(OUTPUT_DIR, os.path.sep, variant, appversion)
 
     # check if new target files exist and remove if necessary
     for f in [map_file, bin_file]:

@@ -41,7 +41,7 @@ The Hardware itself has two Microcontrollers:
   * Only the Wifi-Verisons of thermostats have the ESP-Module.
 
 ### Hardware-Versions
-You need the WiFi Version! (W in product Name). There is also a version without WLAN.
+You need the WiFi Version! (W in productname suffix, like -GALW). There is also a version without WLAN.
 
 The BHT Version is for heating only. The BAC-Version has modes Cooling, Heating and Ventilation.
 The HBT-002-GA/GB/GC versions only differs in relais-wiring. 
@@ -60,6 +60,8 @@ The HBT-002-GA/GB/GC versions only differs in relais-wiring.
   * Relaise on PIN 1 - PIN 2 (dry contacts)
   * Product Spec says Max Power: 3 A
 
+## Download binaries
+Pre-built binaries can be downloaded at <a href="releases">releases-page</a>.
 
 ## Installation
 You can install the firmware either
@@ -117,25 +119,78 @@ For manual Configuration here is an example for your configuration.yaml file:
 climate:
   - platform: mqtt
     name: Room_Thermostat
-    action_topic: "home/room/stat/things/thermostat/properties"
-    action_template: "{{ value_json['action'] }}"
-    temperature_command_topic: "home/room/cmnd/things/thermostat/properties/targetTemperature"
-    temperature_state_topic: "home/room/stat/things/thermostat/properties"
-    temperature_state_template: "{{ value_json['targetTemperature'] }}"
-    current_temperature_topic: "home/room/stat/things/thermostat/properties"
-    current_temperature_template: "{{ value_json['temperature'] }}"
-    mode_command_topic: "home/room/cmnd/things/thermostat/properties/mode"
-    mode_state_topic: "home/room/stat/things/thermostat/properties"
-    mode_state_template: "{{ value_json['mode'] }}"
-    modes:
-      - "heat"
-      - "auto"
-      - "off"
+    ~: "home/room"
+    action_topic: "~/stat/things/thermostat/properties"
+    action_template: "{{value_json.action}}"
+    temperature_command_topic: "~/cmnd/things/thermostat/properties/targetTemperature"
+    temperature_state_topic: "~/stat/things/thermostat/properties"
+    temperature_state_template: "{{value_json.targetTemperature}}"
+    current_temperature_topic: "~/stat/things/thermostat/properties"
+    current_temperature_template: "value_json.temperature}}"
+    away_mode_command_topic: "~/cmnd/things/thermostat/properties/ecoMode"
+    away_mode_state_topic: "~/stat/things/thermostat/properties"
+    away_mode_state_template: "{{value_json.ecoMode}}"
+    mode_command_topic: "~/cmnd/things/thermostat/properties/mode"
+    mode_state_topic: "~/stat/things/thermostat/properties"
+    mode_state_template: "{{value_json.mode}}"
+    payload_on: "true"
+    payload_off: "false"
+    modes: [ "heat", "auto", "off" ]
     min_temp: 5
     max_temp: 35
     temp_step: 0.5
     precision: 0.5
 ```
+If you have several thermostates you can anchor some settings while defining the first device and refer later on. Example: 
+```yaml
+climate:
+- platform: mqtt
+  name: Wohnzimmer_Thermostat
+  action_topic: "home/wohnzimmer/stat/things/thermostat/properties"
+  temperature_command_topic: "home/wohnzimmer/cmnd/things/thermostat/properties/targetTemperature"
+  temperature_state_topic: "home/wohnzimmer/stat/things/thermostat/properties"
+  current_temperature_topic: "home/wohnzimmer/stat/things/thermostat/properties"
+  away_mode_command_topic: "home/wohnzimmer/cmnd/things/thermostat/properties/ecoMode"
+  away_mode_state_topic: "home/wohnzimmer/stat/things/thermostat/properties"
+  mode_command_topic: "home/wohnzimmer/cmnd/things/thermostat/properties/mode"
+  mode_state_topic: "home/wohnzimmer/stat/things/thermostat/properties"
+  <<: &commonbeca
+    action_template: "{{value_json.action}}"
+    temperature_state_template: "{{value_json.targetTemperature}}"
+    current_temperature_template: "{{value_json.temperature}}"
+    mode_state_template: "{{value_json.mode}}"
+    away_mode_state_template: "{{value_json.ecoMode}}"
+    payload_on: "true"
+    payload_off: "false"
+    modes: [ "heat", "auto", "off" ]
+    min_temp: 5
+    max_temp: 35
+    temp_step: 0.5
+    precision: 0.5
+- platform: mqtt
+  name: Flur_Thermostat
+  action_topic: "home/flur/stat/things/thermostat/properties"
+  temperature_command_topic: "home/flur/cmnd/things/thermostat/properties/targetTemperature"
+  temperature_state_topic: "home/flur/stat/things/thermostat/properties"
+  current_temperature_topic: "home/flur/stat/things/thermostat/properties"
+  away_mode_command_topic: "home/flur/cmnd/things/thermostat/properties/ecoMode"
+  away_mode_state_topic: "home/flur/stat/things/thermostat/properties"
+  mode_command_topic: "home/flur/cmnd/things/thermostat/properties/mode"
+  mode_state_topic: "home/flur/stat/things/thermostat/properties"
+  <<: *commonbeca
+- platform: mqtt
+  name: WC_Thermostat
+  action_topic: "home/wc/stat/things/thermostat/properties"
+  temperature_command_topic: "home/wc/cmnd/things/thermostat/properties/targetTemperature"
+  temperature_state_topic: "home/wc/stat/things/thermostat/properties"
+  current_temperature_topic: "home/wc/stat/things/thermostat/properties"
+  away_mode_command_topic: "home/wc/cmnd/things/thermostat/properties/ecoMode"
+  away_mode_state_topic: "home/wc/stat/things/thermostat/properties"
+  mode_command_topic: "home/wc/cmnd/things/thermostat/properties/mode"
+  mode_state_topic: "home/wc/stat/things/thermostat/properties"
+  <<: *commonbeca
+```
+See  https://www.home-assistant.io/integrations/climate.mqtt/ for more information.
 
 # Device-Functions
 ## Json structures

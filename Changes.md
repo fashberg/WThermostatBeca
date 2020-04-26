@@ -1,6 +1,9 @@
 ## Version 1.11-fas
 * HASS Autodiscovery Fix and Improvements
 * by https://github.com/austwhite
+* platform.io automatic firmware naming
+* documentation updates
+* by Folke Ashberg <folke@ashberg.de>
 
 ## Version 1.10-fas
 * introduced -minimal version for interim-upgrade on small sketch size

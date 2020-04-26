@@ -7,7 +7,9 @@
 #include "WLogDevice.h"
 #endif
 #define APPLICATION "Thermostat Beca"
-#define VERSION "1.10-fas"
+#ifndef VERSION
+#define VERSION "undefined" // gets defined in commandline
+#endif
 
 #ifdef MINIMAL
 #define FULLVERSION VERSION "-minimal"
