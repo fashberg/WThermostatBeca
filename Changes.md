@@ -3,6 +3,7 @@
 * by https://github.com/austwhite
 * platform.io automatic firmware naming
 * documentation updates
+* fixed targetTemp wrong on change from scheduleMode to Manual #9 (thanks austwhite)
 * by Folke Ashberg <folke@ashberg.de>
 
 ## Version 1.10-fas

@@ -1220,9 +1220,13 @@ private:
 							if (commandLength == 0x05) {
 								//manualMode?
 								newB = (receivedCommand[10] == 0x01);
-								changed = ((changed) || (newChanged=((newB) && (!schedulesMode->equalsString(SCHEDULES_MODE_OFF))) || ((!newB) && (!schedulesMode->equalsString(SCHEDULES_MODE_AUTO)))));
+								changed = ((changed) || (newChanged=((newB && !schedulesMode->equalsString(SCHEDULES_MODE_OFF)) || (!newB && !schedulesMode->equalsString(SCHEDULES_MODE_AUTO)))));
 								schedulesMode->setString(newB ? SCHEDULES_MODE_OFF : SCHEDULES_MODE_AUTO);
-								if (newChanged) updateTargetTemperature();
+								if (newChanged){
+									network->log()->trace("Manual Mode newChanged to %s", (newB ? "on" : "off"));
+									updateTargetTemperature();
+									updateModeAndAction();
+								}
 								receivedStates[2] = true;
 								logIncomingCommand("manualMode_x04", (newChanged ? LOG_LEVEL_TRACE : LOG_LEVEL_VERBOSE));
 								knownCommand = true;
@@ -1430,19 +1434,26 @@ private:
 			double temp = (double) schedules[startAddr + period * 3 + 2] / getTemperatureFactor();
     		String p = String(weekDay == 0 ? SCHEDULES_DAYS[2] : (weekDay == 6 ? SCHEDULES_DAYS[1] : SCHEDULES_DAYS[0]));
     		p.concat(SCHEDULES_PERIODS[period]);
-    		network->log()->notice((String(PSTR("We take temperature from period '%s', Schedule temperature is "))+String(temp)).c_str() , p.c_str());
+    		network->log()->trace((String(PSTR("We take temperature from period '%s', Schedule temperature is "))+String(temp)).c_str() , p.c_str());
     		targetTemperature->setDouble(temp);
     	} else {
+			network->log()->trace((String(PSTR("set targetTemperature from targetTemperatureManualMode, which is "))+String(targetTemperatureManualMode)).c_str());
     		targetTemperature->setDouble(targetTemperatureManualMode);
     	}
     }
 
     void setTargetTemperature(WProperty* property) {
-    	if (!WProperty::isEqual(targetTemperatureManualMode, this->targetTemperature->getDouble(), 0.01)) {
-    		targetTemperatureManualMode = this->targetTemperature->getDouble();
-    		targetTemperatureManualModeToMcu();
-    		schedulesMode->setString(SCHEDULES_MODE_OFF);
-    	}
+		if (schedulesMode->equalsString(SCHEDULES_MODE_OFF)){
+			// only set targetTemperatureManualMode and targetTemperatureManualModeToMcu() if current mode is Manual
+			if (!WProperty::isEqual(targetTemperatureManualMode, this->targetTemperature->getDouble(), 0.01)) {
+				targetTemperatureManualMode = this->targetTemperature->getDouble();
+				network->log()->trace((String(PSTR("setTargetTemperature, temp: "))+String(targetTemperatureManualMode)).c_str());
+				targetTemperatureManualModeToMcu();
+				schedulesMode->setString(SCHEDULES_MODE_OFF);
+			} else {
+				network->log()->trace((String(PSTR("setTargetTemperatureNoChange, temp: "))+String(this->targetTemperature->getDouble())).c_str());
+			}
+		}
     }
 
     void targetTemperatureManualModeToMcu() {
