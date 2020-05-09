@@ -42,8 +42,8 @@ Also you can remove the surface protection (pull green label).
 
 Now you can switch Main Power on.
 
-Then you can flash this version of WThermostatBeca - see Flashing.md
-Then you are ready for configuration - see Configuration.md
+Then you can flash this version of WThermostatBeca - see <a href="Flashing.md">Flashing.md</a>
+Then you are ready for configuration - see <a href="Configuration.md">Flashing.md</a>
 
 
 
