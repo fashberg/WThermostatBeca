@@ -20,11 +20,11 @@ Open old thermostate.  Check function of inputs and outputs and notice the wirin
 ![install-001](docs/install-001.jpg)  
 
 ## 2. Remove Display-Unit
-You better should remove Processor-Wifi-Unit from Relais-Body.
+You better should remove Processor-Wifi-Unit from Relais-Body before you'are going to install.
 The surface is very sensitive for scratches.
 ![install-002](docs/install-002.jpg)  
 
-## 3. Remove Display-Unit
+## 3. Wiring
 The Images shows the GA-Version which has two relais:
 1 - Relais/Output 1 (Close) is active if powered on and the the room temperature is warm enough so the valve should close
 2 - Relais/Output 2 (Open) is active if powered on and the the room temperature is to cold so the valve should open to heat the room
