@@ -155,6 +155,7 @@ public:
 		this->mcuId="";
 		this->onConfigurationRequest=nullptr;
 		this->onPowerButtonOn=nullptr;
+		this->mqttHassAutodiscoverSent=false;
 		startMcuInitialize();
 		/* properties */
 
@@ -964,6 +965,7 @@ public:
     }
 
 	bool sendMqttHassAutodiscover(){
+		if (mqttHassAutodiscoverSent) return true;
 		network->log()->notice(F("sendMqttHassAutodiscover"));
 		if (getThermostatModel() == MODEL_BHT_002_GBLW ){
 			// https://www.home-assistant.io/docs/mqtt/discovery/
@@ -987,7 +989,7 @@ public:
 				str_temp 
 			);
 			delay(50); // some extra time
-			network->publishMqtt(topic.c_str(), response, true);
+			if (!network->publishMqtt(topic.c_str(), response, true)) return false;
 
 
 			response->flush();
@@ -1003,7 +1005,8 @@ public:
 				network->getMqttTopic()
 			);
 			delay(50); // some extra time
-			network->publishMqtt(topic.c_str(), response, true);
+			if (!network->publishMqtt(topic.c_str(), response, true)) return false;
+			mqttHassAutodiscoverSent=true;
 		}
 		return true;
 	}
@@ -1064,6 +1067,7 @@ private:
 	THandlerFunction onPowerButtonOn;
     unsigned long lastNotify, lastScheduleNotify;
     bool schedulesChanged;
+	bool mqttHassAutodiscoverSent;
 
 	bool mcuInitialized;
 	int mcuInitializeState;

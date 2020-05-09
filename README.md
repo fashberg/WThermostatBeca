@@ -63,7 +63,10 @@ The HBT-002-GA/GB/GC versions only differs in relais-wiring.
 ## Download binaries
 Pre-built binaries can be downloaded at <a href="https://github.com/fashberg/WThermostatBeca/releases">releases-page</a>.
 
-## Installation
+## Hardware Installation
+ * see Installation.md
+
+## Software Installation
 You can install the firmware either
 * by using tuya-convert - no Hardware Modifications necessary
 * by soldering cables to the ESP-Modules using an ESP/Arduino-Programmer (3,3 Volt TTL)

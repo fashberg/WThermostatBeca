@@ -7,6 +7,10 @@ There are 2 options to flash the firmware on device:
 1. Flashing device manually: Unplug and open the device, wire 4 cables and connect it to a programmer for ESP8266 
 2. Use tuya-convert for flashing. Not tested from my side, tested and committed by another user
 
+## Download pre-built binaries
+
+Pre-Built binaries can be downloaded at <a href="https://github.com/fashberg/WThermostatBeca/releases">releases-page</a>.
+
 # Option 1: Flashing device manually
 ## 1. Check your device
 Compatible devices looks inside like this. On the right you can see the ESP8266 module (TYWE3S)

@@ -1,3 +1,8 @@
+## Version 1.12-fas
+* HASS Autodiscovery interval fix #10 (thanks again austwhite)
+* installation documentation
+* by Folke Ashberg <folke@ashberg.de>
+
 ## Version 1.11-fas
 * HASS Autodiscovery Fix and Improvements
 * by https://github.com/austwhite

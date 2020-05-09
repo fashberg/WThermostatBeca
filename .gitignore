@@ -6,3 +6,5 @@
 .vscode/ipch
 build_output
 firmware.map
+docs/Originals/
+docs/large/

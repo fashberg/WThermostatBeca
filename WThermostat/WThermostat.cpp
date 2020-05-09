@@ -103,8 +103,6 @@ void setup() {
     network->log()->trace(F("Loading LogDevice Done"));
 
     network->setOnMqttHassAutodiscover([]() {
-        // gets fired if MqttHassAutotiscovery is enabled repeatedly
-        network->log()->trace(F("onMqttHassAutodiscover"));
         // https://www.home-assistant.io/integrations/climate.mqtt/
         return becaDevice->sendMqttHassAutodiscover();
     });
