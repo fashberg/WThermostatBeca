@@ -128,7 +128,7 @@ climate:
     temperature_state_topic: "home/room/stat/things/thermostat/properties"
     temperature_state_template: "{{value_json.targetTemperature}}"
     current_temperature_topic: "home/room/stat/things/thermostat/properties"
-    current_temperature_template: "value_json.temperature}}"
+    current_temperature_template: "{{value_json.temperature}}"
     away_mode_command_topic: "home/room/cmnd/things/thermostat/properties/ecoMode"
     away_mode_state_topic: "home/room/stat/things/thermostat/properties"
     away_mode_state_template: "{{value_json.ecoMode}}"
