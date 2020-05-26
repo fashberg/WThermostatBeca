@@ -31,12 +31,18 @@ const static char HTTP_CONFIG_SCHTAB_FOOT[]         PROGMEM = R"=====(
 	</tbody></table>
 )=====";
 
+
+// LWT = Last Will & Testament
+// tasmota
 const static char MQTT_HASS_AUTODISCOVERY_CLIMATE[]         PROGMEM = R"=====(
 {
 "name":"%s",
 "unique_id": "%s",
 "dev":{"ids":["%s"],"name":"%s","mdl":"%s","sw":"%s","mf":"WThermostatBeca"},
 "~": "%s",
+"avty_t":"~/tele/LWT",
+"pl_avail":"Online",
+"pl_not_avail":"Offline",
 "act_t":"~/stat/things/thermostat/properties",
 "act_tpl":"{{value_json.action}}",
 "mode_cmd_t":"~/cmnd/things/thermostat/properties/mode",

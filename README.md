@@ -107,7 +107,8 @@ There is also a detailed view available:
 <img src="docs/Webthing_Complete.png" width="400">
 
 # Integration in Home Assisant
-![homeassistant](docs/homeassistant.png)  ![hass_discovery](docs/hass_discovery.png)  
+![homeassistant](docs/homeassistant.png)  ![hass_discovery](docs/hass_discovery.png) 
+## HASS Autodiscovery
 ThermostatBecaWifi supports optional HASS-Autodiscovery since Version 1.08-fas (currently only for heating devices).
 You have to enable it at Thermostate (settings network) and of course it must be enabled in your HASS configuration.yaml file:
 ```yaml
@@ -117,11 +118,32 @@ mqtt:
   discovery_prefix: homeassistant
 ```
 
+### Use a persistant MQTT-Broker
+You should use a persistent MQTT-Broker, keeping all retained messages during reboot/restart.
+HASS integrated MQTT broker is not persistent 
+Otherwise all autodiscovered messages are getting lost and you have to reboot all devices, to send HASS autodiscover messages again!
+See: https://www.home-assistant.io/docs/mqtt/discovery/
+
+Example for users of mosquitto, file mosquitto.conf:
+```sh
+persistence true
+persistence_file mosquitto.db
+persistence_location /var/lib/mosquitto/
+autosave_interval 1800
+# The default if not set is to never expire persistent clients.
+persistent_client_expiration 24h
+```
+See https://mosquitto.org/man/mosquitto-conf-5.html for more details.
+
+## HASS Manual Configuration
 For manual Configuration here is an example for your configuration.yaml file:
 ```yaml
 climate:
   - platform: mqtt
     name: Room_Thermostat
+    availability_topic: "home/room/tele/LWT"
+    payload_available: "Online"
+    payload_not_available: "Offline"
     action_topic: "home/room/stat/things/thermostat/properties"
     action_template: "{{value_json.action}}"
     temperature_command_topic: "home/room/cmnd/things/thermostat/properties/targetTemperature"
@@ -148,6 +170,7 @@ If you have several thermostates you can anchor some settings while defining the
 climate:
 - platform: mqtt
   name: Wohnzimmer_Thermostat
+  availability_topic: "home/wohnzimmer/tele/LWT"
   action_topic: "home/wohnzimmer/stat/things/thermostat/properties"
   temperature_command_topic: "home/wohnzimmer/cmnd/things/thermostat/properties/targetTemperature"
   temperature_state_topic: "home/wohnzimmer/stat/things/thermostat/properties"
@@ -157,6 +180,8 @@ climate:
   mode_command_topic: "home/wohnzimmer/cmnd/things/thermostat/properties/mode"
   mode_state_topic: "home/wohnzimmer/stat/things/thermostat/properties"
   <<: &commonbeca
+    payload_available: "Online"
+    payload_not_available: "Offline"
     action_template: "{{value_json.action}}"
     temperature_state_template: "{{value_json.targetTemperature}}"
     current_temperature_template: "{{value_json.temperature}}"
@@ -171,6 +196,7 @@ climate:
     precision: 0.5
 - platform: mqtt
   name: Flur_Thermostat
+  availability_topic: "home/flur/tele/LWT"
   action_topic: "home/flur/stat/things/thermostat/properties"
   temperature_command_topic: "home/flur/cmnd/things/thermostat/properties/targetTemperature"
   temperature_state_topic: "home/flur/stat/things/thermostat/properties"
@@ -182,6 +208,7 @@ climate:
   <<: *commonbeca
 - platform: mqtt
   name: WC_Thermostat
+  availability_topic: "home/wc/tele/LWT"
   action_topic: "home/wc/stat/things/thermostat/properties"
   temperature_command_topic: "home/wc/cmnd/things/thermostat/properties/targetTemperature"
   temperature_state_topic: "home/wc/stat/things/thermostat/properties"
@@ -268,9 +295,13 @@ The state report is sent with MQTT-retain-flag enabled.
 ### 4. Logs
 If logging is enabled (webgui/mqtt) you will see messages like:
 ```
-home/<your_topic>/tele/log trace: sending heartBeatCommand
-home/<your_topic>/tele/log trace: commandCharsToSerial: 55 aa 00 00 00 00
+<your_topic>/tele/log trace: sending heartBeatCommand
+<your_topic>/tele/log trace: commandCharsToSerial: 55 aa 00 00 00 00
 ```
+
+### 5. Last Will & Testament
+**WebThings:** n.a.
+**MQTT:** The retained message at topic '<your_topic>/tele/LWT' is set to the value "Online" if the devices comes up and your MQTT-Broker is requested to set to "Offline" as last will when device goes down.
 
 ## Modifying parameters via MQTT
 Send a json with changed parameters to `<your_topic>/cmnd/things/thermostat/properties`.  

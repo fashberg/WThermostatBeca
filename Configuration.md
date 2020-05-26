@@ -11,7 +11,7 @@ Steps are in general:
 
 ## 1. Configure thermostat device (model selection)
 * The thermostat opens an Access Point when it's started first time after flashing. 
-* The AccessPoint is named `Thermostat-Beca_xxxxxx`. Default password is `12345678`
+* The AccessPoint is named `Thermostat-Beca-xxxxxx`. Default password is `12345678`
 * After connection open `http://192.168.4.1` in a web browser
 * Goto 'Configure device'
 * Choose your thermostat model
@@ -79,6 +79,6 @@ If you cannot access your device, try to switch to Access-Point mode:
 * Power off the device by Pressing the button in the middle.
 * Then press the "down" button (most right) for about 8 seconds.
 * The Screen starts to blink and shows a WiFi-Icon.
-* The thermostat is now an Access Point named `Thermostat-Beca_xxxxxx`. Default password is `12345678`
+* The thermostat is now an Access Point named `Thermostat-Beca-xxxxxx`. Default password is `12345678`
 * Now you can fix network settings.
 * Saving settings or pressing power button switches back to Station mode

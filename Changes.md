@@ -1,3 +1,12 @@
+
+## Version 1.14-fas
+* MQTT Last Will & Testament (topic/tele/LWT)
+* Changed '_' in default hostname to '-' to be RFC952 compliant
+* by Folke Ashberg <folke@ashberg.de>
+
+## Version 1.13-fas
+* Never use thirteen (tm)
+
 ## Version 1.12-fas
 * HASS Autodiscovery interval fix #10 (thanks again austwhite)
 * installation documentation
