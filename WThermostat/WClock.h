@@ -16,8 +16,8 @@
 #include <TimeLib.h>
 #include <WiFiUdp.h>
 
-#include "../lib/WAdapter/Wadapter/WDevice.h"
-#include "../lib/WAdapter/Wadapter/WNetwork.h"
+#include "../lib/WAdapter/WAdapter/WDevice.h"
+#include "../lib/WAdapter/WAdapter/WNetwork.h"
 #include "Arduino.h"
 
 const static char* DEFAULT_NTP_SERVER = "pool.ntp.org";

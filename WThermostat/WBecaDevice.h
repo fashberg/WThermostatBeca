@@ -4,8 +4,8 @@
 #include "Arduino.h"
 #include <ESP8266WiFi.h>
 #include <EEPROM.h>
-#include "../lib/WAdapter/Wadapter/WDevice.h"
-#include "../lib/WAdapter/Wadapter/WPage.h"
+#include "../lib/WAdapter/WAdapter/WDevice.h"
+#include "../lib/WAdapter/WAdapter/WPage.h"
 #include "WClock.h"
 
 const static char HTTP_SELECTED[] PROGMEM = "selected=\"selected\"";

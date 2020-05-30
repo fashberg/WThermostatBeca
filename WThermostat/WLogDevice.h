@@ -4,7 +4,7 @@
 #include "Arduino.h"
 #include <ESP8266WiFi.h>
 #include <EEPROM.h>
-#include "../lib/WAdapter/Wadapter/WDevice.h"
+#include "../lib/WAdapter/WAdapter/WDevice.h"
 
 const char* LOG_MODE_SILENT  = "silent";
 const char* LOG_MODE_FATAL   = "fatal";
