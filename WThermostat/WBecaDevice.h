@@ -154,6 +154,7 @@ public:
     	this->receivingDataFromMcu = false;
     	this->schedulesChanged = false;
 		this->providingConfigPage = true;
+		this->currentSchedulePeriod = -1;
 		this->targetTemperatureManualMode = 0.0;
     	this->wClock = wClock;
     	this->systemMode = nullptr;
@@ -377,7 +378,7 @@ public:
 		this->addPage(schedulePage);
 		
 
-    	lastHeartBeat = lastNotify = lastScheduleNotify = 0;
+    	lastHeartBeat = lastNotify = lastScheduleNotify  = lastLongLoop = 0;
     	resetAll();
     	for (int i = 0; i < STATE_COMPLETE; i++) {
     		receivedStates[i] = false;
@@ -498,6 +499,12 @@ public:
 
     		}
     	}
+		// to tasks only every second
+		if (lastLongLoop + 1000 < now ){
+			updateCurrentSchedulePeriod();
+			lastLongLoop=now;
+		}
+
     	//Heartbeat
     	//long now = millis();
     	if ((HEARTBEAT_INTERVAL > 0)
@@ -1091,13 +1098,16 @@ private:
     WProperty* schedulesDayOffset;
     THandlerFunction onConfigurationRequest;
 	THandlerFunction onPowerButtonOn;
-    unsigned long lastNotify, lastScheduleNotify;
+    unsigned long lastNotify, lastScheduleNotify, lastLongLoop;
     bool schedulesChanged;
+	int currentSchedulePeriod;
 	bool mqttHassAutodiscoverSent;
 
 	bool mcuInitialized;
 	int mcuInitializeState;
 	String mcuId;
+
+
 
     int getIndex(unsigned char c) {
     	const char HEX_DIGITS[] = { '0', '1', '2', '3', '4', '5', '6', '7', '8',
@@ -1434,8 +1444,21 @@ private:
      	}
     }
 
-    void updateTargetTemperature() {
-    	if ((receivedSchedules()) && (wClock->isValidTime()) && (schedulesMode->equalsString(SCHEDULES_MODE_AUTO))) {
+    void updateTargetTemperature() { 
+		if ((this->currentSchedulePeriod != -1) && (schedulesMode->equalsString(SCHEDULES_MODE_AUTO))) {
+			double temp = (double) schedules[this->currentSchedulePeriod + 2] / getTemperatureFactor();
+			byte weekDay;
+			String p = String(weekDay == 0 ? SCHEDULES_DAYS[2] : (weekDay == 6 ? SCHEDULES_DAYS[1] : SCHEDULES_DAYS[0]));
+			p.concat(SCHEDULES_PERIODS[this->currentSchedulePeriod]);
+			network->log()->trace((String(PSTR("We take temperature from period '%s', Schedule temperature is "))+String(temp)).c_str() , p.c_str());
+			targetTemperature->setDouble(temp);
+		} else {
+			targetTemperature->setDouble(targetTemperatureManualMode);
+		}
+	}
+
+	void updateCurrentSchedulePeriod() {
+		if ((receivedSchedules()) && (wClock->isValidTime())) {
     		byte weekDay = wClock->getWeekDay();
     		weekDay += getSchedulesDayOffset();
     		weekDay = weekDay % 7;
@@ -1461,14 +1484,18 @@ private:
     				}
     			}
     		}
-			double temp = (double) schedules[startAddr + period * 3 + 2] / getTemperatureFactor();
-    		String p = String(weekDay == 0 ? SCHEDULES_DAYS[2] : (weekDay == 6 ? SCHEDULES_DAYS[1] : SCHEDULES_DAYS[0]));
-    		p.concat(SCHEDULES_PERIODS[period]);
-    		network->log()->trace((String(PSTR("We take temperature from period '%s', Schedule temperature is "))+String(temp)).c_str() , p.c_str());
-    		targetTemperature->setDouble(temp);
+
+
+			int newPeriod = startAddr + period * 3;
+			if (/*(getThermostatModel() != MODEL_ET_81_W) && */ (this->switchBackToAuto->getBoolean()) &&
+				(this->currentSchedulePeriod > -1) && (newPeriod != this->currentSchedulePeriod) &&
+				(this->schedulesMode->equalsString(SCHEDULES_MODE_OFF))) {
+				network->log()->notice(PSTR("Changed automatically back to Schedule from Manual"));
+				this->schedulesMode->setString(SCHEDULES_MODE_AUTO);
+			}
+			this->currentSchedulePeriod = newPeriod;
     	} else {
-			network->log()->trace((String(PSTR("set targetTemperature from targetTemperatureManualMode, which is "))+String(targetTemperatureManualMode)).c_str());
-    		targetTemperature->setDouble(targetTemperatureManualMode);
+			this->currentSchedulePeriod = -1;
     	}
     }
 
