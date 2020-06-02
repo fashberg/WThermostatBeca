@@ -8,8 +8,6 @@
 #include "../lib/WAdapter/Wadapter/WPage.h"
 #include "WClock.h"
 
-const static char HTTP_SELECTED[] PROGMEM = "selected=\"selected\"";
-
 const static char HTTP_CONFIG_SCHTAB_HEAD[]         PROGMEM = R"=====(
 	<h2>Schedules</h2>
 	<table class="settingstable">
@@ -126,10 +124,13 @@ const byte STORED_FLAG_BECA = 0x36;
 const char SCHEDULES_PERIODS[] = "123456";
 const char SCHEDULES_DAYS[] = "wau";
 
-const byte BECABITS1_RELAIS_HEAT = 1;
-const byte BECABITS1_RELAIS_COOL = 2;
-const byte BECABITS1_TEMP_01     = 4;
-const byte BECABITS1_TEMP_10     = 8;
+const byte BECABITS1_RELAIS_HEAT    =   1;
+const byte BECABITS1_RELAIS_COOL    =   2;
+const byte BECABITS1_TEMP_01        =   4;
+const byte BECABITS1_TEMP_10        =   8;
+const byte BECABITS1_SWITCHBACKOFF  =  16;
+
+
 
 //typedef 
 typedef enum mcuNetworkMode
@@ -173,9 +174,19 @@ public:
 
 		// Heating Relay and State property
 		this->supportingHeatingRelay = new WProperty("supportingHeatingRelay", "supportingHeatingRelay", BOOLEAN);
-		this->supportingHeatingRelay->setBoolean(this->becaBits1->getByte() & BECABITS1_RELAIS_HEAT);
+		//this->supportingHeatingRelay->setBoolean(this->becaBits1->getByte() & BECABITS1_RELAIS_HEAT);
+		this->supportingHeatingRelay->setBoolean(false);
 		this->supportingCoolingRelay = new WProperty("supportingCoolingRelay", "supportingCoolingRelay", BOOLEAN);
-		this->supportingCoolingRelay->setBoolean(this->becaBits1->getByte() & BECABITS1_RELAIS_COOL);
+		//this->supportingCoolingRelay->setBoolean(this->becaBits1->getByte() & BECABITS1_RELAIS_COOL);
+		this->supportingCoolingRelay->setBoolean(false);
+
+		if (this->supportingHeatingRelay->getBoolean() && this->supportingCoolingRelay->getBoolean()) {
+			this->supportingCoolingRelay->setBoolean(false);
+		}
+
+		// switch back property
+		this->switchBackToAuto = new WProperty("switchBackToAuto", "switchBackToAuto", BOOLEAN);
+		this->switchBackToAuto->setBoolean(!(this->becaBits1->getByte() & BECABITS1_SWITCHBACKOFF));
 
 		// precicion (must be initialized before Temperature Values)
 		this->temperaturePrecision = new WProperty("precision", "precision", DOUBLE);
@@ -303,8 +314,8 @@ public:
     		this->state->setAtType("HeatingCoolingProperty");
     		this->state->setReadOnly(true);
     		this->state->addEnumString(STATE_OFF);
-    		this->state->addEnumString(STATE_HEATING);
-    		this->state->addEnumString(STATE_COOLING);
+    		if (isSupportingHeatingRelay()) this->state->addEnumString(STATE_HEATING);
+    		if (isSupportingCoolingRelay()) this->state->addEnumString(STATE_COOLING);
 			this->state->setMqttSendChangedValues(true);
 			this->state->setOnValueRequest([this](WProperty* p) {updateModeAndAction();});
     		this->addProperty(state);
@@ -321,19 +332,19 @@ public:
 			page->printAndReplace(FPSTR(HTTP_CONFIG_PAGE_BEGIN), ((String)getId()+"_"+schedulePage->getId()).c_str());
 			page->print(FPSTR(HTTP_CONFIG_SCHTAB_HEAD));
 			for (char *period=(char*)SCHEDULES_PERIODS; *period > 0; period++){
-				page->printFormat(F("<tr>"));
-				page->printFormat(F("<td>Period %c</td>"), *period);
+				page->printf(F("<tr>"));
+				page->printf(F("<td>Period %c</td>"), *period);
 				for (char *day=(char*)SCHEDULES_DAYS; *day > 0; day++){
 					char keyH[4];
 					char keyT[4];
 					snprintf(keyH, 4, "%c%ch", *day, *period);
 					snprintf(keyT, 4, "%c%ct", *day, *period);
 					this->network->log()->verbose(PSTR("Period %s / %s"), keyH, keyT);
-					page->printFormat(HTTP_CONFIG_SCHTAB_TD, 
+					page->printf(HTTP_CONFIG_SCHTAB_TD, 
 					*day, *period, this->getSchedulesValue(keyH).c_str(),
 					*day, *period, this->getSchedulesValue(keyT).c_str());
 				}
-				page->printFormat(F("</tr>"));
+				page->printf(F("</tr>"));
 			}
 			page->print(FPSTR(HTTP_CONFIG_SCHTAB_FOOT));
 			page->print(FPSTR(HTTP_CONFIG_SAVE_BUTTON));
@@ -377,40 +388,47 @@ public:
     virtual void printConfigPage(WStringStream* page) {
     	network->log()->notice(PSTR("Beca thermostat config page"));
     	page->printAndReplace(FPSTR(HTTP_CONFIG_PAGE_BEGIN), getId());
+
     	//ComboBox with model selection
     	page->printAndReplace(FPSTR(HTTP_COMBOBOX_BEGIN), "Thermostat model:", "tm");
-    	page->printAndReplace(FPSTR(HTTP_COMBOBOX_ITEM), "0", (getThermostatModel() == 0 ? "selected" : ""), "Floor heating (BHT-002-GBLW)");
-    	page->printAndReplace(FPSTR(HTTP_COMBOBOX_ITEM), "1", (getThermostatModel() == 1 ? "selected" : ""), "Heating, Cooling, Ventilation (BAC-002-ALW)");
+    	page->printAndReplace(FPSTR(HTTP_COMBOBOX_ITEM), "0", (getThermostatModel() == 0 ? HTTP_SELECTED : ""), "Floor heating (BHT-002-GBLW)");
+    	page->printAndReplace(FPSTR(HTTP_COMBOBOX_ITEM), "1", (getThermostatModel() == 1 ? HTTP_SELECTED : ""), "Heating, Cooling, Ventilation (BAC-002-ALW)");
     	page->print(FPSTR(HTTP_COMBOBOX_END));
-
 
 		// Temp precision
 		page->printAndReplace(FPSTR(HTTP_COMBOBOX_BEGIN), "Temperature Precision (must match your hardware):", "tp");
-		page->printAndReplace(FPSTR(HTTP_COMBOBOX_ITEM), "05", (getTemperatureFactor() ==  2.0f ? "selected" : ""), "0.5 (default for most Devices)");
-		page->printAndReplace(FPSTR(HTTP_COMBOBOX_ITEM), "10", (getTemperatureFactor() ==  1.0f ? "selected" : ""), "1.0 (untested)");
-		//page->printAndReplace(FPSTR(HTTP_COMBOBOX_ITEM), "01", (getTemperatureFactor() == 10.0f ? "selected" : ""), "0.1");
+		page->printAndReplace(FPSTR(HTTP_COMBOBOX_ITEM), "05", (getTemperatureFactor() ==  2.0f ? HTTP_SELECTED : ""), "0.5 (default for most Devices)");
+		page->printAndReplace(FPSTR(HTTP_COMBOBOX_ITEM), "10", (getTemperatureFactor() ==  1.0f ? HTTP_SELECTED : ""), "1.0 (untested)");
+		//page->printAndReplace(FPSTR(HTTP_COMBOBOX_ITEM), "01", (getTemperatureFactor() == 10.0f ? HTTP_SELECTED : ""), "0.1");
 		page->print(FPSTR(HTTP_COMBOBOX_END));
 
 		//Checkbox with support for relay
 		int rsMode=(this->isSupportingHeatingRelay() ? 1 :  (this->isSupportingCoolingRelay() ? 2 : 0));
 		page->printAndReplace(FPSTR(HTTP_COMBOBOX_BEGIN), "Relais connected to GPIO Inputs:", "rs");
-		page->printAndReplace(FPSTR(HTTP_COMBOBOX_ITEM), "_", (rsMode == 0 ? "selected" : ""), "No Hardware Hack");
-		page->printAndReplace(FPSTR(HTTP_COMBOBOX_ITEM), "h", (rsMode == 1 ? "selected" : ""), "Heating-Relay at GPIO 5");
-		page->printAndReplace(FPSTR(HTTP_COMBOBOX_ITEM), "c", (rsMode == 2 ? "selected" : ""), "Cooling-Relay at GPIO 5");
+		page->printAndReplace(FPSTR(HTTP_COMBOBOX_ITEM), "_", (rsMode == 0 ? HTTP_SELECTED : ""), "No Hardware Hack");
+		page->printAndReplace(FPSTR(HTTP_COMBOBOX_ITEM), "h", (rsMode == 1 ? HTTP_SELECTED : ""), "Heating-Relay at GPIO 5");
+		page->printAndReplace(FPSTR(HTTP_COMBOBOX_ITEM), "c", (rsMode == 2 ? HTTP_SELECTED : ""), "Cooling-Relay at GPIO 5");
 		page->print(FPSTR(HTTP_COMBOBOX_END));
 
-    	//ComboBox with weekday
-    	page->printAndReplace(FPSTR(HTTP_COMBOBOX_BEGIN), "Workday schedules:", "ws");
-    	page->printAndReplace(FPSTR(HTTP_COMBOBOX_ITEM), "0", (getSchedulesDayOffset() == 0 ? "selected" : ""), "Workday (1-5): Mon-Fri; Weekend (6 - 7): Sat-Sun");
-    	page->printAndReplace(FPSTR(HTTP_COMBOBOX_ITEM), "1", (getSchedulesDayOffset() == 1 ? "selected" : ""), "Workday (1-5): Sun-Thu; Weekend (6 - 7): Fri-Sat");
-    	page->printAndReplace(FPSTR(HTTP_COMBOBOX_ITEM), "2", (getSchedulesDayOffset() == 2 ? "selected" : ""), "Workday (1-5): Sat-Wed; Weekend (6 - 7): Thu-Fri");
-    	page->printAndReplace(FPSTR(HTTP_COMBOBOX_ITEM), "3", (getSchedulesDayOffset() == 3 ? "selected" : ""), "Workday (1-5): Fri-Tue; Weekend (6 - 7): Wed-Thu");
-    	page->printAndReplace(FPSTR(HTTP_COMBOBOX_ITEM), "4", (getSchedulesDayOffset() == 4 ? "selected" : ""), "Workday (1-5): Thu-Mon; Weekend (6 - 7): Tue-Wed");
-    	page->printAndReplace(FPSTR(HTTP_COMBOBOX_ITEM), "5", (getSchedulesDayOffset() == 5 ? "selected" : ""), "Workday (1-5): Wed-Sun; Weekend (6 - 7): Mon-Tue");
-    	page->printAndReplace(FPSTR(HTTP_COMBOBOX_ITEM), "6", (getSchedulesDayOffset() == 6 ? "selected" : ""), "Workday (1-5): Tue-Sat; Weekend (6 - 7): Sun-Mon");
+		// Switch back from manual temo
+		page->printAndReplace(FPSTR(HTTP_CHECKBOX_OPTION), "Switch back to Auto mode from manual at next schedule period change",
+		"sb", "sb", (this->switchBackToAuto->getBoolean() ? HTTP_CHECKED : ""), "", "Enabled");
+
+		//ComboBox with weekday
+    	byte dayOffset = getSchedulesDayOffset();
+		page->printAndReplace(FPSTR(HTTP_COMBOBOX_BEGIN), "Workday schedules:", "ws");
+    	page->printAndReplace(FPSTR(HTTP_COMBOBOX_ITEM), "0", (dayOffset == 0 ? HTTP_SELECTED : ""), "Workday (1-5): Mon-Fri; Weekend (6 - 7): Sat-Sun");
+    	page->printAndReplace(FPSTR(HTTP_COMBOBOX_ITEM), "1", (dayOffset == 1 ? HTTP_SELECTED : ""), "Workday (1-5): Sun-Thu; Weekend (6 - 7): Fri-Sat");
+    	page->printAndReplace(FPSTR(HTTP_COMBOBOX_ITEM), "2", (dayOffset == 2 ? HTTP_SELECTED : ""), "Workday (1-5): Sat-Wed; Weekend (6 - 7): Thu-Fri");
+    	page->printAndReplace(FPSTR(HTTP_COMBOBOX_ITEM), "3", (dayOffset == 3 ? HTTP_SELECTED : ""), "Workday (1-5): Fri-Tue; Weekend (6 - 7): Wed-Thu");
+    	page->printAndReplace(FPSTR(HTTP_COMBOBOX_ITEM), "4", (dayOffset == 4 ? HTTP_SELECTED : ""), "Workday (1-5): Thu-Mon; Weekend (6 - 7): Tue-Wed");
+    	page->printAndReplace(FPSTR(HTTP_COMBOBOX_ITEM), "5", (dayOffset == 5 ? HTTP_SELECTED : ""), "Workday (1-5): Wed-Sun; Weekend (6 - 7): Mon-Tue");
+    	page->printAndReplace(FPSTR(HTTP_COMBOBOX_ITEM), "6", (dayOffset == 6 ? HTTP_SELECTED : ""), "Workday (1-5): Tue-Sat; Weekend (6 - 7): Sun-Mon");
     	page->print(FPSTR(HTTP_COMBOBOX_END));
 
-    	page->print(FPSTR(HTTP_CONFIG_SAVE_BUTTON));
+		page->print(FPSTR(HTTP_CONFIG_SAVE_BUTTON));
+		network->log()->notice(PSTR("Beca thermostat config page DONE"));
+		return;
     }
 
     void saveConfigPage(ESP8266WebServer* webServer) {
@@ -433,6 +451,7 @@ public:
 		} else {
 			// default 0.5
 		}
+		bb1 |= ((webServer->arg("sb") == HTTP_TRUE) ? 0 : BECABITS1_SWITCHBACKOFF);
 		this->becaBits1->setByte(bb1);
 		this->becaBits2->setByte(bb2); // meets r2d2
     }
@@ -984,7 +1003,7 @@ public:
 			response->flush();
 			char str_temp[6];
 			dtostrf(this->temperaturePrecision->getDouble(), 3, 1, str_temp);
-			response->printFormat(FPSTR(MQTT_HASS_AUTODISCOVERY_CLIMATE),
+			response->printf(FPSTR(MQTT_HASS_AUTODISCOVERY_CLIMATE),
 				network->getIdx(),
 				unique_id.c_str(),
 				network->getMacAddress().c_str(),
@@ -1004,7 +1023,7 @@ public:
 			topic="homeassistant/sensor/"; 
 			topic.concat(unique_id);
 			topic.concat("/config");
-			response->printFormat(FPSTR(MQTT_HASS_AUTODISCOVERY_SENSOR),
+			response->printf(FPSTR(MQTT_HASS_AUTODISCOVERY_SENSOR),
 				network->getIdx(),
 				unique_id.c_str(),
 				network->getMacAddress().c_str(),
@@ -1067,6 +1086,7 @@ private:
     WProperty *supportingHeatingRelay;
     WProperty *supportingCoolingRelay;
 	WProperty *temperaturePrecision;
+	WProperty *switchBackToAuto;
     WProperty* ntpServer;
     WProperty* schedulesDayOffset;
     THandlerFunction onConfigurationRequest;
@@ -1417,7 +1437,7 @@ private:
     void updateTargetTemperature() {
     	if ((receivedSchedules()) && (wClock->isValidTime()) && (schedulesMode->equalsString(SCHEDULES_MODE_AUTO))) {
     		byte weekDay = wClock->getWeekDay();
-    		weekDay += schedulesDayOffset->getByte();
+    		weekDay += getSchedulesDayOffset();
     		weekDay = weekDay % 7;
     		int startAddr = (weekDay == 0 ? 36 : (weekDay == 6 ? 18 : 0));
     		int period = 0;

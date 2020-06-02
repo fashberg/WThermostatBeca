@@ -52,13 +52,13 @@ public:
     	//ComboBox with model selection
 
     	page->printAndReplace(FPSTR(HTTP_COMBOBOX_BEGIN), "Log Mode (Logging to MQTT Only!):", "lm");
-    	page->printAndReplace(FPSTR(HTTP_COMBOBOX_ITEM), "0", (getlogLevelByte() == LOG_LEVEL_SILENT  ? "selected" : ""), "Logging Disabled");
-    	page->printAndReplace(FPSTR(HTTP_COMBOBOX_ITEM), "1", (getlogLevelByte() == LOG_LEVEL_FATAL  ? "selected" : ""), "Fatal Messages");
-    	page->printAndReplace(FPSTR(HTTP_COMBOBOX_ITEM), "2", (getlogLevelByte() == LOG_LEVEL_ERROR   ? "selected" : ""), "Error Messages");
-    	page->printAndReplace(FPSTR(HTTP_COMBOBOX_ITEM), "3", (getlogLevelByte() == LOG_LEVEL_WARNING ? "selected" : ""), "Warning Messages");
-    	page->printAndReplace(FPSTR(HTTP_COMBOBOX_ITEM), "4", (getlogLevelByte() == LOG_LEVEL_NOTICE ? "selected" : ""), "Notice Messages");
-    	page->printAndReplace(FPSTR(HTTP_COMBOBOX_ITEM), "5", (getlogLevelByte() == LOG_LEVEL_TRACE ? "selected" : ""), "Trace Messages");
-    	page->printAndReplace(FPSTR(HTTP_COMBOBOX_ITEM), "6", (getlogLevelByte() == LOG_LEVEL_VERBOSE ? "selected" : ""), "Verbose Messages");
+    	page->printAndReplace(FPSTR(HTTP_COMBOBOX_ITEM), "0", (getlogLevelByte() == LOG_LEVEL_SILENT  ? HTTP_SELECTED : ""), "Logging Disabled");
+    	page->printAndReplace(FPSTR(HTTP_COMBOBOX_ITEM), "1", (getlogLevelByte() == LOG_LEVEL_FATAL  ? HTTP_SELECTED : ""), "Fatal Messages");
+    	page->printAndReplace(FPSTR(HTTP_COMBOBOX_ITEM), "2", (getlogLevelByte() == LOG_LEVEL_ERROR   ? HTTP_SELECTED : ""), "Error Messages");
+    	page->printAndReplace(FPSTR(HTTP_COMBOBOX_ITEM), "3", (getlogLevelByte() == LOG_LEVEL_WARNING ? HTTP_SELECTED : ""), "Warning Messages");
+    	page->printAndReplace(FPSTR(HTTP_COMBOBOX_ITEM), "4", (getlogLevelByte() == LOG_LEVEL_NOTICE ? HTTP_SELECTED : ""), "Notice Messages");
+    	page->printAndReplace(FPSTR(HTTP_COMBOBOX_ITEM), "5", (getlogLevelByte() == LOG_LEVEL_TRACE ? HTTP_SELECTED : ""), "Trace Messages");
+    	page->printAndReplace(FPSTR(HTTP_COMBOBOX_ITEM), "6", (getlogLevelByte() == LOG_LEVEL_VERBOSE ? HTTP_SELECTED : ""), "Verbose Messages");
     	page->print(FPSTR(HTTP_COMBOBOX_END));
 
     	page->print(FPSTR(HTTP_CONFIG_SAVE_BUTTON));
