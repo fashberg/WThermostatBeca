@@ -1,7 +1,13 @@
 
 ## Version 1.14-fas
 * MQTT Last Will & Testament (topic/tele/LWT)
+* MQTT Hass Availibility Topic Support
+* Support for switching back automatically from manual temperature to scheduled temperature
+* Reading NetworkSettings support for 1.00-1.11 and 1.xx-fas Versions
+* Writing NetworkSettings same way Version >=1.09 does
 * Changed '_' in default hostname to '-' to be RFC952 compliant
+* Changed default Hostname to "Thermostat" (to fit hostname in 16 chars)
+* Show passwords fields in ClearText on Request
 * by Folke Ashberg <folke@ashberg.de>
 
 ## Version 1.13-fas

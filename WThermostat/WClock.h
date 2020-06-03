@@ -86,11 +86,24 @@ class WClock : public WDevice {
         : WDevice(network, "clock", "clock", network->getIdx(), DEVICE_TYPE_TEXT_DISPLAY) {
         this->mainDevice = false;
         this->visibility = MQTT;
-        this->ntpServer = network->getSettings()->setString("ntpServer", 32, DEFAULT_NTP_SERVER);
+
+        if (network->getSettingsOld()){
+            if (network->getSettingsOld()->getNetworkSettingsVersion()==NETWORKSETTINGS_PRE_FAS114){
+                network->log()->notice(F("Reading WClockSettings PRE_FAS114"));
+                network->getSettingsOld()->setString("ntpServer", 32, "");
+                network->getSettingsOld()->setString("timeZone", 6, "");
+                network->getSettingsOld()->setString("timeDST", 14, "");
+                network->getSettingsOld()->setString("timeSTD", 14, "");
+            }
+        }
+
+        this->ntpServer = network->getSettings()->setString("ntpServer", 32,
+            (network->getSettingsOld() && network->getSettingsOld()->getString("ntpServer") ? network->getSettingsOld()->getString("ntpServer") : DEFAULT_NTP_SERVER));
         this->ntpServer->setReadOnly(true);
         this->ntpServer->setVisibility(MQTT);
         this->addProperty(ntpServer);
-        this->timeZoneConfig = network->getSettings()->setString("timeZone", 6, DEFAULT_TIME_ZONE);
+        this->timeZoneConfig = network->getSettings()->setString("timeZone", 6,
+         (network->getSettingsOld() && network->getSettingsOld()->getString("timeZone") ? network->getSettingsOld()->getString("timeZone") : DEFAULT_TIME_ZONE));
         // upgrade hack
         String tzval=(String)this->timeZoneConfig->c_str();
         if (tzval.startsWith("http://")){
@@ -100,11 +113,13 @@ class WClock : public WDevice {
         this->timeZoneConfig->setReadOnly(true);
         this->timeZoneConfig->setVisibility(MQTT);
         this->addProperty(timeZoneConfig);
-        this->timeDST = network->getSettings()->setString("timeDST", 14, DEFAULT_TIME_DST);
+        this->timeDST = network->getSettings()->setString("timeDST", 14,
+            (network->getSettingsOld() && network->getSettingsOld()->getString("timeDST") ? network->getSettingsOld()->getString("timeDST") : DEFAULT_TIME_DST));
         this->timeDST->setReadOnly(true);
         this->timeDST->setVisibility(MQTT);
         this->addProperty(timeDST);
-        this->timeSTD = network->getSettings()->setString("timeSTD", 14, DEFAULT_TIME_STD);
+        this->timeSTD = network->getSettings()->setString("timeSTD", 14,
+            (network->getSettingsOld() && network->getSettingsOld()->getString("timeSTD") ? network->getSettingsOld()->getString("timeSTD") : DEFAULT_TIME_STD));
         this->timeSTD->setReadOnly(true);
         this->timeSTD->setVisibility(MQTT);
         this->addProperty(timeSTD);

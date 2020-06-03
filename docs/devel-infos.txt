@@ -1,0 +1,16 @@
+
+Show Crashposition
+& $Env:USERPROFILE\.platformio\packages\toolchain-xtensa\bin\xtensa-lx106-elf-addr2line.exe -aipfC -e .\.pioenvs\wthermostat-debug\firmware.elf 0xXXXXXXXX
+Example:
+    c:/users/folke/.platformio/packages/toolchain-xtensa/bin/xtensa-lx106-elf-addr2line.exe -aipfC -e .\.pioenvs\wthermostat-debug\firmware.elf 0x40218a5d
+    0x40218a5d: WNetwork::handleHttpFirmwareUpdateFinished() at C:\Users\folke\Documents\Arduino\thermostat/WThermostat\../lib/WAdapter/WAdapter/WStringStream.h:55
+    (inlined by) ?? at C:\Users\folke\Documents\Arduino\thermostat/WThermostat\../lib/WAdapter/WAdapter/WStringStream.h:12
+    (inlined by) ?? at C:\Users\folke\Documents\Arduino\thermostat/WThermostat\../lib/WAdapter/WAdapter/WNetwork.h:1307
+    (inlined by) ?? at C:\Users\folke\Documents\Arduino\thermostat/WThermostat\../lib/WAdapter/WAdapter/WNetwork.h:1318
+(inlined by) WNetwork::handleHttpFirmwareUpdateFinished() at C:\Users\folke\Documents\Arduino\thermostat/WThermostat\../lib/WAdapter/WAdapter/WNetwork.h:1227
+
+Upload Firmware:
+& $Env:USERPROFILE\.platformio\packages\tool-esptool\esptool.exe -cp COM4 -cb 921600 -cd nodemcu  -cf .\build_output\firmware\WThermostat_xxxx.bin -v
+
+Platformio not found in path:
+Code->File-Preferences->Settings->Extensions->PlatformIO->Update Terminal Path Configuration -> Enable

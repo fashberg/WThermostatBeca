@@ -167,9 +167,21 @@ public:
 		startMcuInitialize();
 		/* properties */
 
+		if (network->getSettingsOld()){
+			if (network->getSettingsOld()->getNetworkSettingsVersion()==NETWORKSETTINGS_PRE_FAS114){
+				network->log()->notice(F("Reading WLogSettings PRE_FAS114"));
+				network->getSettingsOld()->setByte("becabits1", 0x00);
+				network->getSettingsOld()->setByte("becabits2", 0x00);
+				network->getSettingsOld()->setByte("thermostatModel", MODEL_BHT_002_GBLW);
+				network->getSettingsOld()->setByte("schedulesDayOffset", 0);
+			}
+		}
+
 		// read beca bits 
-		this->becaBits1 = network->getSettings()->setByte("becabits1", 0x00);
-		this->becaBits2 = network->getSettings()->setByte("becabits2", 0x00);
+		this->becaBits1 = network->getSettings()->setByte("becabits1",
+			(network->getSettingsOld() && network->getSettingsOld()->getByte("becabits1") ? network->getSettingsOld()->getByte("becabits1") : 0x00));
+		this->becaBits2 = network->getSettings()->setByte("becabits2",
+			(network->getSettingsOld() && network->getSettingsOld()->getByte("becabits2") ? network->getSettingsOld()->getByte("becabits2") : 0x00));
 		// Split mqtt setting into bits - so we keep settings storage compatibility
 		if (this->becaBits1->getByte() == 0xFF) this->becaBits1->setByte(BECABITS1_RELAIS_HEAT); // compatibility
 
@@ -235,7 +247,8 @@ public:
     	this->addProperty(locked);
     	//Model
     	this->actualFloorTemperature = nullptr;
-    	this->thermostatModel = network->getSettings()->setByte("thermostatModel", MODEL_BHT_002_GBLW);
+    	this->thermostatModel = network->getSettings()->setByte("thermostatModel",
+			(network->getSettingsOld() && network->getSettingsOld()->getByte("thermostatModel") ? network->getSettingsOld()->getByte("thermostatModel") : MODEL_BHT_002_GBLW));
     	if (getThermostatModel() == MODEL_BHT_002_GBLW) {
     		this->actualFloorTemperature = new WTemperatureProperty("floorTemperature", "Floor");
     		this->actualFloorTemperature->setReadOnly(true);
@@ -324,7 +337,8 @@ public:
 
 
     	//schedulesDayOffset
-    	this->schedulesDayOffset = network->getSettings()->setByte("schedulesDayOffset", 0);
+    	this->schedulesDayOffset = network->getSettings()->setByte("schedulesDayOffset",
+			(network->getSettingsOld() && network->getSettingsOld()->getByte("schedulesDayOffset") ? network->getSettingsOld()->getByte("schedulesDayOffset") : 0));
 
 		// Pages		
 		WPage * schedulePage=new WPage("schedules", "Configure Schedules");
@@ -392,7 +406,7 @@ public:
 
     	//ComboBox with model selection
     	page->printAndReplace(FPSTR(HTTP_COMBOBOX_BEGIN), "Thermostat model:", "tm");
-    	page->printAndReplace(FPSTR(HTTP_COMBOBOX_ITEM), "0", (getThermostatModel() == 0 ? HTTP_SELECTED : ""), "Floor heating (BHT-002-GBLW)");
+    	page->printAndReplace(FPSTR(HTTP_COMBOBOX_ITEM), "0", (getThermostatModel() == 0 ? HTTP_SELECTED : ""), "Floor heating (BHT-002-GxLW)");
     	page->printAndReplace(FPSTR(HTTP_COMBOBOX_ITEM), "1", (getThermostatModel() == 1 ? HTTP_SELECTED : ""), "Heating, Cooling, Ventilation (BAC-002-ALW)");
     	page->print(FPSTR(HTTP_COMBOBOX_END));
 

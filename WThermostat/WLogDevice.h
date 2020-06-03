@@ -24,7 +24,17 @@ public:
 		this->configNeedsReboot = false;
 		
 		/* properties */
-		this->logLevelByte = network->getSettings()->setByte("logLevelByte", LOG_LEVEL_WARNING);
+
+		if (network->getSettingsOld()){
+			if (network->getSettingsOld()->getNetworkSettingsVersion()==NETWORKSETTINGS_PRE_FAS114){
+				network->log()->notice(F("Reading WLogSettings PRE_FAS114"));
+				network->getSettingsOld()->setByte("logLevelByte", LOG_LEVEL_WARNING);
+			}
+		}
+
+
+		this->logLevelByte = network->getSettings()->setByte("logLevelByte",
+			(network->getSettingsOld() && network->getSettingsOld()->getByte("logLevelByte") ? network->getSettingsOld()->getByte("logLevelByte") : LOG_LEVEL_WARNING));
 		this->logLevelByte->setVisibility(NONE);
     	this->addProperty(logLevelByte);
 		setlogLevelByte(constrain(getlogLevelByte(),LOG_LEVEL_SILENT, LOG_LEVEL_VERBOSE ));

@@ -11,7 +11,7 @@ Steps are in general:
 
 ## 1. Configure thermostat device (model selection)
 * The thermostat opens an Access Point when it's started first time after flashing. 
-* The AccessPoint is named `Thermostat-Beca-xxxxxx`. Default password is `12345678`
+* The AccessPoint is named `Thermostat-xxxxxx`. Default password is `12345678`
 * After connection open `http://192.168.4.1` in a web browser
 * Goto 'Configure device'
 * Choose your thermostat model

@@ -6,7 +6,7 @@
 #include "WClock.h"
 #include "WLogDevice.h"
 #endif
-#define APPLICATION "Thermostat Beca"
+#define APPLICATION "Thermostat"
 #ifndef VERSION
 #define VERSION "undefined" // gets defined in commandline
 #endif
@@ -101,6 +101,16 @@ void setup() {
     logDevice = new WLogDevice(network);
     network->addDevice(logDevice);
     network->log()->trace(F("Loading LogDevice Done"));
+
+    if (network->getSettings()->settingsNeedsUpdate()){
+        network->deleteSettingsOld();
+        network->log()->trace(F("Writing Config"));
+        #ifndef DEBUG
+        network->getSettings()->save();
+        #else
+        network->log()->trace(F("Writing Config - bot really - debug MODE"));
+        #endif
+    }
 
     network->setOnMqttHassAutodiscover([]() {
         // https://www.home-assistant.io/integrations/climate.mqtt/
