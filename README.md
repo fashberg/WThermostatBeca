@@ -25,7 +25,8 @@ Also selled by Moes or Qiumi.
 * Only BHT-002-GxLW: actualFloorTemperature (external temperature sensor)
 * Only BAC-002-ALW: fanSpeed:auto|low|medium|high; systemMode:cooling|heating|ventilation
 * Reading and setting of time schedules via MQTT
-* Reading and setting of Schedules via Web-GUI _(fas)_
+* Reading and setting of Schedules via Web-GUI 
+* Automatic switching back to temperature-scheduling from manual mode next schedule interval (optional)
 * Logging to MQTT _(fas)_
 
 _(fas)_: Only available in -fas version
@@ -70,6 +71,8 @@ Pre-built binaries can be downloaded at <a href="https://github.com/fashberg/WTh
 You can install the firmware either
 * by using tuya-convert - no Hardware Modifications necessary
 * by soldering cables to the ESP-Modules using an ESP/Arduino-Programmer (3,3 Volt TTL)
+
+Yoube video of converting to 1.14-fas with tuya-convert: https://youtu.be/fqfghJqnK_8
 
 Follow instructions here: <a href="Flashing.md">Flashing.md</a>
 
