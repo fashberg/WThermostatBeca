@@ -56,7 +56,9 @@ Write firmware (1MB)
 This method does not require any kind of soldering or disassembly of the device.
 You should be able to flash Beca Thermostats (BHT-002 and BHT-6000 also) with [tuya-convert](https://github.com/ct-Open-Source/tuya-convert).  
 Follow the steps [here](https://github.com/ct-Open-Source/tuya-convert#procedure) to upload the firmware to your thermostat.  
-You should download the binary from here and place it in the ```/files/``` folder before starting the flash procedure. 
+Download the wthermostat-1.xx-fas.bin binary from https://github.com/fashberg/WThermostatBeca/releases and place it in the ```/files/``` folder before starting the flash procedure. 
+
+Video of this procedure: https://youtu.be/fqfghJqnK_8
 
 ## Restore original Firmware: ##
 The Backup file dumped by tuya-convert is 1 MB large (whole flash of ESP-Chip), which is too big to be flashed OTA (over the air). So you are not able to flash back to original Firmware without soldering!
