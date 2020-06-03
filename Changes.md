@@ -1,7 +1,7 @@
 
 ## Version 1.14-fas
 * MQTT Last Will & Testament (topic/tele/LWT)
-* MQTT Hass Availibility Topic Support
+* MQTT Hass Availibility Topic Support (also with autodiscover)
 * Support for switching back automatically from manual temperature to scheduled temperature
 * Reading NetworkSettings support for 1.00-1.11 and 1.xx-fas Versions
 * Writing NetworkSettings same way Version >=1.09 does

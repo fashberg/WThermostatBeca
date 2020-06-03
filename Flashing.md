@@ -5,7 +5,7 @@ The thermostat is working independent from the Wifi-Module. That means, function
 ## Choose your way
 There are 2 options to flash the firmware on device:
 1. Flashing device manually: Unplug and open the device, wire 4 cables and connect it to a programmer for ESP8266 
-2. Use tuya-convert for flashing. Not tested from my side, tested and committed by another user
+2. Use tuya-convert for flashing. Tested multiple times with success on all devices!
 
 ## Download pre-built binaries
 
@@ -53,7 +53,11 @@ Write firmware (1MB)
 ```esptool.py -p /dev/ttyUSB0 write_flash -fs 1MB 0x0 WThermostat_x.xx.bin```
 
 # Option 2: Use tuya-convert
-This method does not require any kind of soldering or disassembly of the device.  
-Some users were able to flash Beca Thermostats (BHT-002 and BHT-6000 also) with [tuya-convert](https://github.com/ct-Open-Source/tuya-convert).  
+This method does not require any kind of soldering or disassembly of the device.
+You should be able to flash Beca Thermostats (BHT-002 and BHT-6000 also) with [tuya-convert](https://github.com/ct-Open-Source/tuya-convert).  
 Follow the steps [here](https://github.com/ct-Open-Source/tuya-convert#procedure) to upload the firmware to your thermostat.  
-You should download the binary from here and place it in the ```/files/``` folder before starting the flash procedure.  
+You should download the binary from here and place it in the ```/files/``` folder before starting the flash procedure. 
+
+## Restore original Firmware: ##
+The Backup file dumped by tuya-convert is 1 MB large (whole flash of ESP-Chip), which is too big to be flashed OTA (over the air). So you are not able to flash back to original Firmware without soldering!
+See: https://github.com/ct-Open-Source/tuya-convert/issues/113 
