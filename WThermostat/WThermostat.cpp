@@ -108,7 +108,7 @@ void setup() {
         #ifndef DEBUG
         network->getSettings()->save();
         #else
-        network->log()->trace(F("Writing Config - bot really - debug MODE"));
+        network->log()->trace(F("Writing Config - not really, because debug MODE"));
         #endif
     }
 

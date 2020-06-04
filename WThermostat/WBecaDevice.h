@@ -77,6 +77,18 @@ const static char MQTT_HASS_AUTODISCOVERY_SENSOR[]         PROGMEM = R"=====(
 "unit_of_measurement":"°C"
 }
 )=====";
+const static char MQTT_HASS_AUTODISCOVERY_SENSORFLOOR[]         PROGMEM = R"=====(
+{
+"name":"%s Temperature Floor",
+"unique_id":"%s",
+"device_class":"temperature",
+"dev":{"ids":["%s"]},
+"~":"%s",
+"stat_t":"~/stat/things/thermostat/properties",
+"val_tpl":"{{value_json.floorTemperature}}",
+"unit_of_measurement":"°C"
+}
+)=====";
 
 
 #define COUNT_DEVICE_MODELS 2
@@ -129,6 +141,7 @@ const byte BECABITS1_RELAIS_COOL    =   2;
 const byte BECABITS1_TEMP_01        =   4;
 const byte BECABITS1_TEMP_10        =   8;
 const byte BECABITS1_SWITCHBACKOFF  =  16;
+const byte BECABITS1_FLOORSENSOR    =  32;
 
 
 
@@ -179,19 +192,17 @@ public:
 
 		// read beca bits 
 		this->becaBits1 = network->getSettings()->setByte("becabits1",
-			(network->getSettingsOld() && network->getSettingsOld()->getByte("becabits1") ? network->getSettingsOld()->getByte("becabits1") : 0x00));
+			(network->getSettingsOld() && network->getSettingsOld()->existsSetting("becabits1") ? network->getSettingsOld()->getByte("becabits1") : 0x00));
 		this->becaBits2 = network->getSettings()->setByte("becabits2",
-			(network->getSettingsOld() && network->getSettingsOld()->getByte("becabits2") ? network->getSettingsOld()->getByte("becabits2") : 0x00));
+			(network->getSettingsOld() && network->getSettingsOld()->existsSetting("becabits2") ? network->getSettingsOld()->getByte("becabits2") : 0x00));
 		// Split mqtt setting into bits - so we keep settings storage compatibility
 		if (this->becaBits1->getByte() == 0xFF) this->becaBits1->setByte(BECABITS1_RELAIS_HEAT); // compatibility
 
 		// Heating Relay and State property
 		this->supportingHeatingRelay = new WProperty("supportingHeatingRelay", "supportingHeatingRelay", BOOLEAN);
-		//this->supportingHeatingRelay->setBoolean(this->becaBits1->getByte() & BECABITS1_RELAIS_HEAT);
-		this->supportingHeatingRelay->setBoolean(false);
+		this->supportingHeatingRelay->setBoolean(this->becaBits1->getByte() & BECABITS1_RELAIS_HEAT);
 		this->supportingCoolingRelay = new WProperty("supportingCoolingRelay", "supportingCoolingRelay", BOOLEAN);
-		//this->supportingCoolingRelay->setBoolean(this->becaBits1->getByte() & BECABITS1_RELAIS_COOL);
-		this->supportingCoolingRelay->setBoolean(false);
+		this->supportingCoolingRelay->setBoolean(this->becaBits1->getByte() & BECABITS1_RELAIS_COOL);
 
 		if (this->supportingHeatingRelay->getBoolean() && this->supportingCoolingRelay->getBoolean()) {
 			this->supportingCoolingRelay->setBoolean(false);
@@ -200,6 +211,15 @@ public:
 		// switch back property
 		this->switchBackToAuto = new WProperty("switchBackToAuto", "switchBackToAuto", BOOLEAN);
 		this->switchBackToAuto->setBoolean(!(this->becaBits1->getByte() & BECABITS1_SWITCHBACKOFF));
+		this->switchBackToAuto->setVisibility(ALL);
+		this->switchBackToAuto->setReadOnly(false);
+		this->switchBackToAuto->setMqttSendChangedValues(true);
+		this->switchBackToAuto->setOnChange(std::bind(&WBecaDevice::saveSettings, this, std::placeholders::_1));
+		this->addProperty(switchBackToAuto);
+
+		// Floor Sensor 
+		this->floorSensor = new WProperty("floorSensor", "floorSensor", BOOLEAN);
+		this->floorSensor->setBoolean(this->becaBits1->getByte() & BECABITS1_FLOORSENSOR);
 
 		// precicion (must be initialized before Temperature Values)
 		this->temperaturePrecision = new WProperty("precision", "precision", DOUBLE);
@@ -248,13 +268,15 @@ public:
     	//Model
     	this->actualFloorTemperature = nullptr;
     	this->thermostatModel = network->getSettings()->setByte("thermostatModel",
-			(network->getSettingsOld() && network->getSettingsOld()->getByte("thermostatModel") ? network->getSettingsOld()->getByte("thermostatModel") : MODEL_BHT_002_GBLW));
+			(network->getSettingsOld() && network->getSettingsOld()->existsSetting("thermostatModel") ? network->getSettingsOld()->getByte("thermostatModel") : MODEL_BHT_002_GBLW));
     	if (getThermostatModel() == MODEL_BHT_002_GBLW) {
-    		this->actualFloorTemperature = new WTemperatureProperty("floorTemperature", "Floor");
-    		this->actualFloorTemperature->setReadOnly(true);
-    		this->actualFloorTemperature->setVisibility(MQTT);
-			this->actualFloorTemperature->setMqttSendChangedValues(true);
-    		this->addProperty(actualFloorTemperature);
+			if (this->floorSensor->getBoolean()){
+				this->actualFloorTemperature = new WTemperatureProperty("floorTemperature", "Floor");
+				this->actualFloorTemperature->setReadOnly(true);
+				this->actualFloorTemperature->setVisibility(ALL);
+				this->actualFloorTemperature->setMqttSendChangedValues(true);
+				this->addProperty(actualFloorTemperature);
+			}
     	} else if (getThermostatModel() == MODEL_BAC_002_ALW) {
     		this->systemMode = new WProperty("systemMode", "System Mode", STRING);
         	this->systemMode->setAtType("ThermostatModeProperty");
@@ -338,7 +360,7 @@ public:
 
     	//schedulesDayOffset
     	this->schedulesDayOffset = network->getSettings()->setByte("schedulesDayOffset",
-			(network->getSettingsOld() && network->getSettingsOld()->getByte("schedulesDayOffset") ? network->getSettingsOld()->getByte("schedulesDayOffset") : 0));
+			(network->getSettingsOld() && network->getSettingsOld()->existsSetting("schedulesDayOffset") ? network->getSettingsOld()->getByte("schedulesDayOffset") : 0));
 
 		// Pages		
 		WPage * schedulePage=new WPage("schedules", "Configure Schedules");
@@ -425,6 +447,10 @@ public:
 		page->printAndReplace(FPSTR(HTTP_COMBOBOX_ITEM), "c", (rsMode == 2 ? HTTP_SELECTED : ""), "Cooling-Relay at GPIO 5");
 		page->print(FPSTR(HTTP_COMBOBOX_END));
 
+		// FloorSensor 
+		page->printAndReplace(FPSTR(HTTP_CHECKBOX_OPTION), "Floor Sensor enabled",
+		"fs", "fs", (this->floorSensor->getBoolean() ? HTTP_CHECKED : ""), "", "Enabled");
+
 		// Switch back from manual temo
 		page->printAndReplace(FPSTR(HTTP_CHECKBOX_OPTION), "Switch back to Auto mode from manual at next schedule period change",
 		"sb", "sb", (this->switchBackToAuto->getBoolean() ? HTTP_CHECKED : ""), "", "Enabled");
@@ -466,7 +492,8 @@ public:
 		} else {
 			// default 0.5
 		}
-		bb1 |= ((webServer->arg("sb") == HTTP_TRUE) ? 0 : BECABITS1_SWITCHBACKOFF);
+		bb1 |= ((webServer->arg("sb") == HTTP_TRUE) ? 0 : BECABITS1_SWITCHBACKOFF); //logic reversed!
+		bb1 |= ((webServer->arg("fs") == HTTP_TRUE) ? BECABITS1_FLOORSENSOR : 0);
 		this->becaBits1->setByte(bb1);
 		this->becaBits2->setByte(bb2); // meets r2d2
     }
@@ -1050,8 +1077,26 @@ public:
 				network->getMacAddress().c_str(),
 				network->getMqttTopic()
 			);
-			delay(50); // some extra time
 			if (!network->publishMqtt(topic.c_str(), response, true)) return false;
+			response->flush();
+			delay(50); // some extra time
+
+			if (this->floorSensor->getBoolean()){
+				unique_id = (String)network->getIdx();
+				unique_id.concat("_floorsensor"); 
+				topic="homeassistant/sensor/"; 
+				topic.concat(unique_id);
+				topic.concat("/config");
+				response->printf(FPSTR(MQTT_HASS_AUTODISCOVERY_SENSORFLOOR),
+					network->getIdx(),
+					unique_id.c_str(),
+					network->getMacAddress().c_str(),
+					network->getMqttTopic()
+				);
+				if (!network->publishMqtt(topic.c_str(), response, true)) return false;
+				delay(50); // some extra time
+				response->flush();
+			}
 			mqttHassAutodiscoverSent=true;
 		}
 		return true;
@@ -1108,6 +1153,7 @@ private:
     WProperty *supportingCoolingRelay;
 	WProperty *temperaturePrecision;
 	WProperty *switchBackToAuto;
+	WProperty *floorSensor;
     WProperty* ntpServer;
     WProperty* schedulesDayOffset;
     THandlerFunction onConfigurationRequest;
@@ -1687,6 +1733,12 @@ private:
        	commandLength = -1;
     }
 
+
+
+	void saveSettings(WProperty* property) {
+		network->log()->trace(F("saveSettings"));
+		network->getSettings()->save();
+	}
 
 };
 

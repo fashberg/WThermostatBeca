@@ -34,7 +34,7 @@ public:
 
 
 		this->logLevelByte = network->getSettings()->setByte("logLevelByte",
-			(network->getSettingsOld() && network->getSettingsOld()->getByte("logLevelByte") ? network->getSettingsOld()->getByte("logLevelByte") : LOG_LEVEL_WARNING));
+			(network->getSettingsOld() && network->getSettingsOld()->existsSetting("logLevelByte") ? network->getSettingsOld()->getByte("logLevelByte") : LOG_LEVEL_WARNING));
 		this->logLevelByte->setVisibility(NONE);
     	this->addProperty(logLevelByte);
 		setlogLevelByte(constrain(getlogLevelByte(),LOG_LEVEL_SILENT, LOG_LEVEL_VERBOSE ));

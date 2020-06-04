@@ -1,3 +1,15 @@
+## Version 1.15-fas
+* Bugfix issue #20: Hardware Hacks not saved (thanks ilkkaolavas)
+* Bugfix: no instant mqtt reconnect after network-reset mode
+* New: floorSensor configurable (default off). If Off: not shown in MQTT/WebThings
+  * If enabled und HASS-Autodiscovery also enabled: show additional Sensor in HASS
+* New: Support changing switchBackToAuto via MQTT
+  * saved in EEPROM permanently on Change
+  * mosquitto_pub -h mqtt -t TOPIC/cmnd/things/thermostat/properties/switchBackToAuto  -m "true"
+* Bugfix: Crash on setting non-existant property using MQTT
+* Bugfix: No default clock settings after fresh install
+* Improvement: Show empty Passwordfield if password is empty instead of \_\_NOCHANGE__
+* by Folke Ashberg <folke@ashberg.de>
 
 ## Version 1.14-fas
 * MQTT Last Will & Testament (topic/tele/LWT)
