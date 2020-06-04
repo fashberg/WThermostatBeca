@@ -34,8 +34,8 @@ _(fas)_: Only available in -fas version
 ## Hardware
 The Hardware itself has two Microcontrollers:
 * The MCU, the Main Controlling Unit.
-  * It controls the Display, the Relais, has RTC, etc.
-  * The software on the MCU is not upgraded, so no changes here.
+  * It controls Temperature, Display, the Relay, Scheduling, has RTC, etc.
+  * The software on the MCU gets not upgraded with WThermostat, so no changes here.
 * The ESP8266-based Tuya-Wifi-Module. 
   * WThermostat replaces the Software on this ESP-Module
   * There is a serial connection between MCU and ESP. Via this connection the we can control the MCU
@@ -45,21 +45,29 @@ The Hardware itself has two Microcontrollers:
 You need the WiFi Version! (W in productname suffix, like -GALW). There is also a version without WLAN.
 
 The BHT Version is for heating only. The BAC-Version has modes Cooling, Heating and Ventilation.
-The HBT-002-GA/GB/GC versions only differs in relais-wiring. 
+The BHT-002-GA/GB/GC versions only differs in relays-wiring. 
 
 * GA - Water-Heating
-  * Two Relais for opening and closing valve
-  * Only one Relais will be closed at the same time
-  * Closing Relais PIN 1 - PIN 3 (N or L)
-  * Opening Relais PIN 2 - PIN 3 (N or L)
+  * Two Relays for opening and closing valve
+  * Only one Relay will be closed at the same time
+  * Closing Relay PIN 1 - PIN 3 (N or L)
+  * Opening Relay PIN 2 - PIN 3 (N or L)
   * Product Spec says Max Power: 3 A
 * GB - Electric-Heating
   * Connect Heating between PIN 1 and PIN 2
   * Product Spec says Max Power: 16 A
 * GC - Water/Gas Boiler
-  * One Relais - potential free
-  * Relaise on PIN 1 - PIN 2 (dry contacts)
+  * One Relay - potential free (dry contact)
+  * Relay on PIN 1 - PIN 2 (dry contacts)
   * Product Spec says Max Power: 3 A
+
+
+### External Temperature Sensor
+You can connect one external NTC temperature sensor (type 10K, 3950) to BHT-002 thermostates, for GB-Model it's included.
+In settings menu of MCU (option 4) you can switch between internal (IN), external (OU) and All (AL).
+* IN-Mode: MCU reports only temperature of internal sensor and uses it for thermostat room-temperature. Value "floorTemperature" shows 0.00, or last measured value of OU- or AL-Mode (even after restart or re-powering).
+* OU-Mode: MCU reports only temperature of external sensor and uses it for thermostat room-temperatur. Values "temperature" and "floorTemperature" are the same (external sensor).
+* AL-Mode: MCU reports both temperatures, uses internal sensor for room-temperature and external sensor for maximum floor temperature overheating protection. Values "temperature" and "floorTemperature" are both valid.
 
 ## Download binaries
 Pre-built binaries can be downloaded at <a href="https://github.com/fashberg/WThermostatBeca/releases">releases-page</a>.
@@ -250,7 +258,7 @@ The state report is sent with MQTT-retain-flag enabled.
   "ecoMode":false,
   "locked":false,
   "state":"off|heating", //only_available, if hardware is modified
-  "floorTemperature":20, //only_BHT-002-GBLW
+  "floorTemperature":20, //only_BHT-002-GxLW
   "fanMode":"auto|low|medium|high", //only_BAC-002-ALW
   "systemMode":"cool|heat|fan_only", //only_BAC-002-ALW
   "mode":"off|auto|heat" // BHT-002: combined Mode for better home assistant support. 
