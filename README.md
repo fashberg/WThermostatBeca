@@ -68,6 +68,7 @@ In settings menu of MCU (option 4) you can switch between internal (IN), externa
 * IN-Mode: MCU reports only temperature of internal sensor and uses it for thermostat room-temperature. Value "floorTemperature" shows 0.00, or last measured value of OU- or AL-Mode (even after restart or re-powering).
 * OU-Mode: MCU reports only temperature of external sensor and uses it for thermostat room-temperatur. Values "temperature" and "floorTemperature" are the same (external sensor).
 * AL-Mode: MCU reports both temperatures, uses internal sensor for room-temperature and external sensor for maximum floor temperature overheating protection. Values "temperature" and "floorTemperature" are both valid.
+  * Hint: Long pressing the most right button for 5 seconds (while device switched on) the displays shows external temperature.
 
 ## Download binaries
 Pre-built binaries can be downloaded at <a href="https://github.com/fashberg/WThermostatBeca/releases">releases-page</a>.
