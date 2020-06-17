@@ -149,6 +149,37 @@ See https://mosquitto.org/man/mosquitto-conf-5.html for more details.
 
 ## HASS Manual Configuration
 For manual Configuration here is an example for your configuration.yaml file:
+
+Heating:
+```yaml
+climate:
+  - platform: mqtt
+    name: Room_Thermostat
+    availability_topic: "home/room/tele/LWT"
+    payload_available: "Online"
+    payload_not_available: "Offline"
+    action_topic: "home/room/stat/things/thermostat/properties"
+    action_template: "{{value_json.action}}"
+    temperature_command_topic: "home/room/cmnd/things/thermostat/properties/targetTemperature"
+    temperature_state_topic: "home/room/stat/things/thermostat/properties"
+    temperature_state_template: "{{value_json.targetTemperature}}"
+    current_temperature_topic: "home/room/stat/things/thermostat/properties"
+    current_temperature_template: "{{value_json.temperature}}"
+    away_mode_command_topic: "home/room/cmnd/things/thermostat/properties/ecoMode"
+    away_mode_state_topic: "home/room/stat/things/thermostat/properties"
+    away_mode_state_template: "{{value_json.ecoMode}}"
+    mode_command_topic: "home/room/cmnd/things/thermostat/properties/mode"
+    mode_state_topic: "home/room/stat/things/thermostat/properties"
+    mode_state_template: "{{value_json.mode}}"
+    payload_on: "true"
+    payload_off: "false"
+    modes: [ "heat", "auto", "off" ]
+    min_temp: 5
+    max_temp: 35
+    temp_step: 0.5
+    precision: 0.5
+```
+Air Conditioning:
 ```yaml
 climate:
   - platform: mqtt
