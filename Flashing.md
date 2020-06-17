@@ -15,7 +15,7 @@ Pre-Built binaries can be downloaded at <a href="https://github.com/fashberg/WTh
 ## 1. Check your device
 Compatible devices looks inside like this. On the right you can see the ESP8266 module (TYWE3S)
 
-![thermostat inside](https://raw.githubusercontent.com/klausahrenberg/ThermostatBecaWifi/master/docs/bac-002-wifi-inside.png)
+![thermostat inside](docs/bac-002-wifi-inside.jpg)
 
 ## 2. Connection to device for flashing
 There are many ways to get the physical connection to ESP module. I soldered the connections on the device for flashing. Maybe there is a more elegant way to do that. It's quite the same, if you try to flash any other Sonoff devices to Tasmota. So get the inspiration for flashing there: https://github.com/arendst/Sonoff-Tasmota/wiki
@@ -28,7 +28,7 @@ Following connections were working for me (refer to ESP-12E pinout):
 - Blue right: ESP-GPIO0, must be connected with GND during power up
 - Blue left: ESP-Reset, connect to GND to restart the ESP
 
-![Flashing connection](https://raw.githubusercontent.com/klausahrenberg/ThermostatBecaWifi/master/docs/Flashing_Tywe3S_Detail.jpg)
+![Flashing connection](docs/Flashing_Tywe3S_Detail.jpg)
 
 ## 3. Remove the power supply from thermostat during all flashing steps
 Flasing will fail, if the thermostat is still powered during this operation.
