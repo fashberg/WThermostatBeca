@@ -15,8 +15,8 @@ Switch Main Power off.
 Check if main power is off.
 Ensure no one switches if on.
 
-## 2. Check and remove old Thermostate
-Open old thermostate.  Check function of inputs and outputs and notice the wiring.
+## 2. Check and remove old Thermostat
+Open old thermostat.  Check function of inputs and outputs and notice the wiring.
 ![install-001](docs/install-001.jpg)  
 
 ## 2. Remove Display-Unit

@@ -63,23 +63,24 @@ The BHT-002-GA/GB/GC versions only differs in relays-wiring.
 
 
 ### External Temperature Sensor
-You can connect one external NTC temperature sensor (type 10K, 3950) to BHT-002 thermostates, for GB-Model it's included.
+You can connect one external NTC temperature sensor (type 10K, 3950) to BHT-002 thermostats, for GB-Model it's included.
 In settings menu of MCU (option 4) you can switch between internal (IN), external (OU) and All (AL).
 * IN-Mode: MCU reports only temperature of internal sensor and uses it for thermostat room-temperature. Value "floorTemperature" shows 0.00, or last measured value of OU- or AL-Mode (even after restart or re-powering).
 * OU-Mode: MCU reports only temperature of external sensor and uses it for thermostat room-temperatur. Values "temperature" and "floorTemperature" are the same (external sensor).
 * AL-Mode: MCU reports both temperatures, uses internal sensor for room-temperature and external sensor for maximum floor temperature overheating protection. Values "temperature" and "floorTemperature" are both valid.
   * Hint: Long pressing the most right button for 5 seconds (while device switched on) the displays shows external temperature.
 
-## Download binaries
-Pre-built binaries can be downloaded at <a href="https://github.com/fashberg/WThermostatBeca/releases">releases-page</a>.
-
 ## Hardware Installation
  * see <a href="Installation.md">Installation.md</a>
+
+## Download binaries
+Pre-built binaries can be downloaded at <a href="https://github.com/fashberg/WThermostatBeca/releases">releases-page</a>.
 
 ## Software Installation
 You can install the firmware either
 * by using tuya-convert - no Hardware Modifications necessary
 * by soldering cables to the ESP-Modules using an ESP/Arduino-Programmer (3,3 Volt TTL)
+* by using OTA Upgrade on tasmota or other OpenSource ESP Firmware
 
 Yoube video of converting to 1.14-fas with tuya-convert: https://youtu.be/fqfghJqnK_8
 
@@ -122,7 +123,7 @@ There is also a detailed view available:
 ![homeassistant](docs/homeassistant.png)  ![hass_discovery](docs/hass_discovery.png) 
 ## HASS Autodiscovery
 ThermostatBecaWifi supports optional HASS-Autodiscovery since Version 1.08-fas (currently only for heating devices).
-You have to enable it at Thermostate (settings network) and of course it must be enabled in your HASS configuration.yaml file:
+You have to enable it at Thermostat (settings network) and of course it must be enabled in your HASS configuration.yaml file:
 ```yaml
 mqtt:
   broker: <ip of broker>
@@ -211,7 +212,7 @@ climate:
     fan_mode_state_topic: "home/bedroom/stat/things/thermostat/properties"
     fan_mode_state_template: "{{value_json.fanMode}}"
 ```
-If you have several thermostates you can anchor some settings while defining the first device and refer later on. Example: 
+If you have several thermostats you can anchor some settings while defining the first device and refer later on. Example: 
 ```yaml
 climate:
 - platform: mqtt
