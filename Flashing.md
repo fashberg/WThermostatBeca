@@ -55,6 +55,28 @@ for example:
 
 ```esptool.py -p /dev/ttyUSB0 -b 460800 read_flash 0x00000 0x100000 originalFirmware1M.bin```
 
+Example running Windows with PlatformIO's integrated python interpreter:
+```
+PS C:\> python C:\Users\folke\.platformio\packages\tool-esptoolpy\esptool.py -p COM6 -b 460800 read_flash 0x00000 0x100000 bac002-originalFirmware1M.bin
+esptool.py v2.8
+Serial port COM6
+Connecting....
+Detecting chip type... ESP8266
+Chip is ESP8266EX
+Features: WiFi
+Crystal is 26MHz
+MAC: 84:f3:eb:e7:b0:87
+Uploading stub...
+Running stub...
+Stub running...
+Changing baud rate to 460800
+Changed.
+1048576 (100 %)
+1048576 (100 %)
+Read 1048576 bytes at 0x0 in 25.3 seconds (331.8 kbit/s)...
+Hard resetting via RTS pin...
+```
+
 ## 5. Upload new firmware
 Get the ESP in programming mode first.
 Erase flash:
@@ -66,7 +88,46 @@ Write firmware (1MB)
 
 ```esptool.py -p /dev/ttyUSB0 write_flash -fs 1MB 0x0 WThermostat_x.xx.bin```
 
-# Option 3: Flashing Tasmota or other Free Firmware
+```
+PS C:\> python C:\Users\folke\.platformio\packages\tool-esptoolpy\esptool.py -p COM6 erase_flash
+esptool.py v2.8
+Serial port COM6
+Connecting....
+Detecting chip type... ESP8266
+Chip is ESP8266EX
+Features: WiFi
+Crystal is 26MHz
+MAC: 84:f3:eb:e7:b0:87
+Uploading stub...
+Running stub...
+Stub running...
+Erasing flash (this may take a while)...
+Chip erase completed successfully in 2.0s
+Hard resetting via RTS pin...
+
+
+PS C:\> python C:\Users\folke\.platformio\packages\tool-esptoolpy\esptool.py -p COM6 write_flash -fs 1MB 0x0 .\build_output\firmware\wthermostat-1.15-fas.bin
+esptool.py v2.8
+Serial port COM6
+Connecting........__
+Detecting chip type... ESP8266
+Chip is ESP8266EX
+Features: WiFi
+Crystal is 26MHz
+MAC: 84:f3:eb:e7:b0:87
+Uploading stub...
+Running stub...
+Stub running...
+Configuring flash size...
+Compressed 387808 bytes to 270181...
+Wrote 387808 bytes (270181 compressed) at 0x00000000 in 25.2 seconds (effective 123.0 kbit/s)...
+Hash of data verified.
+
+Leaving...
+Hard resetting via RTS pin...
+```
+
+# Option 3: Flashing on top of Tasmota or other Free Firmware
 If you already have tasmota installed or any other free ESP alternative you can upgrade easyly using the "Firmware Upgrade" function.
 If you get "Upload Failed - Not compatible" you have to set the following option in tasmota console before you start the upgrade:
 ```SetOption78 1```
