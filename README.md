@@ -87,9 +87,14 @@ Yoube video of converting to 1.14-fas with tuya-convert: https://youtu.be/fqfghJ
 Follow instructions here: <a href="Flashing.md">Flashing.md</a>
 
 ## Initial configuration
-To setup the device model, network options and other parameters, follow instrcution here:  
-Configuration.md  
-After initial setup, the device configuration is available via `http://<device_ip>/` 
+* The devices becomes an Access Point
+* Connect to WiFi `Thermostat-xxxxxx` with Password `12345678`
+* Open `http://192.168.4.1` or wait for Captive Portal to be opened on Android
+* Configure your WiFi Settings
+* After initial setup, the device configuration is available at `http://<device_ip>/` 
+* Configure device model, clock and other settings
+
+See <a href="Configuration.md">Configuration.md</a> for a detailed explanation of the setup.
 
 ## Upgrading
 You can Upgrade over the Air from other versions of ThermostatBecaWifi on the Web-GUI.
