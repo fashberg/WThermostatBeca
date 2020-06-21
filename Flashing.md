@@ -44,7 +44,8 @@ Following connections were working for me (refer to ESP-12E pinout):
 ![Flashing connection](docs/Flashing_Tywe3S_Detail.jpg)
 
 ## 3. Remove the power supply from thermostat during all flashing steps
-Flasing will fail, if the thermostat is still powered during this operation.
+Flashing will fail if the thermostat is still powered up during this operation.
+
 ## 4. Backup the original firmware
 Don't skip this. In case of malfunction you need the original firmware. Tasmota has also a great tutorial for the right esptool commands: https://github.com/arendst/Sonoff-Tasmota/wiki/Esptool. So the backup command is:
 
