@@ -34,7 +34,7 @@ Compatible devices looks inside like this. On the right you can see the ESP8266 
 There are many ways to get the physical connection to ESP module. I soldered the connections on the device for flashing. Maybe there is a more elegant way to do that. It's quite the same, if you try to flash any other Sonoff devices to Tasmota. So get the inspiration for flashing there: https://github.com/arendst/Sonoff-Tasmota/wiki
 
 Following connections were working for me (refer to ESP-12E pinout):
-- Red: ESP-VCC and ESP-EN connected to Programmer-VCC (3.3V) 
+- Red: ESP-VCC and ESP-EN (Enable) connected to Programmer-VCC (3.3V) 
 - Black: ESP-GND and ESP-GPIO15 connected to Programmer-GND
 - Green: ESP-RX connected to Programmer-TX
 - Yellow: ESP-TX connected to Programmer-RX
@@ -43,8 +43,38 @@ Following connections were working for me (refer to ESP-12E pinout):
 
 ![Flashing connection](docs/Flashing_Tywe3S_Detail.jpg)
 
-## 3. Remove the power supply from thermostat during all flashing steps
+I've tested flashing with both this TTL-Adapters and had success:
+* DSD TECH SH-U09C2 with FT232RL
+  * https://www.amazon.de/gp/product/B07TXVRQ7V/
+  * 10 EUR Amazon Prime (Germany)
+  * Has separate Voltage regulator on Board which delivers enough power
+  * You can jumper betweeen 1.8/3.3/5 Volt (it switches Vcc AND Signal-Level - which is important)
+  * Not sure if it's original FTDI-Chip (has not the 2014 'bug', but text seems to be printed not laser-engraved), but overall quality looks very good, including RX/TX LEDs
+* AliExpress Cheap Adaptter with Profilic PL2303
+  * https://www.aliexpress.com/item/32893637666.html
+  * 3 EUR and long delivery time
+  * Vcc Pin can easily soldered from 5V to 3.3V (has to be changed to 3.3V)
+  * Signal Level is always 3.3 Volt (measured with Osci)
+  * No separate Voltage Regulator, but flashing was ok
+
+Good to know:
+* If not entering programming-mode (GPIO-0 not connected to GND) the ESP boots normally and is reachable through WiFi.
+* Between the read_flash, erase_flash and write_flash commands you have to reset the ESP!
+  * By repowering
+  * Or by connecting RESET-PIN to GND for a short time
+  * GPIO-0 has to be connected to GND during these reboots to enter flashing mode
+* If flashing does not work:
+  * was GPIO-0 connected to GND while power-up
+  * Does your TTL-Adapter deliveres enough power to power ESP?
+  * Is ESP-EN (Enabled) connected to Vcc?
+
+Another Image with DSD TECH SH-U09C2 adapter:
+![flash](https://github.com/fashberg/WThermostatBeca/blob/master/docs/flashing2.jpg?raw=true)
+
+
+## 3. Remove the main power supply from thermostat during all flashing steps
 Flashing will fail if the thermostat is still powered up during this operation.
+Connect only the 3.3 Volt from RS232/TTL-Adapter.
 
 ## 4. Backup the original firmware
 Don't skip this. In case of malfunction you need the original firmware. Tasmota has also a great tutorial for the right esptool commands: https://github.com/arendst/Sonoff-Tasmota/wiki/Esptool. So the backup command is:
