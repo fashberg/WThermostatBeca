@@ -407,5 +407,25 @@ Flash the original firmware (see installation). Write me a message with your exa
 
 ### Build this firmware from source
 For build from sources i suggest <a href="https://code.visualstudio.com/">Visual Studio Code</a> and <a href="https://platformio.org/">Platform.IO</a>.
- All sources needed are inside the folder 'WThermostat', also you need the WAdapter library from https://github.com/fashberg/WAdapter.
- Additionally you will need some other libraries: DNSServer, EEPROM (for esp8266), ESP8266HTTPClient, ESP8266mDNS, ESP8266WebServer, ESP8266WiFi, Hash, NTPClient, Time.
+
+#### Prepare to build
+ * Install Code and PlatformIO
+ * Type:
+```
+git clone https://github.com/fashberg/WThermostatBeca
+cd WThermostatBeca
+# download dependant library WAdapter
+git submodule init
+git submodule update
+``` 
+ * Open the folder 'WThermostatBeca' in VS Code
+ * Go To PlatformIO Icon
+ * Click Build
+   * Binary Firmware can be found in build_output\firmware\wthermostat-1.xx-fas.bin (or -debug or -minimal)
+   
+All dependant arduino-libraries (DNSServer, EEPROM (for esp8266), ESP8266HTTPClient, ESP8266mDNS, ESP8266WebServer, ESP8266WiFi, Hash, NTPClient, Time.) will be downloaded automatically (defined in platform.ini) and the necessary WAdapter library from https://github.com/fashberg/WAdapter (git submodule).
+
+### Special Build Versions
+* -Minimal environment: minimal version without thermostat, MQTT or WebThings support. Use only for intermediate Updating
+* -Debug environment: DO NOT FLASH TO THERMOSTAT. There is debugging output to serial interface which will confuse MCU
+  * Upload to USB-Connected development ESP8266 board (Node MCU or Wemos D1 Mini pro)
