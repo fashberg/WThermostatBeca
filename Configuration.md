@@ -73,7 +73,7 @@ Steps are in general:
   D = day of week (1..7 1 = sunday 7 = saturday)
   h = hour (0..23)
   T = timezone (-810..810) (offset from UTC in MINUTES - 810min / 60min=13:30)
-  * It's adopted from http://tasmota.github.io/ - but you don't need the Hemisphere Setting (first number), its calculated
+  * It's adopted from https://tasmota.github.io/docs/Commands/#timestd - but you don't need the Hemisphere Setting (first number), its calculated
 * Examples:
 
   | Region | Timezone | DST | STD |
