@@ -414,13 +414,27 @@ public:
 		this->addPage(schedulePage);
 		
 
-    	lastHeartBeat = lastNotify = lastScheduleNotify  = lastLongLoop = 0;
-    	resetAll();
-    	for (int i = 0; i < STATE_COMPLETE; i++) {
-    		receivedStates[i] = false;
-    	}
-    	this->schedulesDataPoint = 0x00;
-    }
+		// Pages reinit		
+		WPage * reinitPage=new WPage("reinit", "Reinit Thermostat");
+		reinitPage->setPrintPage([this,reinitPage](ESP8266WebServer* webServer, WStringStream* page) {
+			this->network->log()->notice(PSTR("Reinit"));
+			page->print(F("Reinitialized"));
+			page->print(FPSTR(HTTP_HOME_BUTTON));
+			startMcuInitialize();
+		});
+		reinitPage->setSubmittedPage([this](ESP8266WebServer* webServer, WStringStream* page) {
+			page->print(F("VOID"));			
+		});
+		this->addPage(reinitPage);
+		
+
+		lastHeartBeat = lastNotify = lastScheduleNotify  = lastLongLoop = 0;
+		resetAll();
+		for (int i = 0; i < STATE_COMPLETE; i++) {
+			receivedStates[i] = false;
+		}
+		this->schedulesDataPoint = 0x00;
+	}
 
     virtual void printConfigPage(WStringStream* page) {
     	network->log()->notice(PSTR("Beca thermostat config page"));
@@ -532,8 +546,8 @@ public:
     			}
     			expChecksum = expChecksum % 0x100;
     			if (expChecksum == receivedCommand[receiveIndex]) {
-					network->log()->verbose(F("processSerial"));
-    				processSerialCommand();
+					logIncomingCommand("processSerial", LOG_LEVEL_VERBOSE);
+					processSerialCommand();
     			}
     			resetAll();
 
@@ -565,7 +579,7 @@ public:
     			lastScheduleNotify = now;
     		}
     	}
-		if (isDeviceStateComplete() && !isMcuInitialized()){
+		if (!isMcuInitialized()){
 			mcuInitialize();
 		}
     }
@@ -994,6 +1008,7 @@ public:
 					commandCharsToSerial(6, mcuCommand);
 				}
 				mcuInitializeState++;
+				mcuInitializeState=5; // FIXME HY08WE: no answer from MCU on Working Mode Query 
 				break;
 			case 4:
 				/* wait for answer of 3 */
@@ -1210,7 +1225,7 @@ private:
 			// header 
 			if (receivedCommand[0] == 0x55 && receivedCommand[1] == 0xaa) {
 				//version
-				if (receivedCommand[2] == 0x00 || receivedCommand[2] == 0x01 ){
+				if (receivedCommand[2] == 0x00 || receivedCommand[2] == 0x01 || receivedCommand[2] == 0x03 ){
 					if (receivedCommand[3] == 0x00) {
 						switch (receivedCommand[6]) {
 						case 0x00:

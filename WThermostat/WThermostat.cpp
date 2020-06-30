@@ -33,6 +33,8 @@
 #define SERIALSPEED 9600
 #endif
 
+const byte FLAG_OPTIONS_APPLICATION = 0xF0;
+
 WNetwork *network;
 #ifndef MINIMAL
 WLogDevice *logDevice;
@@ -44,7 +46,7 @@ void setup() {
     Serial.begin(SERIALSPEED);
 
     // Wifi and Mqtt connection
-    network = new WNetwork(SERIALDEBUG, APPLICATION, FULLVERSION, NO_LED);
+    network = new WNetwork(SERIALDEBUG, APPLICATION, FULLVERSION, NO_LED, FLAG_OPTIONS_APPLICATION);
 #ifndef MINIMAL
     network->setOnNotify([]() {
         if (network->isSoftAPDesired()){
