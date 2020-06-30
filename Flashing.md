@@ -26,9 +26,13 @@ See: https://github.com/ct-Open-Source/tuya-convert/issues/113
 
 # Option 2: Flashing device manually
 ## 1. Check your device
-Compatible devices looks inside like this. On the right you can see the ESP8266 module (TYWE3S)
+Compatible devices looks inside like this. On the top left you can see the ESP8266 module (TYWE3S)
 
-![thermostat inside](docs/bac-002-wifi-inside.jpg)
+![thermostat wifi inside](docs/bac-002-wifi-inside.jpg)
+
+The following picture shows an BHT-002GA with __NO WIFI__ - no chance to flash or to enhance.
+![thermostat no wifi inside](docs/bac-002-no-wifi-inside.jpg)
+
 
 ## 2. Connection to device for flashing
 There are many ways to get the physical connection to ESP module. I soldered the connections on the device for flashing. Maybe there is a more elegant way to do that. It's quite the same, if you try to flash any other Sonoff devices to Tasmota. So get the inspiration for flashing there: https://github.com/arendst/Sonoff-Tasmota/wiki
