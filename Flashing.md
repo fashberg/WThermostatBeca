@@ -31,6 +31,7 @@ Compatible devices looks inside like this. On the top left you can see the ESP82
 ![thermostat wifi inside](docs/bac-002-wifi-inside.jpg)
 
 The following picture shows an BHT-002GA with __NO WIFI__ - no chance to flash or to enhance.
+See my detailed diagnosis on this at <a href="docs/Diagnose%20Can%20we%20add%20WiFi%20to%20Non-Wifi%20Thermostat%20bac-002.pdf">docs/Diagnose Can we add WiFi to Non-Wifi Thermostat bac-002.pdf</a>, this document also show a little bit about communication between MCU und ESP.
 ![thermostat no wifi inside](docs/bac-002-no-wifi-inside.jpg)
 
 
