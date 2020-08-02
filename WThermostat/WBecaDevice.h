@@ -54,17 +54,14 @@ const static char MQTT_HASS_AUTODISCOVERY_CLIMATE[]         PROGMEM = R"=====(
 "temp_stat_tpl":"{{value_json.targetTemperature}}",
 "curr_temp_t":"~/stat/things/thermostat/properties",
 "curr_temp_tpl":"{{value_json.temperature}}",
-"pl_on":"true",
-"pl_off":"false",
+"pl_on":true,
+"pl_off":false,
 "min_temp":"10",
 "max_temp":"35",
 "temp_step":"%s",
 "modes":["off","heat","auto"]
 }
 )=====";
-//"mdl":"Shelly 1",
-//"sw":"8.2.0(tasmota)",
-//"mf":"Tasmota"}
 const static char MQTT_HASS_AUTODISCOVERY_SENSOR[]         PROGMEM = R"=====(
 {
 "name":"%s Temperature",
@@ -89,6 +86,18 @@ const static char MQTT_HASS_AUTODISCOVERY_SENSORFLOOR[]         PROGMEM = R"====
 "unit_of_measurement":"°C"
 }
 )=====";
+const static char MQTT_HASS_AUTODISCOVERY_SENSORRSSI[]         PROGMEM = R"=====(
+{
+"name":"%s WiFi RSSI",
+"unique_id":"%s",
+"device_class":"signal_strength",
+"dev":{"ids":["%s"]},
+"~":"%s",
+"stat_t":"~/stat/things/network/properties",
+"val_tpl":"{{value_json.rssi}}",
+"unit_of_measurement":"dBm"
+}
+)=====";
 
 
 #define COUNT_DEVICE_MODELS 2
@@ -99,6 +108,7 @@ const static char MQTT_HASS_AUTODISCOVERY_SENSORFLOOR[]         PROGMEM = R"====
 #define STATE_COMPLETE 5
 #define PIN_STATE_HEATING_RELAY 5
 #define PIN_STATE_COOLING_RELAY 4
+#define ECOMODETEMP 20.0
 
 const unsigned char COMMAND_START[] = {0x55, 0xAA};
 const char AR_COMMAND_END = '\n';
@@ -1078,9 +1088,8 @@ public:
 			);
 			delay(50); // some extra time
 			if (!network->publishMqtt(topic.c_str(), response, true)) return false;
-
-
 			response->flush();
+
 			unique_id = (String)network->getIdx();
 			unique_id.concat("_sensor"); 
 			topic="homeassistant/sensor/"; 
@@ -1112,6 +1121,23 @@ public:
 				delay(50); // some extra time
 				response->flush();
 			}
+
+			unique_id = (String)network->getIdx();
+			unique_id.concat("_rssi"); 
+			topic="homeassistant/sensor/"; 
+			topic.concat(unique_id);
+			topic.concat("/config");
+			response->printf(FPSTR(MQTT_HASS_AUTODISCOVERY_SENSORRSSI),
+				network->getIdx(),
+				unique_id.c_str(),
+				network->getMacAddress().c_str(),
+				network->getMqttTopic()
+			);
+			if (!network->publishMqtt(topic.c_str(), response, true)) return false;
+			response->flush();
+			delay(50); // some extra time
+
+
 			mqttHassAutodiscoverSent=true;
 		}
 		return true;
@@ -1324,7 +1350,7 @@ private:
 							if (commandLength == 0x08) {
 								//actual Temperature
 								//e.g. 23C: 55 aa 01 07 00 08 03 02 00 04 00 00 00 2e
-								newValue = (float) receivedCommand[13] / getTemperatureFactor();
+								newValue = (float) (int8_t)receivedCommand[13] / getTemperatureFactor();
 								changed = ((changed) || (newChanged=!actualTemperature->equalsDouble(newValue)));
 								actualTemperature->setDouble(newValue);
 								logIncomingCommand("actualTemperature_x03", (newChanged ? LOG_LEVEL_TRACE : LOG_LEVEL_VERBOSE));
@@ -1396,7 +1422,7 @@ private:
 							if (commandLength == 0x08) {
 								//MODEL_BHT_002_GBLW - actualFloorTemperature
 								//55 aa 01 07 00 08 66 02 00 04 00 00 00 00
-								newValue = (float) receivedCommand[13] / getTemperatureFactor();
+								newValue = (float) (int8_t)(receivedCommand[13]) / getTemperatureFactor();
 								if (actualFloorTemperature != nullptr) {
 									changed = ((changed) || (newChanged=!actualFloorTemperature->equalsDouble(newValue)));
 									actualFloorTemperature->setDouble(newValue);
@@ -1519,8 +1545,10 @@ private:
      	}
     }
 
-    void updateTargetTemperature() { 
-		if ((this->currentSchedulePeriod != -1) && (schedulesMode->equalsString(SCHEDULES_MODE_AUTO))) {
+    void updateTargetTemperature() {
+		if (ecoMode->getBoolean()) {
+			targetTemperature->setDouble(ECOMODETEMP);
+		} else if ((this->currentSchedulePeriod != -1) && (schedulesMode->equalsString(SCHEDULES_MODE_AUTO))) {
 			double temp = (double) schedules[this->currentSchedulePeriod + 2] / getTemperatureFactor();
 			byte weekDay;
 			String p = String(weekDay == 0 ? SCHEDULES_DAYS[2] : (weekDay == 6 ? SCHEDULES_DAYS[1] : SCHEDULES_DAYS[0]));

@@ -177,8 +177,8 @@ climate:
     mode_command_topic: "home/room/cmnd/things/thermostat/properties/mode"
     mode_state_topic: "home/room/stat/things/thermostat/properties"
     mode_state_template: "{{value_json.mode}}"
-    payload_on: "true"
-    payload_off: "false"
+    payload_on: true
+    payload_off: false
     modes: [ "heat", "auto", "off" ]
     min_temp: 5
     max_temp: 35
@@ -206,8 +206,8 @@ climate:
     mode_command_topic: "home/bedroom/cmnd/things/thermostat/properties/mode"
     mode_state_topic: "home/bedroom/stat/things/thermostat/properties"
     mode_state_template: "{{value_json.mode}}"
-    payload_on: "true"
-    payload_off: "false"
+    payload_on: true
+    payload_off: false
     modes: [ "heat", "cool", "auto", "fan_only", "off" ]
     min_temp: 16
     max_temp: 32
@@ -239,8 +239,8 @@ climate:
     current_temperature_template: "{{value_json.temperature}}"
     mode_state_template: "{{value_json.mode}}"
     away_mode_state_template: "{{value_json.ecoMode}}"
-    payload_on: "true"
-    payload_off: "false"
+    payload_on: true
+    payload_off: false
     modes: [ "heat", "auto", "off" ]
     min_temp: 5
     max_temp: 35

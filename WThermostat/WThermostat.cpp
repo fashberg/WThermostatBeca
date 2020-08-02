@@ -5,6 +5,7 @@
 #include "WBecaDevice.h"
 #include "WClock.h"
 #include "WLogDevice.h"
+#include "../lib/WAdapter/WAdapter/WNetworkDevice.h"
 #endif
 #define APPLICATION "Thermostat"
 #ifndef VERSION
@@ -37,6 +38,7 @@ const byte FLAG_OPTIONS_APPLICATION = 0xF0;
 
 WNetwork *network;
 #ifndef MINIMAL
+WNetworkDev *networkDevice;
 WLogDevice *logDevice;
 WBecaDevice *becaDevice;
 WClock *wClock;
@@ -61,6 +63,7 @@ void setup() {
                 becaDevice->reportNetworkToMcu(mcuNetworkMode::MCU_NETWORKMODE_NOTCONNECTED);
             }
         }
+        if (networkDevice) networkDevice->connectionChange();
     });
     network->setOnConfigurationFinished([]() {
         // Switch blinking thermostat in normal operating mode back
@@ -68,8 +71,13 @@ void setup() {
         becaDevice->cancelConfiguration();
     });
 
-    // KaClock - time sync
 
+    // networkDevice 
+    networkDevice = new WNetworkDev(network, APPLICATION);
+    network->log()->trace(F("Loading ClockDevice"));
+    network->addDevice(networkDevice);
+
+    // KaClock - time sync
     wClock = new WClock(network, APPLICATION);
     network->log()->trace(F("Loading ClockDevice"));
     network->addDevice(wClock);

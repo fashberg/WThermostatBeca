@@ -1,3 +1,9 @@
+## Version 1.16-fas (BETA)
+* ecoMode temperature Fixed 20 degrees (not changeable) #32
+* WebThings autodiscovery fix
+* IceBucketChallenge: Support for negative temperatures
+* Apple Captive Portal support
+
 ## Version 1.15-fas
 * Bugfix issue #20: Hardware Hacks not saved (thanks ilkkaolavas)
 * Bugfix: no instant mqtt reconnect after network-reset mode

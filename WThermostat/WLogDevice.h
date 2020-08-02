@@ -22,6 +22,7 @@ public:
 		
 		this->providingConfigPage = true;
 		this->configNeedsReboot = false;
+		this->mainDevice = false;
 		
 		/* properties */
 
