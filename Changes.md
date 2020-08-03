@@ -3,7 +3,8 @@
 * WebThings autodiscovery fix
 * IceBucketChallenge: Support for negative temperatures
 * Apple Captive Portal support
-* WiFi RSS Value property (http://therm-test1.fritz.box/things/network/properties/rssi) #24
+* WiFi RSS Value property (/things/network/properties/rssi) #24
+* Case Insensitive true/false (HomeAssistant Uses "True" if boolean values are enabled) #32
 
 ## Version 1.15-fas
 * Bugfix issue #20: Hardware Hacks not saved (thanks ilkkaolavas)
