@@ -1,12 +1,22 @@
-# ThermostatBecaWifi
+# WThermostat - FAS-Fork
 
 Fork of https://github.com/klausahrenberg/WThermostatBeca with some new features
 
-Replaces original Tuya firmware on Beca thermostat with ESP8266 wifi module. The firmware is tested with following devices:
-* BHT-002-GBLW, BHT-6000 (floor heating)
-* BHT-002-GALW (Water/Gas heating)
-* BHT-002-GCLW (Water/Gas Boiler)
-* BAC-002-ALW (heater, cooling, ventilation)
+Replaces original Tuya firmware on Beca thermostat with ESP8266 wifi module.
+
+## Supported Devices
+The firmware has been tested or reported to work with following devices:
+* BHT-002 WiFi Thermostat
+  * BHT-002-GALW (Water/Gas heating)
+  * BHT-002-GBLW (floor heating)
+  * BHT-002-GCLW (Water/Gas Boiler)
+* BHT-6000 WiFi Thermostat
+  * BHT-6000-GALW, BHT-6000-GBLW, BHT-6000-GCLW
+* BHT-3000 WiFi Thermostat
+  * BHT-3000-GALW, BHT-3000-GBLW, BHT-3000-GCLW
+  * also known as BTH-3000L-ABLW, BTH-3000L-GBLW, BTH-3000L-GCLW
+* BAC-1000-ALW WiFi Thermostat for Conditioning (heating, cooling, ventilation)
+  * also known as BAC-002-ALW
 
 Also selled by Moes or Qiumi.
 
@@ -31,21 +41,13 @@ Also selled by Moes or Qiumi.
 
 _(fas)_: Only available in -fas version
 
-## Hardware
-The Hardware itself has two Microcontrollers:
-* The MCU, the Main Controlling Unit.
-  * It controls Temperature, Display, the Relay, Scheduling, has RTC, etc.
-  * The software on the MCU gets not upgraded with WThermostat, so no changes here.
-* The ESP8266-based Tuya-Wifi-Module. 
-  * WThermostat replaces the Software on this ESP-Module
-  * There is a serial connection between MCU and ESP. Via this connection the we can control the MCU
-  * Only the Wifi-Verisons of thermostats have the ESP-Module.
-
-### Hardware-Versions
-You need the WiFi Version! (W in productname suffix, like -GALW). There is also a version without WLAN.
+## Hardware-Versions
+You need the WiFi Version! (W in productname suffix, like -GAL**W**). There is also a version without WLAN. See <a href="./docs/Diagnose%20Can%20we%20add%20WiFi%20to%20Non-Wifi%20Thermostat%20bac-002.pdf">Diagnose Can we add WiFi to Non-Wifi Thermostat bac-002.pdf</a>
 
 The BHT Version is for heating only. The BAC-Version has modes Cooling, Heating and Ventilation.
 The BHT-002-GA/GB/GC versions only differs in relays-wiring. 
+
+#### Difference between GA, GB and GC
 
 * GA - Water-Heating
   * Two Relays for opening and closing valve
@@ -70,7 +72,9 @@ In settings menu of MCU (option 4) you can switch between internal (IN), externa
 * AL-Mode: MCU reports both temperatures, uses internal sensor for room-temperature and external sensor for maximum floor temperature overheating protection. Values "temperature" and "floorTemperature" are both valid.
   * Hint: Long pressing the most right button for 5 seconds (while device switched on) the displays shows external temperature.
 
-## Hardware Installation
+### Hardware Installation
+Here a description of how to install the hardware - indepentent from Open Source WThermostat.
+**No special Hardware installation neccessary for Upgrading to this firmware!**
  * see <a href="Installation.md">Installation.md</a>
 
 ## Download binaries
@@ -402,13 +406,35 @@ mosquitto_sub -h mqtt -v -t "home/test/tele/log/#"
 
 ```
 
-### Don't like or it doesn't work?
+## How it works?
+### Hardware and serial communication
+The Hardware itself has two Microcontrollers:
+* **The MCU, the Main Controlling Unit.**
+  * ___The software on the MCU gets not upgraded with WThermostat, so no changes are possible here!___
+  * It controls Temperature, Display, the Relay, Scheduling, has RTC, etc.
+  * Sonix SN8F57083 8 bit Microcontroller
+* **The ESP8266-based Tuya-Wifi-Module.**
+  * ___The Software of ESP can be flashed with this Open Source WThermostat___
+  * There is a serial connection between MCU and ESP. Via this connection the we can control the MCU
+  * Only the Wifi-Verisons of thermostats have the ESP-Module.
+
+Both devices are communication using a binary serial protocol, called "MCU protocol". See <a href="./docs/Tuya%20Cloud%20Universal%20Serial%20Port%20Access%20Protocol_Tuya%20Smart_Docs.pdf">Tuya Cloud Universal Serial Port Access Protocol_Tuya Smart_Docs.pdf</a>
+
+Because ESP8266 runs with 3.3 Volt and Sonix MCU runs with 5.0 Volt the Serial-TTL-Level gets shifted with transistors.
+
+![HowItWorks](docs/how-it-works.png) 
+
+### Can you add xxx as a feature?
+I have been often as if i can implement a specific feature.
+Often the short answer is: Because all internal routines (reading temperature, controlling the relay, reading the buttons, controlling the display) are controlled by MCU, which still runs proprietary closed source software, the behaviour cannot be changed!
+
+## Don't like or it doesn't work?
 Flash the original firmware (see installation). Write me a message with your exact model and which parameter was not correct. Maybe your MQTT-server received some unknown messages - this would be also helpful for me. Again: I have tested this only with model BHT-002-GBLW. If you have another device, don't expect that this is working directly.
 
-### Build this firmware from source
+## Build this firmware from source
 For build from sources i suggest <a href="https://code.visualstudio.com/">Visual Studio Code</a> and <a href="https://platformio.org/">Platform.IO</a>.
 
-#### Prepare to build
+### Prepare to build
  * Install Code and PlatformIO
  * Type:
 ```
