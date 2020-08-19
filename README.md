@@ -66,10 +66,11 @@ The BHT-002-GA/GB/GC versions only differs in relays-wiring.
 
 ### External Temperature Sensor
 You can connect one external NTC temperature sensor (type 10K, 3950) to BHT-002 thermostats, for GB-Model it's included.
-In settings menu of MCU (option 4) you can switch between internal (IN), external (OU) and All (AL).
+In settings menu of MCU (option 4) you can switch between internal (IN), external (OU) and All (AL). See <a href="./docs/BHT-002-Manual-long.pdf">BHT-002-Manual.pdf</a>.
 * IN-Mode: MCU reports only temperature of internal sensor and uses it for thermostat room-temperature. Value "floorTemperature" shows 0.00, or last measured value of OU- or AL-Mode (even after restart or re-powering).
-* OU-Mode: MCU reports only temperature of external sensor and uses it for thermostat room-temperatur. Values "temperature" and "floorTemperature" are the same (external sensor).
+* OU-Mode: MCU reports only temperature of external sensor and uses it for thermostat room-temperature. WThermostat Values "temperature" and "floorTemperature" are the same (external sensor).
 * AL-Mode: MCU reports both temperatures, uses internal sensor for room-temperature and external sensor for maximum floor temperature overheating protection. Values "temperature" and "floorTemperature" are both valid.
+  * It's not possible to change MCU behavior to other modes, e.g. using external temperature sensor to control relays and only display value of internal sensor is not possible. 
   * Hint: Long pressing the most right button for 5 seconds (while device switched on) the displays shows external temperature.
 
 ### Hardware Installation
