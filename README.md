@@ -425,8 +425,8 @@ Because ESP8266 runs with 3.3 Volt and Sonix MCU runs with 5.0 Volt the Serial-T
 ![HowItWorks](docs/how-it-works.png) 
 
 ### Can you add xxx as a feature?
-I have been often as if i can implement a specific feature.
-Often the short answer is: Because all internal routines (reading temperature, controlling the relay, reading the buttons, controlling the display) are controlled by MCU, which still runs proprietary closed source software, the behaviour cannot be changed!
+I have been often asked if i can implement a specific feature.
+Often the answer is: Because all internal routines (reading temperature, controlling the relay, reading the buttons, controlling the display) are controlled by MCU, which still runs proprietary closed source software, the behaviour cannot be changed!
 
 ## Don't like or it doesn't work?
 Flash the original firmware (see installation). Write me a message with your exact model and which parameter was not correct. Maybe your MQTT-server received some unknown messages - this would be also helpful for me. Again: I have tested this only with model BHT-002-GBLW. If you have another device, don't expect that this is working directly.
