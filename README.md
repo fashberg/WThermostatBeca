@@ -71,6 +71,7 @@ In settings menu of MCU (option 4) you can switch between internal (IN), externa
 * OU-Mode: MCU reports only temperature of external sensor and uses it for thermostat room-temperature. WThermostat Values "temperature" and "floorTemperature" are the same (external sensor).
 * AL-Mode: MCU reports both temperatures, uses internal sensor for room-temperature and external sensor for maximum floor temperature overheating protection. Values "temperature" and "floorTemperature" are both valid.
   * It's not possible to change MCU behavior to other modes, e.g. using external temperature sensor to control relays and only display value of internal sensor is not possible. 
+  * See Issue #26 with Workaround by @IanAdd with Home Assistant controlled Heating/Idle state depending on floorTemperature
   * Hint: Long pressing the most right button for 5 seconds (while device switched on) the displays shows external temperature.
 
 ### Hardware Installation
