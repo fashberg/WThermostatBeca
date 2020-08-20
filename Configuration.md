@@ -29,7 +29,7 @@ Steps are in general:
 * Stay at page 'Network configuration'
 * Select checkbox 'Support MQTT', web page will extend
 * Fill out 'MQTT Server', 'MQTT User' (optional), 'MQTT password' (optional) and 'MQTT topic'
-* If you are using Home Assistant then check "Support Autodisovery for Home Assistant using MQTT".
+* If you are using Home Assistant then check "Support Autodiscovery for Home Assistant using MQTT".
 * For some other Smart Home Server (e.g. OpenHAB) optionally check "Send all values also as single values via MQTT" (then you don't have to parse JSON-Strings from summarized output).
 * Press 'Save Configuration' and wait for reboot of device.
 

@@ -103,7 +103,7 @@ Follow instructions here: <a href="Flashing.md">Flashing.md</a>
 See <a href="Configuration.md">Configuration.md</a> for a detailed explanation of the setup.
 
 ## Upgrading
-You can Upgrade over the Air from other versions of ThermostatBecaWifi on the Web-GUI.
+You can Upgrade over the Air from other versions of WThermostatBeca on the Web-GUI.
 Please check all settings after Upgrade!
 
 If you upgrade from original Klaus-Ahrenberg's Original-Version please note:
@@ -133,7 +133,7 @@ There is also a detailed view available:
 # Integration in Home Assisant
 ![homeassistant](docs/homeassistant.png)  ![hass_discovery](docs/hass_discovery.png) 
 ## HASS Autodiscovery
-ThermostatBecaWifi supports optional HASS-Autodiscovery since Version 1.08-fas (currently only for heating devices).
+WThermostatBeca supports optional HASS-Autodiscovery since Version 1.08-fas.
 You have to enable it at Thermostat (settings network) and of course it must be enabled in your HASS configuration.yaml file:
 ```yaml
 mqtt:

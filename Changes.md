@@ -5,6 +5,9 @@
 * Apple Captive Portal support
 * WiFi RSS Value property (/things/network/properties/rssi) #24
 * Case Insensitive true/false (HomeAssistant Uses "True" if boolean values are enabled) #32
+* Case Insensitive true/false (HomeAssistant Uses "True" if boolean values are enabled) #32
+* Climate Autodiscovery (BAC-002)
+* Typos
 
 ## Version 1.15-fas
 * Bugfix issue #20: Hardware Hacks not saved (thanks ilkkaolavas)

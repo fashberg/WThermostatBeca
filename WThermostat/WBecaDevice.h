@@ -1,5 +1,5 @@
 #ifndef BECAMCU_H
-#define	BECAMCU_H
+#define	BECAMCU_H 
 
 #include "Arduino.h"
 #include <ESP8266WiFi.h>
@@ -29,9 +29,9 @@ const static char HTTP_CONFIG_SCHTAB_FOOT[]         PROGMEM = R"=====(
 	</tbody></table>
 )=====";
 
-
+// see https://www.home-assistant.io/docs/mqtt/discovery/ 
+// and https://www.home-assistant.io/integrations/climate.mqtt/
 // LWT = Last Will & Testament
-// tasmota
 const static char MQTT_HASS_AUTODISCOVERY_CLIMATE[]         PROGMEM = R"=====(
 {
 "name":"%s",
@@ -59,7 +59,41 @@ const static char MQTT_HASS_AUTODISCOVERY_CLIMATE[]         PROGMEM = R"=====(
 "min_temp":"10",
 "max_temp":"35",
 "temp_step":"%s",
-"modes":["off","heat","auto"]
+"modes":["heat","auto","off"]
+}
+)=====";
+const static char MQTT_HASS_AUTODISCOVERY_AIRCO[]         PROGMEM = R"=====(
+{
+"name":"%s",
+"unique_id": "%s",
+"dev":{"ids":["%s"],"name":"%s","mdl":"%s","sw":"%s","mf":"WThermostatBeca"},
+"~": "%s",
+"avty_t":"~/tele/LWT",
+"pl_avail":"Online",
+"pl_not_avail":"Offline",
+"act_t":"~/stat/things/thermostat/properties",
+"act_tpl":"{{value_json.action}}",
+"mode_cmd_t":"~/cmnd/things/thermostat/properties/mode",
+"mode_stat_t":"~/stat/things/thermostat/properties",
+"mode_stat_tpl":"{{value_json.mode}}",
+"away_mode_cmd_t":"~/cmnd/things/thermostat/properties/ecoMode",
+"away_mode_stat_t":"~/stat/things/thermostat/properties",
+"away_mode_stat_tpl":"{{value_json.ecoMode}}",
+"temp_cmd_t":"~/cmnd/things/thermostat/properties/targetTemperature",
+"temp_stat_t":"~/stat/things/thermostat/properties",
+"temp_stat_tpl":"{{value_json.targetTemperature}}",
+"curr_temp_t":"~/stat/things/thermostat/properties",
+"curr_temp_tpl":"{{value_json.temperature}}",
+"min_temp":"10",
+"fan_mode_cmd_t":"~/cmnd/things/thermostat/properties/fanMode",
+"fan_mode_stat_tpl":"~/stat/things/thermostat/properties",
+"fan_mode_stat_t":"{{value_json.fanMode}}",
+"pl_on":true,
+"pl_off":false,
+"min_temp":"10",
+"max_temp":"35",
+"temp_step":"%s",
+"modes":["heat","cool","auto","fan_only","off"]
 }
 )=====";
 const static char MQTT_HASS_AUTODISCOVERY_SENSOR[]         PROGMEM = R"=====(
@@ -153,7 +187,10 @@ const byte BECABITS1_TEMP_10        =   8;
 const byte BECABITS1_SWITCHBACKOFF  =  16;
 const byte BECABITS1_FLOORSENSOR    =  32;
 
-
+const byte devicesWithHassAutodiscoverSupport[] = {
+	MODEL_BHT_002_GBLW,
+	MODEL_BAC_002_ALW
+	};
 
 //typedef 
 typedef enum mcuNetworkMode
@@ -366,7 +403,6 @@ public:
 			this->state->setOnValueRequest([this](WProperty* p) {updateModeAndAction();});
     		this->addProperty(state);
     	}
-
 
     	//schedulesDayOffset
     	this->schedulesDayOffset = network->getSettings()->setByte("schedulesDayOffset",
@@ -1064,19 +1100,20 @@ public:
 
 	bool sendMqttHassAutodiscover(){
 		if (mqttHassAutodiscoverSent) return true;
+		if (!hasDevicesWithHassAutodiscoverSupport()) return true;
 		network->log()->notice(F("sendMqttHassAutodiscover"));
+		// https://www.home-assistant.io/docs/mqtt/discovery/
+		String topic="homeassistant/climate/";
+		String unique_id = (String)network->getIdx();
+		unique_id.concat("_climate"); 
+		topic.concat(unique_id);
+		topic.concat("/config"); 
+		WStringStream* response = network->getResponseStream();
+		response->flush();
+		char str_temp[6];
+		dtostrf(this->temperaturePrecision->getDouble(), 3, 1, str_temp);
 		if (getThermostatModel() == MODEL_BHT_002_GBLW ){
-			// https://www.home-assistant.io/docs/mqtt/discovery/
-			String topic="homeassistant/climate/";
-			String unique_id = (String)network->getIdx();
-			unique_id.concat("_climate"); 
-			topic.concat(unique_id);
-			topic.concat("/config"); 
-			WStringStream* response = network->getResponseStream();
-			response->flush();
-			char str_temp[6];
-			dtostrf(this->temperaturePrecision->getDouble(), 3, 1, str_temp);
-			response->printf(FPSTR(MQTT_HASS_AUTODISCOVERY_CLIMATE),
+			response->printf_P(MQTT_HASS_AUTODISCOVERY_CLIMATE,
 				network->getIdx(),
 				unique_id.c_str(),
 				network->getMacAddress().c_str(),
@@ -1086,60 +1123,71 @@ public:
 				network->getMqttTopic(),
 				str_temp 
 			);
-			delay(50); // some extra time
-			if (!network->publishMqtt(topic.c_str(), response, true)) return false;
-			response->flush();
-
-			unique_id = (String)network->getIdx();
-			unique_id.concat("_sensor"); 
-			topic="homeassistant/sensor/"; 
-			topic.concat(unique_id);
-			topic.concat("/config");
-			response->printf(FPSTR(MQTT_HASS_AUTODISCOVERY_SENSOR),
+		} else if (getThermostatModel() == MODEL_BAC_002_ALW ){
+			response->printf_P(MQTT_HASS_AUTODISCOVERY_AIRCO,
 				network->getIdx(),
 				unique_id.c_str(),
 				network->getMacAddress().c_str(),
-				network->getMqttTopic()
-			);
-			if (!network->publishMqtt(topic.c_str(), response, true)) return false;
-			response->flush();
-			delay(50); // some extra time
-
-			if (this->floorSensor->getBoolean()){
-				unique_id = (String)network->getIdx();
-				unique_id.concat("_floorsensor"); 
-				topic="homeassistant/sensor/"; 
-				topic.concat(unique_id);
-				topic.concat("/config");
-				response->printf(FPSTR(MQTT_HASS_AUTODISCOVERY_SENSORFLOOR),
-					network->getIdx(),
-					unique_id.c_str(),
-					network->getMacAddress().c_str(),
-					network->getMqttTopic()
-				);
-				if (!network->publishMqtt(topic.c_str(), response, true)) return false;
-				delay(50); // some extra time
-				response->flush();
-			}
-
-			unique_id = (String)network->getIdx();
-			unique_id.concat("_rssi"); 
-			topic="homeassistant/sensor/"; 
-			topic.concat(unique_id);
-			topic.concat("/config");
-			response->printf(FPSTR(MQTT_HASS_AUTODISCOVERY_SENSORRSSI),
 				network->getIdx(),
-				unique_id.c_str(),
-				network->getMacAddress().c_str(),
-				network->getMqttTopic()
+				network->getApplicationName().c_str(),
+				network->getFirmwareVersion().c_str(),
+				network->getMqttTopic(),
+				str_temp 
 			);
-			if (!network->publishMqtt(topic.c_str(), response, true)) return false;
-			response->flush();
-			delay(50); // some extra time
-
-
-			mqttHassAutodiscoverSent=true;
 		}
+		delay(50); // some extra time
+		if (!network->publishMqtt(topic.c_str(), response, true)) return false;
+		response->flush();
+
+		unique_id = (String)network->getIdx();
+		unique_id.concat("_sensor"); 
+		topic="homeassistant/sensor/"; 
+		topic.concat(unique_id);
+		topic.concat("/config");
+		response->printf_P(MQTT_HASS_AUTODISCOVERY_SENSOR,
+			network->getIdx(),
+			unique_id.c_str(),
+			network->getMacAddress().c_str(),
+			network->getMqttTopic()
+		);
+		if (!network->publishMqtt(topic.c_str(), response, true)) return false;
+		response->flush();
+		delay(50); // some extra time
+
+		if (this->floorSensor->getBoolean()){
+			unique_id = (String)network->getIdx();
+			unique_id.concat("_floorsensor"); 
+			topic="homeassistant/sensor/"; 
+			topic.concat(unique_id);
+			topic.concat("/config");
+			response->printf_P(MQTT_HASS_AUTODISCOVERY_SENSORFLOOR,
+				network->getIdx(),
+				unique_id.c_str(),
+				network->getMacAddress().c_str(),
+				network->getMqttTopic()
+			);
+			if (!network->publishMqtt(topic.c_str(), response, true)) return false;
+			delay(50); // some extra time
+			response->flush();
+		}
+
+		unique_id = (String)network->getIdx();
+		unique_id.concat("_rssi"); 
+		topic="homeassistant/sensor/"; 
+		topic.concat(unique_id);
+		topic.concat("/config");
+		response->printf_P(MQTT_HASS_AUTODISCOVERY_SENSORRSSI,
+			network->getIdx(),
+			unique_id.c_str(),
+			network->getMacAddress().c_str(),
+			network->getMqttTopic()
+		);
+		if (!network->publishMqtt(topic.c_str(), response, true)) return false;
+		response->flush();
+		delay(50); // some extra time
+
+
+		mqttHassAutodiscoverSent=true;
 		return true;
 	}
 
@@ -1781,6 +1829,17 @@ private:
 	void saveSettings(WProperty* property) {
 		network->log()->trace(F("saveSettings"));
 		network->getSettings()->save();
+	}
+
+	bool hasDevicesWithHassAutodiscoverSupport(byte device){
+		for (int i=0; i<sizeof(devicesWithHassAutodiscoverSupport); i++){
+			if (devicesWithHassAutodiscoverSupport[i]==device) return true;
+		}
+		return false;
+	}
+
+	bool hasDevicesWithHassAutodiscoverSupport(){
+		return hasDevicesWithHassAutodiscoverSupport(getThermostatModel());
 	}
 
 };
