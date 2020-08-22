@@ -17,10 +17,11 @@ appversion = config.get("common", "appversion")
 config.get
 
 OUTPUT_DIR = "build_output{}".format(os.path.sep)
+#print("name-firmware.py // appversion: {}".format(appversion))
 
 def bin_map_copy(source, target, env):
     variant = str(target[0]).split(os.path.sep)[1]
-    print("variant: " +variant)
+    #print("bin_map_copy: {} {} {}".format(source[0], target[0], variant))
     
     # check if output directories exist and create if necessary
     if not os.path.isdir(OUTPUT_DIR):
@@ -37,12 +38,19 @@ def bin_map_copy(source, target, env):
     # check if new target files exist and remove if necessary
     for f in [map_file, bin_file]:
         if os.path.isfile(f):
+            #print("removing: {}".format(f))
             os.remove(f)
 
     # copy firmware.bin to firmware/<variant>.bin
     shutil.copy(str(target[0]), bin_file)
 
+
+    print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
+    print("FIRMWARE BUILT: {}".format(bin_file))
+    print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
+
     # copy firmware.map to map/<variant>.map
-    shutil.copy(str(target[0]), map_file)
+    if os.path.isfile("firmware.map"):
+        shutil.move("firmware.map", map_file)
 
 env.AddPostAction("$BUILD_DIR/${PROGNAME}.bin", [bin_map_copy])
