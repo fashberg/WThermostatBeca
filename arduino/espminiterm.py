@@ -130,7 +130,7 @@ class ESPStackDecoder(miniterm.Transform):
       return ""
     home = expanduser("~")
     # home os.environ["HOME"]
-    output = subprocess.check_output([home + "/.platformio/packages/toolchain-xtensa/bin/xtensa-lx106-elf-addr2line.exe", "-aipfC", "-e", ".pioenvs/wmthermostat-debug/firmware.elf"] + addrs)
+    output = subprocess.check_output([home + "/.platformio/packages/toolchain-xtensa/bin/xtensa-lx106-elf-addr2line.exe", "-aipfC", "-e", ".pioenvs/wthermostat-debug/firmware.elf"] + addrs)
     return output
 
 miniterm.TRANSFORMATIONS['espstackdecoder'] = ESPStackDecoder

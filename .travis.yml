@@ -10,9 +10,9 @@ install:
 cache: false
 
 env:
-  - ENV=wmthermostat
+  - ENV=wthermostat
 
 script:
   - platformio run -e $ENV
 before_deploy:
-  - for file in .pioenvs/*/firmware.bin; do cp $file ${file%/*}.bin; done
+  - for file in build_output/firmware/*.bin; do cp $file ${file%/*}.bin; done
