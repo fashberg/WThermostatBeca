@@ -28,7 +28,7 @@ The firmware has been tested or reported to work with following devices:
 
 Also selled by Moes or Qiumi.
 
-![homeassistant](docs/bac-002-wifi.jpg)  
+![homeassistant](docs/images/bac-002-wifi.jpg)
 
 ## Features
 
@@ -136,24 +136,26 @@ If you upgrade from original Klaus-Ahrenberg's Original-Version please note:
 ## Screenshots
 
 Main Screen:
-![setup_main](docs/Setup_Main.png)  
+![setup_main](docs/images/Setup_Main.png)  
 Network Screen:
-![setup_network](docs/Setup_Network.png)  
+![setup_network](docs/images/Setup_Network.png)  
 Schedule Screen:
-![setup_schedules](docs/Setup_Schedules.png)  
+![setup_schedules](docs/images/Setup_Schedules.png)  
 
 ## Integration in WebThings
 
 Since version 0.96 this firmware supports Mozilla WebThings directly. With webthings you can control the thermostat via the Gateway - inside and also outside of your home network. No clunky VPN, dynDNS solutions needed to access your home devices. I recommend to run the gateway in parallel to an MQTT server and for example Node-Red. Via MQTT you can control the thermostat completely and logic can be done by Node-Red. WebThings is used for outside control of main parameters.  
 Add the device to the gateway via '+' icon. After that you have the new nice and shiny icon in the dashboard:  
-![webthing_icon](docs/Webthing_Icon.png)  
-The icon shows the actual temperature and heating state.  
+![webthing_icon](docs/images/Webthing_Icon.png)  
+The icon shows the actual temperature and heating state.
+
 There is also a detailed view available:
-![webthing](docs/Webthing_Complete.png)  
+
+![webthing](docs/images/Webthing_Complete.png)  
 
 ## Integration in Home Assisant
 
-![homeassistant](docs/homeassistant.png)  ![hass_discovery](docs/hass_discovery.png)
+![homeassistant](docs/images/homeassistant.png)  ![hass_discovery](docs/images/hass_discovery.png)
 
 ### HASS Autodiscovery
 
@@ -474,7 +476,7 @@ Both devices are communication using a binary serial protocol, called "MCU proto
 
 Because ESP8266 runs with 3.3 Volt and Sonix MCU runs with 5.0 Volt the Serial-TTL-Level gets shifted with transistors.
 
-![HowItWorks](docs/how-it-works.png)
+![HowItWorks](docs/images/how-it-works.png)
 
 ### Can you add xxx as a feature
 
