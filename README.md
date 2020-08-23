@@ -438,8 +438,8 @@ Flash the original firmware (see installation). Write me a message with your exa
 ## Build this firmware from source
 For build from sources i suggest <a href="https://code.visualstudio.com/">Visual Studio Code</a> and <a href="https://platformio.org/">Platform.IO</a>.
 
-### Prepare to build
- * Install Code and PlatformIO
+### Visual Studio Code: Install and Prepare to build
+ * Install VS Code and PlatformIO
  * Type:
 ```
 git clone https://github.com/fashberg/WThermostatBeca
@@ -456,9 +456,23 @@ git submodule update
 All dependant arduino-libraries (DNSServer, EEPROM (for esp8266), ESP8266HTTPClient, ESP8266mDNS, ESP8266WebServer, ESP8266WiFi, Hash, NTPClient, Time.) will be downloaded automatically (defined in platform.ini) and the necessary WAdapter library from https://github.com/fashberg/WAdapter (git submodule).
 
 
-### Using GitPod
-You can open and compile this Project on Gitpod. Just click 
+### Cloud Development using GitPod
+You can open and compile this Project on Gitpod. You need a GitHub account. 50 hours are free per month.
+
+Just click 
 [![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/fashberg/WThermostatBeca)
+The fist built starts automatically.
+You can download the firmware by right-clicking in the Project-Explorer the file located at build_output/firmware/wthermostat-1.xx-fas.bin and chose Download
+
+###Some commands:
+* Build normal firmware:
+``platformio run -e wthermostat`` 
+* Build all firmwares:
+``platformio run`` 
+* Get latest version and dependant libraries.
+``git pull && git pull --recurse-submodules``
+* Upgrade PlatformIO:
+``platformio upgrade --dev && platformio update``
 
 ### Special Build Versions
 * -Minimal environment: minimal version without thermostat, MQTT or WebThings support. Use only for intermediate Updating
