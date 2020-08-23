@@ -1,5 +1,4 @@
 [![Gitpod ready-to-code](https://img.shields.io/badge/Gitpod-ready--to--code-blue?logo=gitpod)](https://gitpod.io/#https://github.com/klausahrenberg/WThermostatBeca)
-[![Gitpod ready-to-code](https://img.shields.io/badge/Gitpod-ready--to--code-blue?logo=gitpod)](https://gitpod.io/#https://github.com/klausahrenberg/WThermostatBeca)
 
 # WThermostat - FAS-Fork
 
@@ -459,7 +458,7 @@ All dependant arduino-libraries (DNSServer, EEPROM (for esp8266), ESP8266HTTPCli
 
 ### Using GitPod
 You can open and compile this Project on Gitpod. Just click 
-[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/<your-org>/<your-project>)
+[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/fashberg/WThermostatBeca)
 
 ### Special Build Versions
 * -Minimal environment: minimal version without thermostat, MQTT or WebThings support. Use only for intermediate Updating
