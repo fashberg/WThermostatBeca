@@ -148,7 +148,7 @@ class WClock : public WDevice {
             p->setLong(getEpochTime());
         });
         this->addProperty(epochTime);
-        this->epochTimeLocalFormatted = new WStringProperty("epochTimeLocalFormatted", "epochTimeLocalFormatted", 19);
+        this->epochTimeLocalFormatted = new WStringProperty("epochTimeLocalFormatted", "epochTimeLocalFormatted", 20);
         this->epochTimeLocalFormatted->setReadOnly(true);
         this->epochTimeLocalFormatted->setOnValueRequest([this](WProperty* p) { updateLocalFormattedTime(); });
         this->addProperty(epochTimeLocalFormatted);
@@ -739,6 +739,39 @@ class WClock : public WDevice {
         return t;
     }
 
+    bool hasInfoPage() {
+        return true;
+    }
+
+    void printInfoPage(WStringStream* page) {
+        page->print("<tr><th>Time-Valid:</th><td>");
+        page->print((isValidTime()  ? "Yes" : "No"));
+        page->print("</td></tr>");
+
+        page->print("<tr><th>Current local Time:</th><td>");
+        page->print(epochTimeLocalFormatted->c_str());
+        page->print("</td></tr>");
+
+        page->print("<tr><th>Current UTC-Offset:</th><td>");
+        page->print(offset->getInteger());
+        page->print("</td></tr>");
+
+        page->print("<tr><th>Last-NTP-Sync Try:</th><td>");
+        if (lastTry){
+            page->printf("%d Seconds ago", millis()-lastTry);
+        } else {
+            page->print("Never");
+        }        
+        page->print("</td></tr>");
+
+        page->print("<tr><th>Last-NTP-Sync with Success</th><td>");
+        if (lastNtpSync){
+            page->printf("%d Seconds ago", millis()-lastNtpSync);
+        } else {
+            page->print("Never");
+        }
+        page->print("</td></tr>");
+    }
 
 };
 

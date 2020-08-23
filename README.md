@@ -136,10 +136,15 @@ If you upgrade from original Klaus-Ahrenberg's Original-Version please note:
 ## Screenshots
 
 Main Screen:
+
 ![setup_main](docs/images/Setup_Main.png)  
+
 Network Screen:
+
 ![setup_network](docs/images/Setup_Network.png)  
+
 Schedule Screen:
+
 ![setup_schedules](docs/images/Setup_Schedules.png)  
 
 ## Integration in WebThings

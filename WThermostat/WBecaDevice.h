@@ -220,7 +220,6 @@ public:
     	this->systemMode = nullptr;
 		this->setMqttRetain(true);
 		this->stateNotifyInterval=60000;
-		this->mcuId="";
 		this->onConfigurationRequest=nullptr;
 		this->onPowerButtonOn=nullptr;
 		this->mqttHassAutodiscoverSent=false;
@@ -256,7 +255,7 @@ public:
 		}
 
 		// switch back property
-		this->switchBackToAuto = new WProperty("switchBackToAuto", "switchBackToAuto", BOOLEAN);
+		this->switchBackToAuto = new WProperty("switchBackToAuto", "switch Back from Manual to Auto at next Schedule", BOOLEAN);
 		this->switchBackToAuto->setBoolean(!(this->becaBits1->getByte() & BECABITS1_SWITCHBACKOFF));
 		this->switchBackToAuto->setVisibility(ALL);
 		this->switchBackToAuto->setReadOnly(false);
@@ -269,7 +268,7 @@ public:
 		this->floorSensor->setBoolean(this->becaBits1->getByte() & BECABITS1_FLOORSENSOR);
 
 		// precicion (must be initialized before Temperature Values)
-		this->temperaturePrecision = new WProperty("precision", "precision", DOUBLE);
+		this->temperaturePrecision = new WProperty("precision", "Precision", DOUBLE);
 		if (this->becaBits1->getByte() & BECABITS1_TEMP_01){
 			this->temperaturePrecision->setDouble(0.1f);
 		} else if (this->becaBits1->getByte() & BECABITS1_TEMP_10){
@@ -369,7 +368,7 @@ public:
 		this->mode->setMqttSendChangedValues(true);
     	this->addProperty(mode);
 
-		this->action = new WProperty("action", "action", STRING);
+		this->action = new WProperty("action", "Action", STRING);
 		this->action->setAtType("ThermostatactionProperty"); 
 		this->action->addEnumString(ACTION_OFF);
 		this->action->addEnumString(ACTION_HEATING);
@@ -408,6 +407,10 @@ public:
     	this->schedulesDayOffset = network->getSettings()->setByte("schedulesDayOffset",
 			(network->getSettingsOld() && network->getSettingsOld()->existsSetting("schedulesDayOffset") ? network->getSettingsOld()->getByte("schedulesDayOffset") : 0));
 
+
+		this->mcuId = new WProperty("mcuId", "mcuId", STRING);
+		this->mcuId->setReadOnly(true);
+		this->addProperty(mcuId);
 		// Pages		
 		WPage * schedulePage=new WPage("schedules", "Configure Schedules");
 		schedulePage->setPrintPage([this,schedulePage](ESP8266WebServer* webServer, WStringStream* page) {
@@ -1245,6 +1248,7 @@ private:
 	WProperty *floorSensor;
     WProperty* ntpServer;
     WProperty* schedulesDayOffset;
+	WProperty *mcuId;
     THandlerFunction onConfigurationRequest;
 	THandlerFunction onPowerButtonOn;
     unsigned long lastNotify, lastScheduleNotify, lastLongLoop;
@@ -1254,9 +1258,6 @@ private:
 
 	bool mcuInitialized;
 	int mcuInitializeState;
-	String mcuId;
-
-
 
     int getIndex(unsigned char c) {
     	const char HEX_DIGITS[] = { '0', '1', '2', '3', '4', '5', '6', '7', '8',
@@ -1554,7 +1555,7 @@ private:
 								buf[i]=receivedCommand[6+i];
 							}
 							buf[len]=0;
-							this->mcuId=(String)buf;
+							this->mcuId->setString(buf);
 							if (mcuInitializeState==2) mcuInitializeState++;
 							network->log()->notice(F("Product ID: '%s'"), buf);
 
@@ -1842,6 +1843,72 @@ private:
 		return hasDevicesWithHassAutodiscoverSupport(getThermostatModel());
 	}
 
+	bool hasInfoPage() {
+		return true;
+	}
+
+	void printInfoPage(WStringStream* page) {
+
+		page->print("<tr><th>MCU-Initialized:</th><td>");
+		page->print((this->isMcuInitialized() ? "Yes" : "No"));
+		page->print("</td></tr>");
+
+		page->print("<tr><th>MCU-ID:</th><td>");
+		page->print(this->mcuId->c_str());
+		page->print("</td></tr>");
+
+
+		page->print("<tr><th>Device On:</th><td>");
+		page->print((deviceOn->getBoolean() ? "Device On" : "Device Off"));
+		page->print("</td></tr>");
+
+		page->print("<tr><th>Current Temperature:</th><td>");
+		page->print(actualTemperature->getDouble());
+		page->print("</td></tr>");
+
+		if (getThermostatModel() == MODEL_BHT_002_GBLW && this->floorSensor->getBoolean()){
+			page->print("<tr><th>Current Floor-Temperature:</th><td>");
+			page->print(actualFloorTemperature->getDouble());
+			page->print("</td></tr>");
+		}
+
+		page->print("<tr><th>Target Temperature:</th><td>");
+		page->print(targetTemperature->getDouble());
+		page->print("</td></tr>");
+
+		page->print("<tr><th>Current Mode:</th><td>");
+		page->print(systemMode->c_str());
+		page->print("</td></tr>");
+
+		page->print("<tr><th>Schedules Mode:</th><td>");
+		page->print(schedulesMode->c_str());
+		page->print("</td></tr>");
+
+		page->print("<tr><th>Edo Mode:</th><td>");
+		page->print((schedulesMode->getBoolean() ? "Eco On" : "Eco Off"));
+		page->print("</td></tr>");
+
+		if (getThermostatModel() == MODEL_BAC_002_ALW){
+			page->print("<tr><th>System Mode:</th><td>");
+			page->print(systemMode->c_str());
+			page->print("</td></tr>");
+
+			page->print("<tr><th>Fan Mode:</th><td>");
+			page->print(fanMode->c_str());
+			page->print("</td></tr>");
+		}
+
+		page->print("<tr><th>Current Action:</th><td>");
+		page->print(action->c_str());
+		page->print("</td></tr>");
+
+		if ((isSupportingHeatingRelay()) || (isSupportingCoolingRelay())) {
+			page->print("<tr><th>Current State:</th><td>");
+			page->print(state->c_str());
+			page->print("</td></tr>");
+		}
+
+	}
 };
 
 
