@@ -1849,63 +1849,63 @@ private:
 
 	void printInfoPage(WStringStream* page) {
 
-		page->print("<tr><th>MCU-Initialized:</th><td>");
+		htmlTableRowTitle(page, F("MCU-Initialized:"));
 		page->print((this->isMcuInitialized() ? "Yes" : "No"));
-		page->print("</td></tr>");
+		htmlTableRowEnd(page);
 
-		page->print("<tr><th>MCU-ID:</th><td>");
+		htmlTableRowTitle(page, F("MCU-ID:"));
 		page->print(this->mcuId->c_str());
-		page->print("</td></tr>");
+		htmlTableRowEnd(page);
 
 
-		page->print("<tr><th>Device On:</th><td>");
+		htmlTableRowTitle(page, F("Device On:"));
 		page->print((deviceOn->getBoolean() ? "Device On" : "Device Off"));
-		page->print("</td></tr>");
+		htmlTableRowEnd(page);
 
-		page->print("<tr><th>Current Temperature:</th><td>");
+		htmlTableRowTitle(page, F("Current Temperature:"));
 		page->print(actualTemperature->getDouble());
-		page->print("</td></tr>");
+		htmlTableRowEnd(page);
 
 		if (getThermostatModel() == MODEL_BHT_002_GBLW && this->floorSensor->getBoolean()){
-			page->print("<tr><th>Current Floor-Temperature:</th><td>");
+			htmlTableRowTitle(page, F("Current Floor-Temperature:"));
 			page->print(actualFloorTemperature->getDouble());
-			page->print("</td></tr>");
+			htmlTableRowEnd(page);
 		}
 
-		page->print("<tr><th>Target Temperature:</th><td>");
+		htmlTableRowTitle(page, F("Target Temperature:"));
 		page->print(targetTemperature->getDouble());
-		page->print("</td></tr>");
+		htmlTableRowEnd(page);
 
-		page->print("<tr><th>Current Mode:</th><td>");
+		htmlTableRowTitle(page, F("Current Mode:"));
 		page->print(systemMode->c_str());
-		page->print("</td></tr>");
+		htmlTableRowEnd(page);
 
-		page->print("<tr><th>Schedules Mode:</th><td>");
+		htmlTableRowTitle(page, F("Schedules Mode:"));
 		page->print(schedulesMode->c_str());
-		page->print("</td></tr>");
+		htmlTableRowEnd(page);
 
-		page->print("<tr><th>Edo Mode:</th><td>");
+		htmlTableRowTitle(page, F("Edo Mode:"));
 		page->print((schedulesMode->getBoolean() ? "Eco On" : "Eco Off"));
-		page->print("</td></tr>");
+		htmlTableRowEnd(page);
 
 		if (getThermostatModel() == MODEL_BAC_002_ALW){
-			page->print("<tr><th>System Mode:</th><td>");
+			htmlTableRowTitle(page, F("System Mode:"));
 			page->print(systemMode->c_str());
-			page->print("</td></tr>");
+			htmlTableRowEnd(page);
 
-			page->print("<tr><th>Fan Mode:</th><td>");
+			htmlTableRowTitle(page, F("Fan Mode:"));
 			page->print(fanMode->c_str());
-			page->print("</td></tr>");
+			htmlTableRowEnd(page);
 		}
 
-		page->print("<tr><th>Current Action:</th><td>");
+		htmlTableRowTitle(page, F("Current Action:"));
 		page->print(action->c_str());
-		page->print("</td></tr>");
+		htmlTableRowEnd(page);
 
 		if ((isSupportingHeatingRelay()) || (isSupportingCoolingRelay())) {
-			page->print("<tr><th>Current State:</th><td>");
+			htmlTableRowTitle(page, F("Current State:"));
 			page->print(state->c_str());
-			page->print("</td></tr>");
+			htmlTableRowEnd(page);
 		}
 
 	}

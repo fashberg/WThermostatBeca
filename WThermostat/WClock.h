@@ -744,33 +744,33 @@ class WClock : public WDevice {
     }
 
     void printInfoPage(WStringStream* page) {
-        page->print("<tr><th>Time-Valid:</th><td>");
+        htmlTableRowTitle(page, F("Time-Valid:"));
         page->print((isValidTime()  ? "Yes" : "No"));
-        page->print("</td></tr>");
+        htmlTableRowEnd(page);
 
-        page->print("<tr><th>Current local Time:</th><td>");
+        htmlTableRowTitle(page, F("Current local Time:"));
         page->print(epochTimeLocalFormatted->c_str());
-        page->print("</td></tr>");
+        htmlTableRowEnd(page);
 
-        page->print("<tr><th>Current UTC-Offset:</th><td>");
+        htmlTableRowTitle(page, F("Current UTC-Offset:"));
         page->print(offset->getInteger());
-        page->print("</td></tr>");
+        htmlTableRowEnd(page);
 
-        page->print("<tr><th>Last-NTP-Sync Try:</th><td>");
+        page->print("F(<tr><th>Last-NTP-Sync Try:</th><td>");
         if (lastTry){
             page->printf("%d Seconds ago", millis()-lastTry);
         } else {
-            page->print("Never");
+            page->print(F("Never"));
         }        
-        page->print("</td></tr>");
+        htmlTableRowEnd(page);
 
-        page->print("<tr><th>Last-NTP-Sync with Success</th><td>");
+        htmlTableRowTitle(page, F("Last-NTP-Sync with Success"));
         if (lastNtpSync){
             page->printf("%d Seconds ago", millis()-lastNtpSync);
         } else {
-            page->print("Never");
+            page->print(F("Never"));
         }
-        page->print("</td></tr>");
+        htmlTableRowEnd(page);
     }
 
 };
