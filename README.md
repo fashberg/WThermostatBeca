@@ -1,3 +1,6 @@
+[![Gitpod ready-to-code](https://img.shields.io/badge/Gitpod-ready--to--code-blue?logo=gitpod)](https://gitpod.io/#https://github.com/klausahrenberg/WThermostatBeca)
+[![Gitpod ready-to-code](https://img.shields.io/badge/Gitpod-ready--to--code-blue?logo=gitpod)](https://gitpod.io/#https://github.com/klausahrenberg/WThermostatBeca)
+
 # WThermostat - FAS-Fork
 
 Fork of https://github.com/klausahrenberg/WThermostatBeca with some new features
@@ -452,6 +455,11 @@ git submodule update
    * Binary Firmware can be found in build_output\firmware\wthermostat-1.xx-fas.bin (or -debug or -minimal)
    
 All dependant arduino-libraries (DNSServer, EEPROM (for esp8266), ESP8266HTTPClient, ESP8266mDNS, ESP8266WebServer, ESP8266WiFi, Hash, NTPClient, Time.) will be downloaded automatically (defined in platform.ini) and the necessary WAdapter library from https://github.com/fashberg/WAdapter (git submodule).
+
+
+### Using GitPod
+You can open and compile this Project on Gitpod. Just click 
+[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/<your-org>/<your-project>)
 
 ### Special Build Versions
 * -Minimal environment: minimal version without thermostat, MQTT or WebThings support. Use only for intermediate Updating

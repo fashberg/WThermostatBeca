@@ -1,0 +1,6 @@
+tasks:
+- before: platformio upgrade --dev && platformio update
+    command: platformio run -e wthermostat
+vscode:
+extensions:
+    - platformio.platformio-ide
