@@ -8,6 +8,8 @@
 * Case Insensitive true/false (HomeAssistant Uses "True" if boolean values are enabled) #32
 * Climate Autodiscovery (BAC-002)
 * Typos
+* Gitpd support (https://github.com/fashberg/WThermostatBeca#cloud-development-using-gitpod)
+* Travis CI support (https://travis-ci.org/github/fashberg/WThermostatBeca)
 
 ## Version 1.15-fas
 * Bugfix issue #20: Hardware Hacks not saved (thanks ilkkaolavas)

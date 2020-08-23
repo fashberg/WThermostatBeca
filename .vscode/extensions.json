@@ -2,6 +2,8 @@
     // See http://go.microsoft.com/fwlink/?LinkId=827846
     // for the documentation about the extensions.json format
     "recommendations": [
+        "bierner.github-markdown-preview",
+        "davidanson.vscode-markdownlint",
         "platformio.platformio-ide"
     ]
 }

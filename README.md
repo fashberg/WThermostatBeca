@@ -1,13 +1,19 @@
-[![Gitpod ready-to-code](https://img.shields.io/badge/Gitpod-ready--to--code-blue?logo=gitpod)](https://gitpod.io/#https://github.com/klausahrenberg/WThermostatBeca)
-
 # WThermostat - FAS-Fork
 
-Fork of https://github.com/klausahrenberg/WThermostatBeca with some new features
+[![GitHub version](https://img.shields.io/github/release/fashberg/WThermostatBeca.svg)](https://github.com/fashberg/WThermostatBeca/releases/latest)
+![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/v/release/fashberg/WThermostatBeca?include_prereleases&label=beta)
+[![GitHub download](https://img.shields.io/github/downloads/fashberg/WThermostatBeca/total.svg)](https://github.com/fashberg/WThermostatBeca/releases/latest)
+[![Gitpod ready-to-code](https://img.shields.io/badge/Gitpod-ready--to--code-blue?logo=gitpod)](https://gitpod.io/#https://github.com/klausahrenberg/WThermostatBeca)
+[![travis-ci-status](https://api.travis-ci.org/fashberg/WThermostatBeca.svg?branch=master)](https://travis-ci.org/github/fashberg/WThermostatBeca)
+
+Fork of <https://github.com/klausahrenberg/WThermostatBeca> with some new features.
 
 Replaces original Tuya firmware on Beca thermostat with ESP8266 wifi module.
 
 ## Supported Devices
+
 The firmware has been tested or reported to work with following devices:
+
 * BHT-002 WiFi Thermostat
   * BHT-002-GALW (Water/Gas heating)
   * BHT-002-GBLW (floor heating)
@@ -25,6 +31,7 @@ Also selled by Moes or Qiumi.
 ![homeassistant](docs/bac-002-wifi.jpg)  
 
 ## Features
+
 * No Cloud dependencies!
 * Enables thermostat to communicate via MQTT and/or Mozilla WebThings
 * Autodiscovery for Home Assistant via MQTT _(fas)_
@@ -37,19 +44,20 @@ Also selled by Moes or Qiumi.
 * Only BHT-002-GxLW: actualFloorTemperature (external temperature sensor)
 * Only BAC-002-ALW: fanSpeed:auto|low|medium|high; systemMode:cooling|heating|ventilation
 * Reading and setting of time schedules via MQTT
-* Reading and setting of Schedules via Web-GUI 
+* Reading and setting of Schedules via Web-GUI
 * Automatic switching back to temperature-scheduling from manual mode next schedule interval (optional)
 * Logging to MQTT _(fas)_
 
 _(fas)_: Only available in -fas version
 
 ## Hardware-Versions
-You need the WiFi Version! (W in productname suffix, like -GAL**W**). There is also a version without WLAN. See <a href="./docs/Diagnose%20Can%20we%20add%20WiFi%20to%20Non-Wifi%20Thermostat%20bac-002.pdf">Diagnose Can we add WiFi to Non-Wifi Thermostat bac-002.pdf</a>
+
+You need the WiFi Version! (W in productname suffix, like -GAL**W**). There is also a version without WLAN. See [Diagnose Can we add WiFi to Non-Wifi Thermostat bac-002.pdf](./docs/Diagnose%20Can%20we%20add%20WiFi%20to%20Non-Wifi%20Thermostat%20bac-002.pdf)
 
 The BHT Version is for heating only. The BAC-Version has modes Cooling, Heating and Ventilation.
-The BHT-002-GA/GB/GC versions only differs in relays-wiring. 
+The BHT-002-GA/GB/GC versions only differs in relays-wiring.
 
-#### Difference between GA, GB and GC
+### Difference between GA, GB and GC
 
 * GA - Water-Heating
   * Two Relays for opening and closing valve
@@ -65,50 +73,59 @@ The BHT-002-GA/GB/GC versions only differs in relays-wiring.
   * Relay on PIN 1 - PIN 2 (dry contacts)
   * Product Spec says Max Power: 3 A
 
-
 ### External Temperature Sensor
+
 You can connect one external NTC temperature sensor (type 10K, 3950) to BHT-002 thermostats, for GB-Model it's included.
-In settings menu of MCU (option 4) you can switch between internal (IN), external (OU) and All (AL). See <a href="./docs/BHT-002-Manual-long.pdf">BHT-002-Manual.pdf</a>.
+In settings menu of MCU (option 4) you can switch between internal (IN), external (OU) and All (AL). See [BHT-002-Manual.pdf](./docs/BHT-002-Manual-long.pdf).
+
 * IN-Mode: MCU reports only temperature of internal sensor and uses it for thermostat room-temperature. Value "floorTemperature" shows 0.00, or last measured value of OU- or AL-Mode (even after restart or re-powering).
 * OU-Mode: MCU reports only temperature of external sensor and uses it for thermostat room-temperature. WThermostat Values "temperature" and "floorTemperature" are the same (external sensor).
 * AL-Mode: MCU reports both temperatures, uses internal sensor for room-temperature and external sensor for maximum floor temperature overheating protection. Values "temperature" and "floorTemperature" are both valid.
-  * It's not possible to change MCU behavior to other modes, e.g. using external temperature sensor to control relays and only display value of internal sensor is not possible. 
-  * See <a href="https://github.com/fashberg/WThermostatBeca/issues/27">Issue #27</a> with Workaround by @IanAdd with Home Assistant controlled Heating/Idle state depending on floorTemperature
+  * It's not possible to change MCU behavior to other modes, e.g. using external temperature sensor to control relays and only display value of internal sensor is not possible.
+  * See [Issue #27](https://github.com/fashberg/WThermostatBeca/issues/27) with Workaround by @IanAdd with Home Assistant controlled Heating/Idle state depending on floorTemperature
   * Hint: Long pressing the most right button for 5 seconds (while device switched on) the displays shows external temperature.
 
 ### Hardware Installation
+
 Here a description of how to install the hardware - indepentent from Open Source WThermostat.
 **No special Hardware installation neccessary for Upgrading to this firmware!**
- * see <a href="Installation.md">Installation.md</a>
+
+* see [Installation.md](Installation.md)
 
 ## Download binaries
-Pre-built binaries can be downloaded at <a href="https://github.com/fashberg/WThermostatBeca/releases">releases-page</a>.
+
+Pre-built binaries can be downloaded at [releases-page](https://github.com/fashberg/WThermostatBeca/releases)</a>.
 
 ## Software Installation
+
 You can install the firmware either
+
 * by using tuya-convert - no Hardware Modifications necessary
 * by soldering cables to the ESP-Modules using an ESP/Arduino-Programmer (3,3 Volt TTL)
 * by using OTA Upgrade on tasmota or other OpenSource ESP Firmware
 
-Yoube video of converting to 1.14-fas with tuya-convert: https://youtu.be/fqfghJqnK_8
+Yoube video of converting to 1.14-fas with tuya-convert: <https://youtu.be/fqfghJqnK_8>
 
-Follow instructions here: <a href="Flashing.md">Flashing.md</a>
+Follow instructions here: [Flashing.md](Flashing.md)
 
 ## Initial configuration
+
 * The devices becomes an Access Point
 * Connect to WiFi `Thermostat-xxxxxx` with Password `12345678`
 * Open `http://192.168.4.1` or wait for Captive Portal to be opened on Android
 * Configure your WiFi Settings
-* After initial setup, the device configuration is available at `http://<device_ip>/` 
+* After initial setup, the device configuration is available at `http://<device_ip>/`
 * Configure device model, clock and other settings
 
-See <a href="Configuration.md">Configuration.md</a> for a detailed explanation of the setup.
+See [Configuration.md](Configuration.md) for a detailed explanation of the setup.
 
 ## Upgrading
+
 You can Upgrade over the Air from other versions of WThermostatBeca on the Web-GUI.
 Please check all settings after Upgrade!
 
 If you upgrade from original Klaus-Ahrenberg's Original-Version please note:
+
 * Only WLAN settings are kept
 * If you get "Not Enough Space" you can use WThermostat_1.xx-fas-minial.bin as interim-version.
   * WLAN settings are kept
@@ -117,6 +134,7 @@ If you upgrade from original Klaus-Ahrenberg's Original-Version please note:
   * Not neccessary when upgrading from fas to fas versions
 
 ## Screenshots
+
 Main Screen:
 ![setup_main](docs/Setup_Main.png)  
 Network Screen:
@@ -124,19 +142,24 @@ Network Screen:
 Schedule Screen:
 ![setup_schedules](docs/Setup_Schedules.png)  
 
-# Integration in WebThings
+## Integration in WebThings
+
 Since version 0.96 this firmware supports Mozilla WebThings directly. With webthings you can control the thermostat via the Gateway - inside and also outside of your home network. No clunky VPN, dynDNS solutions needed to access your home devices. I recommend to run the gateway in parallel to an MQTT server and for example Node-Red. Via MQTT you can control the thermostat completely and logic can be done by Node-Red. WebThings is used for outside control of main parameters.  
 Add the device to the gateway via '+' icon. After that you have the new nice and shiny icon in the dashboard:  
 ![webthing_icon](docs/Webthing_Icon.png)  
 The icon shows the actual temperature and heating state.  
-There is also a detailed view available:  
-<img src="docs/Webthing_Complete.png" width="400">
+There is also a detailed view available:
+![webthing](docs/Webthing_Complete.png)  
 
-# Integration in Home Assisant
-![homeassistant](docs/homeassistant.png)  ![hass_discovery](docs/hass_discovery.png) 
-## HASS Autodiscovery
+## Integration in Home Assisant
+
+![homeassistant](docs/homeassistant.png)  ![hass_discovery](docs/hass_discovery.png)
+
+### HASS Autodiscovery
+
 WThermostatBeca supports optional HASS-Autodiscovery since Version 1.08-fas.
 You have to enable it at Thermostat (settings network) and of course it must be enabled in your HASS configuration.yaml file:
+
 ```yaml
 mqtt:
   broker: <ip of broker>
@@ -144,13 +167,15 @@ mqtt:
   discovery_prefix: homeassistant
 ```
 
-### Use a persistant MQTT-Broker
+#### Use a persistant MQTT-Broker
+
 You should use a persistent MQTT-Broker, keeping all retained messages during reboot/restart.
-HASS integrated MQTT broker is not persistent 
+HASS integrated MQTT broker is not persistent.
 Otherwise all autodiscovered messages are getting lost and you have to reboot all devices, to send HASS autodiscover messages again!
-See: https://www.home-assistant.io/docs/mqtt/discovery/
+See: <https://www.home-assistant.io/docs/mqtt/discovery/>
 
 Example for users of mosquitto, file mosquitto.conf:
+
 ```sh
 persistence true
 persistence_file mosquitto.db
@@ -158,13 +183,17 @@ persistence_location /var/lib/mosquitto/
 autosave_interval 1800
 # The default if not set is to never expire persistent clients.
 persistent_client_expiration 24h
-```
-See https://mosquitto.org/man/mosquitto-conf-5.html for more details.
 
-## HASS Manual Configuration
+```
+
+See <https://mosquitto.org/man/mosquitto-conf-5.html> for more details.
+
+### HASS Manual Configuration
+
 For manual Configuration here is an example for your configuration.yaml file:
 
 Heating:
+
 ```yaml
 climate:
   - platform: mqtt
@@ -193,7 +222,9 @@ climate:
     temp_step: 0.5
     precision: 0.5
 ```
+
 Air Conditioning:
+
 ```yaml
 climate:
   - platform: mqtt
@@ -225,7 +256,9 @@ climate:
     fan_mode_state_topic: "home/bedroom/stat/things/thermostat/properties"
     fan_mode_state_template: "{{value_json.fanMode}}"
 ```
-If you have several thermostats you can anchor some settings while defining the first device and refer later on. Example: 
+
+If you have several thermostats you can anchor some settings while defining the first device and refer later on. Example:
+
 ```yaml
 climate:
 - platform: mqtt
@@ -279,17 +312,22 @@ climate:
   mode_state_topic: "home/wc/stat/things/thermostat/properties"
   <<: *commonbeca
 ```
-See  https://www.home-assistant.io/integrations/climate.mqtt/ for more information.
 
-# Device-Functions
-## Json structures
+See <https://www.home-assistant.io/integrations/climate.mqtt/> for more information.
+
+## Device-Functions
+
+### Json structures
+
 The software provides different messages:
+
 1. Thermostat State report (JSON)
 2. Schedules (JSON)
 3. Device (at start of device to let you know the topics and ip)
 4. Logs (Plain)
 
-### 1. Thermostat State report 
+#### 1. Thermostat State report
+
 **MQTT:** State report is provided every 5 minutes, at change of a parameter or at request via message with empty payload to `<your_topic>/cmnd/things/thermostat/properties` , reports are sent to `<your_topic>/stat/things/thermostat/properties`.
 The state report is sent with MQTT-retain-flag enabled.
 
@@ -310,14 +348,14 @@ The state report is sent with MQTT-retain-flag enabled.
   "floorTemperature":20, //only_BHT-002-GxLW
   "fanMode":"auto|low|medium|high", //only_BAC-002-ALW
   "systemMode":"cool|heat|fan_only", //only_BAC-002-ALW
-  "mode":"off|auto|heat" // BHT-002: combined Mode for better home assistant support. 
+  "mode":"off|auto|heat" // BHT-002: combined Mode for better home assistant support.
   "mode":"off|autoheat|autocool|autofan|heat|cool|fan_only" // BAC-002-ALW
   "action":"off|idle|heating|cooling|fan" // read only current action, idle only available if hardware is modified, cooling/fan only BAC-002
 }
 ```
 
+#### 2. Schedules
 
-### 2. Schedules
 **MQTT:** Request actual schedules via message with empty payload to `<your_topic>/cmnd/things/thermostat/schedules`, answers are reported to to `<your_topic>/stat/things/thermostat/schedules`
 
 **WebThings:** State report can be requested by: `http://<device_ip>/things/thermostat/schedules`
@@ -339,7 +377,9 @@ The state report is sent with MQTT-retain-flag enabled.
   "u6t":15
 }
 ```
-### 3. Device Report
+
+#### 3. Device Report
+
 **MQTT:** At start of device to let you know the topics and ip to `devices/thermostat`  
 
 **WebThings:** n.a.
@@ -352,24 +392,29 @@ The state report is sent with MQTT-retain-flag enabled.
 }
 ```
 
-### 4. Logs
+#### 4. Logs
+
 If logging is enabled (webgui/mqtt) you will see messages like:
-```
+
+```sh
 <your_topic>/tele/log trace: sending heartBeatCommand
 <your_topic>/tele/log trace: commandCharsToSerial: 55 aa 00 00 00 00
 ```
 
-### 5. Last Will & Testament
+#### 5. Last Will & Testament
+
 **WebThings:** n.a.
 **MQTT:** The retained message at topic '<your_topic>/tele/LWT' is set to the value "Online" if the devices comes up and your MQTT-Broker is requested to set to "Offline" as last will when device goes down.
 
-## Modifying parameters via MQTT
+### Modifying parameters via MQTT
+
 Send a json with changed parameters to `<your_topic>/cmnd/things/thermostat/properties`.  
 Send a json with changed schedules to `<your_topic>/cmnd/things/thermostat/schedules`.
 Also you can change single values by sending the value to `<your_topic>/cmnd/things/thermostat/properties/parameterName`.
 
 Examples:
-```
+
+```sh
 # set device on
 mosquitto_pub -h mqtt -t home/test/cmnd/things/thermostat/properties/deviceOn  -m "true"
 
@@ -410,11 +455,14 @@ mosquitto_sub -h mqtt -v -t "home/test/tele/log/#"
 
 ```
 
-## How it works?
+## How it works
+
 ### Hardware and serial communication
+
 The Hardware itself has two Microcontrollers:
+
 * **The MCU, the Main Controlling Unit.**
-  * ___The software on the MCU gets not upgraded with WThermostat, so no changes are possible here!___
+  * The software on the MCU gets not upgraded with WThermostat, so no changes are possible here!
   * It controls Temperature, Display, the Relay, Scheduling, has RTC, etc.
   * Sonix SN8F57083 8 bit Microcontroller
 * **The ESP8266-based Tuya-Wifi-Module.**
@@ -422,59 +470,69 @@ The Hardware itself has two Microcontrollers:
   * There is a serial connection between MCU and ESP. Via this connection the we can control the MCU
   * Only the Wifi-Verisons of thermostats have the ESP-Module.
 
-Both devices are communication using a binary serial protocol, called "MCU protocol". See <a href="./docs/Tuya%20Cloud%20Universal%20Serial%20Port%20Access%20Protocol_Tuya%20Smart_Docs.pdf">Tuya Cloud Universal Serial Port Access Protocol_Tuya Smart_Docs.pdf</a>
+Both devices are communication using a binary serial protocol, called "MCU protocol". See [Tuya Cloud Universal Serial Port Access Protocol_Tuya Smart_Docs.pdf](./docs/Tuya%20Cloud%20Universal%20Serial%20Port%20Access%20Protocol_Tuya%20Smart_Docs.pdf")
 
 Because ESP8266 runs with 3.3 Volt and Sonix MCU runs with 5.0 Volt the Serial-TTL-Level gets shifted with transistors.
 
-![HowItWorks](docs/how-it-works.png) 
+![HowItWorks](docs/how-it-works.png)
 
-### Can you add xxx as a feature?
+### Can you add xxx as a feature
+
 I have been often asked if i can implement a specific feature.
 Often the answer is: Because all internal routines (reading temperature, controlling the relay, reading the buttons, controlling the display) are controlled by MCU, which still runs proprietary closed source software, the behaviour cannot be changed!
 
-## Don't like or it doesn't work?
+## Don't like it or it doesn't work
+
 Flash the original firmware (see installation). Write me a message with your exact model and which parameter was not correct. Maybe your MQTT-server received some unknown messages - this would be also helpful for me. Again: I have tested this only with model BHT-002-GBLW. If you have another device, don't expect that this is working directly.
 
 ## Build this firmware from source
-For build from sources i suggest <a href="https://code.visualstudio.com/">Visual Studio Code</a> and <a href="https://platformio.org/">Platform.IO</a>.
+
+For building from sources and coding i suggest VS Code and PlatformIO. Also you can use Gitpod.
 
 ### Visual Studio Code: Install and Prepare to build
- * Install VS Code and PlatformIO
- * Type:
-```
+
+* Install [Visual Studio Code](]https://code.visualstudio.com/) and [PlatformIO](https://platformio.org/).
+* Type:
+
+```sh
 git clone https://github.com/fashberg/WThermostatBeca
 cd WThermostatBeca
 # download dependant library WAdapter
 git submodule init
 git submodule update
-``` 
- * Open the folder 'WThermostatBeca' in VS Code
- * Go To PlatformIO Icon
- * Click Build
-   * Binary Firmware can be found in build_output\firmware\wthermostat-1.xx-fas.bin (or -debug or -minimal)
-   
-All dependant arduino-libraries (DNSServer, EEPROM (for esp8266), ESP8266HTTPClient, ESP8266mDNS, ESP8266WebServer, ESP8266WiFi, Hash, NTPClient, Time.) will be downloaded automatically (defined in platform.ini) and the necessary WAdapter library from https://github.com/fashberg/WAdapter (git submodule).
+```
 
+* Open the folder 'WThermostatBeca' in VS Code
+* Go To PlatformIO Icon
+* Click Build
+  * Binary Firmware can be found in build_output\firmware\wthermostat-1.xx-fas.bin (or -debug or -minimal)
 
-### Cloud Development using GitPod
-You can open and compile this Project on Gitpod. You need a GitHub account. 50 hours are free per month.
+All dependant arduino-libraries (DNSServer, EEPROM (for esp8266), ESP8266HTTPClient, ESP8266mDNS, ESP8266WebServer, ESP8266WiFi, Hash, NTPClient, Time.) will be downloaded automatically (defined in platform.ini) and the necessary WAdapter library from <https://github.com/fashberg/WAdapter> (git submodule).
 
-Just click 
+### Cloud Development using Gitpod
+
+You can open and compile this Project on Gitpod. You need a GitHub account, 50 hours are free per month - don't forget to stop the workspace.
+
+Just click
+
 [![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/fashberg/WThermostatBeca)
-The fist built starts automatically.
-You can download the firmware by right-clicking in the Project-Explorer the file located at build_output/firmware/wthermostat-1.xx-fas.bin and chose Download
 
-###Some commands:
+The fist build starts automatically.
+You can download the firmware by right-clicking in the Project-Explorer the file located at build_output/firmware/wthermostat-1.xx-fas.bin and then choose Download.
+
+### Some commands
+
 * Build normal firmware:
-``platformio run -e wthermostat`` 
+``platformio run -e wthermostat``
 * Build all firmwares:
-``platformio run`` 
+``platformio run``
 * Get latest version and dependant libraries.
-``git pull && git pull --recurse-submodules``
+``git pull ; git pull --recurse-submodules``
 * Upgrade PlatformIO:
-``platformio upgrade --dev && platformio update``
+``platformio upgrade --dev ; platformio update``
 
 ### Special Build Versions
+
 * -Minimal environment: minimal version without thermostat, MQTT or WebThings support. Use only for intermediate Updating
 * -Debug environment: DO NOT FLASH TO THERMOSTAT. There is debugging output to serial interface which will confuse MCU
   * Upload to USB-Connected development ESP8266 board (Node MCU or Wemos D1 Mini pro)
