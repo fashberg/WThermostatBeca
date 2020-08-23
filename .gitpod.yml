@@ -1,6 +1,7 @@
-tasks:
-- before: platformio upgrade --dev && platformio update
-    command: platformio run -e wthermostat
 vscode:
-extensions:
-    - platformio.platformio-ide
+    extensions:
+        - platformio.platformio-ide
+tasks:
+    - before: pip3 install -U platformio
+      init: platformio upgrade --dev && platformio update
+      command: platformio run -e wthermostat
