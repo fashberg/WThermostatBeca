@@ -252,16 +252,20 @@ climate:
     mode_command_topic: "home/bedroom/cmnd/things/thermostat/properties/mode"
     mode_state_topic: "home/bedroom/stat/things/thermostat/properties"
     mode_state_template: "{{value_json.mode}}"
+    fan_mode_command_topic: "home/bedroom/cmnd/things/thermostat/properties/fanMode"
+    fan_mode_state_topic: "home/bedroom/stat/things/thermostat/properties"
+    fan_mode_state_template: "{{value_json.fanMode}}"
+    hold_command_topic: "home/bedroom/cmnd/things/thermostat/properties/holdState"
+    hold_state_topic: "home/bedroom/stat/things/thermostat/properties"
+    hold_state_template: "{{value_json.holdState}}"
+    hold_modes: [ "scheduler", "manual" ]
     payload_on: true
     payload_off: false
-    modes: [ "heat", "cool", "auto", "fan_only", "off" ]
+    modes: [ "heat", "cool", "fan_only", "off" ]
     min_temp: 16
     max_temp: 32
     temp_step: 1
     precision: 0.5
-    fan_mode_command_topic: "home/bedroom/cmnd/things/thermostat/properties/fanMode"
-    fan_mode_state_topic: "home/bedroom/stat/things/thermostat/properties"
-    fan_mode_state_template: "{{value_json.fanMode}}"
 ```
 
 If you have several thermostats you can anchor some settings while defining the first device and refer later on. Example:
@@ -349,14 +353,15 @@ The state report is sent with MQTT-retain-flag enabled.
   "targetTemperature":23,
   "deviceOn":true,
   "schedulesMode":"off|auto",
+  "holdMode":"manual|scheduler|away", // Special Mode for BAC-002 for HASS integration
   "ecoMode":false,
   "locked":false,
   "state":"off|heating", //only_available, if hardware is modified
   "floorTemperature":20, //only_BHT-002-GxLW
   "fanMode":"auto|low|medium|high", //only_BAC-002-ALW
   "systemMode":"cool|heat|fan_only", //only_BAC-002-ALW
-  "mode":"off|auto|heat" // BHT-002: combined Mode for better home assistant support.
-  "mode":"off|autoheat|autocool|autofan|heat|cool|fan_only" // BAC-002-ALW
+  "mode":"off|auto|heat", // BHT-002: combined Mode for better home assistant support.
+  "mode":"off|heat|cool|fan_only", // BAC-002-ALW
   "action":"off|idle|heating|cooling|fan" // read only current action, idle only available if hardware is modified, cooling/fan only BAC-002
 }
 ```
