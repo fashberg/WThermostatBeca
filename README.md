@@ -1,7 +1,7 @@
 # WThermostat - FAS-Fork
 
 [![GitHub version](https://img.shields.io/github/release/fashberg/WThermostatBeca.svg)](https://github.com/fashberg/WThermostatBeca/releases/latest)
-![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/v/release/fashberg/WThermostatBeca?include_prereleases&label=beta)
+[![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/v/release/fashberg/WThermostatBeca?include_prereleases&label=beta)](https://github.com/fashberg/WThermostatBeca/releases)
 [![GitHub download](https://img.shields.io/github/downloads/fashberg/WThermostatBeca/total.svg)](https://github.com/fashberg/WThermostatBeca/releases/latest)
 [![Gitpod ready-to-code](https://img.shields.io/badge/Gitpod-ready--to--code-blue?logo=gitpod)](https://gitpod.io/#https://github.com/klausahrenberg/WThermostatBeca)
 [![travis-ci-status](https://api.travis-ci.org/fashberg/WThermostatBeca.svg?branch=master)](https://travis-ci.org/github/fashberg/WThermostatBeca)
