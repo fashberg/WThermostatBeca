@@ -76,9 +76,6 @@ const static char MQTT_HASS_AUTODISCOVERY_AIRCO[]         PROGMEM = R"=====(
 "mode_cmd_t":"~/cmnd/things/thermostat/properties/mode",
 "mode_stat_t":"~/stat/things/thermostat/properties",
 "mode_stat_tpl":"{{value_json.mode}}",
-"away_mode_cmd_t":"~/cmnd/things/thermostat/properties/ecoMode",
-"away_mode_stat_t":"~/stat/things/thermostat/properties",
-"away_mode_stat_tpl":"{{value_json.ecoMode}}",
 "temp_cmd_t":"~/cmnd/things/thermostat/properties/targetTemperature",
 "temp_stat_t":"~/stat/things/thermostat/properties",
 "temp_stat_tpl":"{{value_json.targetTemperature}}",
@@ -90,7 +87,7 @@ const static char MQTT_HASS_AUTODISCOVERY_AIRCO[]         PROGMEM = R"=====(
 "hold_cmd_t":"~/cmnd/things/thermostat/properties/holdState",
 "hold_stat_t":"~/stat/things/thermostat/properties",
 "hold_stat_tpl":"{{value_json.holdState}}",
-"hold_modes":["scheduler","manual"],
+"hold_modes":["scheduler","manual","eco"],
 "pl_on":true,
 "pl_off":false,
 "min_temp":"10",
@@ -146,6 +143,7 @@ const static char MQTT_HASS_AUTODISCOVERY_SENSORRSSI[]         PROGMEM = R"=====
 #define PIN_STATE_HEATING_RELAY 5
 #define PIN_STATE_COOLING_RELAY 4
 #define ECOMODETEMP 20.0
+#define ECOMODETEMP_COOL 26.0
 
 const unsigned char COMMAND_START[] = {0x55, 0xAA};
 const char AR_COMMAND_END = '\n';
@@ -157,7 +155,8 @@ const char* SCHEDULES_MODE_AUTO = "auto";
 // special for HASS
 const char* HOLD_STATE_MANUAL = "manual";
 const char* HOLD_STATE_SCHEDULER = "scheduler";
-const char* HOLD_STATE_AWAY = "away";
+const char* HOLD_STATE_ECO = "eco";
+const char* HOLD_STATE_OFF = "off";
 const char* SYSTEM_MODE_NONE = "none";
 const char* SYSTEM_MODE_COOL = "cool";
 const char* SYSTEM_MODE_HEAT = "heat";
@@ -310,7 +309,8 @@ public:
 		this->holdState->setAtType("ThermostatHoldStateProperty");
 		this->holdState->addEnumString(HOLD_STATE_MANUAL);
 		this->holdState->addEnumString(HOLD_STATE_SCHEDULER);
-		this->holdState->addEnumString(HOLD_STATE_AWAY);
+		this->holdState->addEnumString(HOLD_STATE_ECO);
+		this->holdState->addEnumString(HOLD_STATE_OFF);
 		this->holdState->setOnChange(std::bind(&WBecaDevice::holdStateToScheduleMode, this, std::placeholders::_1));
 		this->holdState->setOnValueRequest(std::bind(&WBecaDevice::holdStateRequest, this, std::placeholders::_1));
 		this->holdState->setMqttSendChangedValues(true);
@@ -1426,6 +1426,7 @@ private:
 								schedulesMode->setString(newB ? SCHEDULES_MODE_OFF : SCHEDULES_MODE_AUTO);
 								if (newChanged){
 									network->log()->trace("Manual Mode newChanged to %s", (newB ? "on" : "off"));
+									holdFromScheduler();
 									updateTargetTemperature();
 									updateModeAndAction();
 								}
@@ -1608,7 +1609,12 @@ private:
 
     void updateTargetTemperature() {
 		if (ecoMode->getBoolean()) {
-			targetTemperature->setDouble(ECOMODETEMP);
+			if (getThermostatModel() == MODEL_BAC_002_ALW &&
+			 (this->systemMode->equalsString(SYSTEM_MODE_COOL) || this->systemMode->equalsString(SYSTEM_MODE_FAN))){
+				targetTemperature->setDouble(ECOMODETEMP_COOL);
+			} else {
+				targetTemperature->setDouble(ECOMODETEMP);
+			}
 		} else if ((this->currentSchedulePeriod != -1) && (schedulesMode->equalsString(SCHEDULES_MODE_AUTO))) {
 			double temp = (double) schedules[this->currentSchedulePeriod + 2] / getTemperatureFactor();
 			byte weekDay;
@@ -1713,7 +1719,9 @@ private:
 		} else if (holdState->equalsString(HOLD_STATE_SCHEDULER)){
 			this->ecoMode->setBoolean(false);
 			this->schedulesMode->setString(SCHEDULES_MODE_AUTO);
-		} else if (holdState->equalsString(HOLD_STATE_AWAY)){
+		} else if (holdState->equalsString(HOLD_STATE_OFF)){
+			this->ecoMode->setBoolean(false);
+		} else if (holdState->equalsString(HOLD_STATE_ECO)){
 			this->ecoMode->setBoolean(true);
 		} else {
 			// correct to valid value
@@ -1724,13 +1732,25 @@ private:
 	}
 
 	void holdStateRequest(WProperty* property) {
-		if (schedulesMode->equalsString(SCHEDULES_MODE_OFF)){
+		if (holdState->equalsString(HOLD_STATE_ECO)){
+		} else if (schedulesMode->equalsString(SCHEDULES_MODE_OFF)){
 			this->holdState->setString(HOLD_STATE_MANUAL);
 		} else if (schedulesMode->equalsString(SCHEDULES_MODE_AUTO)){
 			this->holdState->setString(HOLD_STATE_SCHEDULER);
 		} else {
 			this->holdState->setString(HOLD_STATE_SCHEDULER);
 		}	
+	}
+
+	void holdFromScheduler(){
+		if (ecoMode->getBoolean()){
+			//if ecoMode is On we must not return an holdState
+			holdState->setString(HOLD_STATE_ECO);
+		} else if (schedulesMode->equalsString(SCHEDULES_MODE_OFF)){
+			holdState->setString(HOLD_STATE_MANUAL);
+		} else {
+			holdState->setString(HOLD_STATE_SCHEDULER);
+		}
 	}
 
     void ecoModeToMcu(WProperty* property) {
@@ -1740,21 +1760,11 @@ private:
        		unsigned char deviceOnCommand[] = { 0x55, 0xAA, 0x00, 0x06, 0x00, 0x05,
        		                                    0x05, 0x01, 0x00, 0x01, dt};
        		commandCharsToSerial(11, deviceOnCommand);
-       		//notifyState();
-			if (this->ecoMode->getBoolean()){
-				holdState->setString(HOLD_STATE_AWAY);
-			} else {
-				if (schedulesMode->equalsString(SCHEDULES_MODE_OFF)){
-					holdState->setString(HOLD_STATE_MANUAL);
-				} else {
-					holdState->setString(HOLD_STATE_SCHEDULER);
-				}
-			}
+			holdFromScheduler();
        	}
     }
  	void modeToMcu(WProperty* property) {
 		network->log()->trace(F("modeToMcu %s"), property->c_str());
-
 		if (getThermostatModel() == MODEL_BHT_002_GBLW) {
 			if (this->mode->equalsString(MODE_OFF)){
 				this->deviceOn->setBoolean(false);
@@ -1924,6 +1934,10 @@ private:
 
 		htmlTableRowTitle(page, F("Eco Mode:"));
 		page->print((schedulesMode->getBoolean() ? "Eco On" : "Eco Off"));
+		htmlTableRowEnd(page);
+
+		htmlTableRowTitle(page, F("Hold State:"));
+		page->print(holdState->c_str());
 		htmlTableRowEnd(page);
 
 		if (getThermostatModel() == MODEL_BAC_002_ALW){

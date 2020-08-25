@@ -199,7 +199,7 @@ See <https://mosquitto.org/man/mosquitto-conf-5.html> for more details.
 
 For manual Configuration here is an example for your configuration.yaml file:
 
-Heating:
+**Heating:**
 
 ```yaml
 climate:
@@ -230,7 +230,13 @@ climate:
     precision: 0.5
 ```
 
-Air Conditioning:
+**Air Conditioning:**
+
+The BAC-002/BAC-1000 does not support auto mode. The Device (MCU) cannoy not switch between heating, cooling or fan automatically.
+
+To Switch between Automatic Scheduling and Manual Mode we use 'holdState' with the following mode: 'scheduler' and 'manual', combined with mode 'eco'.
+If you choose 'None' it disables 'eco' and device jumps back to last mode (scheduler/manual).
+Do not use away_mode_ combined with holdState.
 
 ```yaml
 climate:
@@ -246,9 +252,6 @@ climate:
     temperature_state_template: "{{value_json.targetTemperature}}"
     current_temperature_topic: "home/bedroom/stat/things/thermostat/properties"
     current_temperature_template: "{{value_json.temperature}}"
-    away_mode_command_topic: "home/bedroom/cmnd/things/thermostat/properties/ecoMode"
-    away_mode_state_topic: "home/bedroom/stat/things/thermostat/properties"
-    away_mode_state_template: "{{value_json.ecoMode}}"
     mode_command_topic: "home/bedroom/cmnd/things/thermostat/properties/mode"
     mode_state_topic: "home/bedroom/stat/things/thermostat/properties"
     mode_state_template: "{{value_json.mode}}"
@@ -258,7 +261,7 @@ climate:
     hold_command_topic: "home/bedroom/cmnd/things/thermostat/properties/holdState"
     hold_state_topic: "home/bedroom/stat/things/thermostat/properties"
     hold_state_template: "{{value_json.holdState}}"
-    hold_modes: [ "scheduler", "manual" ]
+    hold_modes: [ "scheduler", "manual","eco" ]
     payload_on: true
     payload_off: false
     modes: [ "heat", "cool", "fan_only", "off" ]
@@ -353,7 +356,7 @@ The state report is sent with MQTT-retain-flag enabled.
   "targetTemperature":23,
   "deviceOn":true,
   "schedulesMode":"off|auto",
-  "holdMode":"manual|scheduler|away", // Special Mode for BAC-002 for HASS integration
+  "holdMode":"manual|scheduler|eco", // Special Mode for BAC-002 for HASS integration
   "ecoMode":false,
   "locked":false,
   "state":"off|heating", //only_available, if hardware is modified

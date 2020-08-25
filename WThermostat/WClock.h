@@ -756,17 +756,17 @@ class WClock : public WDevice {
         page->print(offset->getInteger());
         htmlTableRowEnd(page);
 
-        page->print("F(<tr><th>Last-NTP-Sync Try:</th><td>");
+        page->print(F("<tr><th>Last-NTP-Sync Try:</th><td>"));
         if (lastTry){
-            page->printf("%d Seconds ago", millis()-lastTry);
+            page->printf("%d Seconds ago", (millis()-lastTry)/1000);
         } else {
             page->print(F("Never"));
         }        
         htmlTableRowEnd(page);
 
-        htmlTableRowTitle(page, F("Last-NTP-Sync with Success"));
+        htmlTableRowTitle(page, F("Last-NTP-Sync with Success:"));
         if (lastNtpSync){
-            page->printf("%d Seconds ago", millis()-lastNtpSync);
+            page->printf("%d Seconds ago", (millis()-lastNtpSync)/1000);
         } else {
             page->print(F("Never"));
         }
