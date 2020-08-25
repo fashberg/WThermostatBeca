@@ -94,7 +94,7 @@ Here a description of how to install the hardware - indepentent from Open Source
 
 ## Download binaries
 
-Pre-built binaries can be downloaded at [releases-page](https://github.com/fashberg/WThermostatBeca/releases)</a>.
+Pre-built binaries can be downloaded at [releases-page](https://github.com/fashberg/WThermostatBeca/releases).
 
 ## Software Installation
 
