@@ -162,6 +162,11 @@ There is also a detailed view available:
 
 ![homeassistant](docs/images/homeassistant.png)  ![hass_discovery](docs/images/hass_discovery.png)
 
+### Controlling BAC in HomeAssistant
+
+![homeassistant](docs/images/hass-bac.png)
+
+
 ### HASS Autodiscovery
 
 WThermostatBeca supports optional HASS-Autodiscovery since Version 1.08-fas.
