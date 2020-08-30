@@ -182,19 +182,19 @@ If you already have tasmota installed or any other free ESP alternative you can 
 If you get "Upload Failed - Not compatible" you have to set the following option in tasmota console before you start the upgrade:
 ```SetOption78 1```
 
-All tasmota settings will get lost, also the network configuration! The Thermostat becomas an AP and you have to reconfigure.
+All tasmota settings, including network configuration, will get lost! The Thermostat becomes an AP and you just have to reconfigure as described in [Configuration.md](Configuration.md).
 
 If you upgrade from Klaus Ahrenbergs WThermostat all network settings will be kept on Firmware Upgrade, but not thermostat-settings.
 
 ### Not Enough Space
 
-If you get 'Not Enough Space' while Upgrading you can flash a lite-version called ``wthermostat-minimal-1.xx-fas.bin`` Then do Wifi-Confoguration of Thermostat and after this flash the full-version.
+If you get 'Not Enough Space' while Upgrading you can flash a lite-version called ``wthermostat-minimal-1.xx-fas.bin`` - then do Wifi-Configuration of Thermostat and after this flash the full-version.
 
 ### Back to tasmota
 
-Unhappy? On Top of WThermostat you can directly flash ``tasmota.bin`` or ``tasmota.bin.gz`` or probably any other ESP firmware.
+Unhappy? On top of WThermostat you can directly flash ``tasmota.bin`` or ``tasmota.bin.gz`` or probably any other ESP firmware.
 
-Hint: Do *not* flash ``tasmota-minimal.bin`` to WThermostat! If you do you will not be able to access the device. Use instead ``tasmota-lite.bin`` if space is getting too small.
+Hint: Do *not* flash ``tasmota-minimal.bin`` to WThermostat! If you do so you will not be able to access ore reconfigure the device. Use instead ``tasmota-lite.bin`` if space is getting too small.
 
 ## After the Upgrade
 
