@@ -23,7 +23,8 @@ Steps are in general:
 * Goto 'Configure network'
 * Fill out 'Hostname/Idx' (unique id of your choice), 'Wifi SSID' (only 2.4G), 'Password' for Wifi
 * If you don't want to use MQTT, press 'Save Configuration' and wait for reboot of device.
-![homeassistant](docs/Setup_Network.png)  
+
+![homeassistant](docs/images/Setup_Network.png)  
 
 ## 2. Configure MQTT (optional) and HASS Autodiscovery
 * Stay at page 'Network configuration'
@@ -58,7 +59,7 @@ Steps are in general:
 * Choose work day and weekend start in your region
 * Press 'Save Configuration' and wait for reboot of device.
 
-![homeassistant](docs/Setup_Thermostat.png)  
+![homeassistant](docs/images/Setup_Thermostat.png)  
 
 
 ## 4. Configure clock settings
