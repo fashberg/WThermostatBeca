@@ -33,7 +33,7 @@ See: <https://github.com/ct-Open-Source/tuya-convert/issues/113>
 
 ## Option 2: Flashing device manually
 
-### 1. Check your device
+### 2.1. Check your device
 
 Compatible devices looks inside like this. On the top left you can see the ESP8266 module (TYWE3S)
 
@@ -43,7 +43,7 @@ The following picture shows an BHT-002GA with __NO WIFI__ - no chance to flash o
 See my detailed diagnosis on this at [Diagnose Can we add WiFi to Non-Wifi Thermostat bac-002.pdf](./docs/Diagnose%20Can%20we%20add%20WiFi%20to%20Non-Wifi%20Thermostat%20bac-002.pdf), this document also show a little bit about communication between MCU und ESP.
 ![thermostat no wifi inside](docs/images/bac-002-no-wifi-inside.jpg)
 
-### 2. Connection to device for flashing
+### 2.2. Connection to device for flashing
 
 There are many ways to get the physical connection to ESP module. I soldered the connections on the device for flashing. Maybe there is a more elegant way to do that. It's quite the same, if you try to flash any other Sonoff devices to Tasmota. So get the inspiration for flashing there: <https://github.com/arendst/Sonoff-Tasmota/wiki>
 
@@ -88,12 +88,12 @@ Good to know:
 Another Image with DSD TECH SH-U09C2 adapter:
 ![flash](docs/images/flashing2.jpg)
 
-### 3. Remove the main power supply from thermostat during all flashing steps
+### 2.3. Remove the main power supply from thermostat during all flashing steps
 
 Flashing will fail if the thermostat is still powered up during this operation.
 Connect only the 3.3 Volt from RS232/TTL-Adapter.
 
-### 4. Backup the original firmware
+### 2.4. Backup the original firmware
 
 Don't skip this. In case of malfunction you need the original firmware. Tasmota has also a great tutorial for the right esptool commands: <https://github.com/arendst/Sonoff-Tasmota/wiki/Esptool>. So the backup command is:
 
@@ -125,7 +125,7 @@ Read 1048576 bytes at 0x0 in 25.3 seconds (331.8 kbit/s)...
 Hard resetting via RTS pin...
 ```
 
-### 5. Upload new firmware
+### 2.5. Upload new firmware
 
 Get the ESP in programming mode first.
 Erase flash:
@@ -182,8 +182,19 @@ If you already have tasmota installed or any other free ESP alternative you can 
 If you get "Upload Failed - Not compatible" you have to set the following option in tasmota console before you start the upgrade:
 ```SetOption78 1```
 
-All tasmota settings will get lost, also the network configuration!
-If you run Klaus Ahrenbergs WThermostat >= 1.09 then network settings will be kept on Firmware Upgrade.
+All tasmota settings will get lost, also the network configuration! The Thermostat becomas an AP and you have to reconfigure.
+
+If you upgrade from Klaus Ahrenbergs WThermostat all network settings will be kept on Firmware Upgrade, but not thermostat-settings.
+
+### Not Enough Space
+
+If you get 'Not Enough Space' while Upgrading you can flash a lite-version called ``wthermostat-minimal-1.xx-fas.bin`` Then do Wifi-Confoguration of Thermostat and after this flash the full-version.
+
+### Back to tasmota
+
+Unhappy? On Top of WThermostat you can directly flash ``tasmota.bin`` or ``tasmota.bin.gz`` or probably any other ESP firmware.
+
+Hint: Do *not* flash ``tasmota-minimal.bin`` to WThermostat! If you do you will not be able to access the device. Use instead ``tasmota-lite.bin`` if space is getting too small.
 
 ## After the Upgrade
 
