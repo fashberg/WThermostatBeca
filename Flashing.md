@@ -45,7 +45,7 @@ See my detailed diagnosis on this at [Diagnose Can we add WiFi to Non-Wifi Therm
 
 ### 2.2. Connection to device for flashing
 
-There are many ways to get the physical connection to ESP module. I soldered the connections on the device for flashing. Maybe there is a more elegant way to do that. It's quite the same, if you try to flash any other Sonoff devices to Tasmota. So get the inspiration for flashing there: <https://github.com/arendst/Sonoff-Tasmota/wiki>
+There are many ways to get the physical connection to ESP module. It's quite the same, if you try to flash any other Sonoff devices to Tasmota. So get the inspiration for flashing there: <https://tasmota.github.io/docs/Getting-Started/>
 
 Following connections were working for me (refer to ESP-12E pinout):
 
@@ -54,9 +54,33 @@ Following connections were working for me (refer to ESP-12E pinout):
 - Green: ESP-RX connected to Programmer-TX
 - Yellow: ESP-TX connected to Programmer-RX
 - Blue right: ESP-GPIO0, must be connected with GND during power up
-- Blue left: ESP-Reset, connect to GND to restart the ESP
+- Blue left: ESP-Reset, connect to GND to restart the ESP or connect to Programmer-RTS, Programmer can reset then automatically.
 
 ![Flashing connection](docs/images/Flashing_Tywe3S_Detail.jpg)
+
+#### Self made ESP Pogo Adapter
+
+Direct connection without soldering?
+
+That's possible using a self printed Pogo Adapter. There are some ready to use products called "IC Test Clip" from 3M, but there are only available for 2,54 mm/0.1 inch chips. ESP8266 has 2mm raster. I could not found anything suitable for ESP Chips.
+
+Then i've found this one DIY-Version: <https://www.thingiverse.com/thing:4547369>
+
+Here are some pictures flashing with my self-3d-printed ESP-Pogo-Adapter:
+
+![esp-pogo-adapter-flash-1](docs/images/esp-pogo-adapter-flash-1.jpg)
+
+![esp-pogo-adapter-flash-2](docs/images/esp-pogo-adapter-flash-2.jpg)
+
+![esp-pogo-adapter-flash-3](docs/images/esp-pogo-adapter-flash-3.jpg)
+
+Accessories i've used:
+
+- PINS with Spring <https://www.amazon.de/gp/product/B0147W4DEA>
+- Clamp to Fix Adapter (no really neccessary, but better): <https://www.amazon.de/gp/product/B0001P19O0>
+- 1mm drill to widen the holes: (my print was not accurate enough for 1mm holes) <https://www.amazon.de/gp/product/B06XG1FY8P>
+
+#### Right Serial Adapter
 
 I've tested flashing with both this TTL-Adapters and had success:
 
@@ -73,7 +97,7 @@ I've tested flashing with both this TTL-Adapters and had success:
   - Signal Level is always 3.3 Volt (measured with Osci)
   - No separate Voltage Regulator, but flashing was ok
 
-Good to know:
+#### Good to know
 
 - If not entering programming-mode (GPIO-0 not connected to GND) the ESP boots normally and is reachable through WiFi.
 - Between the read_flash, erase_flash and write_flash commands you have to reset the ESP!
@@ -91,7 +115,7 @@ Another Image with DSD TECH SH-U09C2 adapter:
 ### 2.3. Remove the main power supply from thermostat during all flashing steps
 
 Flashing will fail if the thermostat is still powered up during this operation.
-Connect only the 3.3 Volt from RS232/TTL-Adapter.
+Connect only the 3.3 Volt from RS232/TTL-Adapter!
 
 ### 2.4. Backup the original firmware
 
