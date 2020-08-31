@@ -28,7 +28,7 @@ Video of this procedure: <https://youtu.be/fqfghJqnK_8>
 
 ### Restore original Firmware
 
-The Backup file dumped by tuya-convert is 1 MB large (whole flash of ESP-Chip), which is too big to be flashed OTA (over the air). So you are not able to flash back to original Firmware without soldering!
+The Backup file dumped by tuya-convert is 1 MB large (whole flash of ESP-Chip), which is too big to be flashed OTA (over the air). So you are not able to flash back to original Firmware without direct serial connection!
 See: <https://github.com/ct-Open-Source/tuya-convert/issues/113>
 
 ## Option 2: Flashing device manually
@@ -62,7 +62,7 @@ Following connections were working for me (refer to ESP-12E pinout):
 
 Direct connection without soldering?
 
-That's possible using a self printed Pogo Adapter. There are some ready to use products called "IC Test Clip" from 3M, but there are only available for 2,54 mm/0.1 inch chips. ESP8266 has 2mm raster. I could not found anything suitable for ESP Chips.
+That's possible using a self printed Pogo Adapter. There are some ready to use products called "IC Test Clip" from 3M and other manufactures, but they are all only for 2,54 mm/0.1 inch chips. ESP8266 has 2mm raster. I could not found anything suitable for ESP Chips.
 
 Then i've found this one DIY-Version: <https://www.thingiverse.com/thing:4547369>
 
@@ -89,7 +89,13 @@ I've tested flashing with both this TTL-Adapters and had success:
   - 10 EUR Amazon Prime (Germany)
   - Has separate Voltage regulator on Board which delivers enough power
   - You can jumper betweeen 1.8/3.3/5 Volt (it switches Vcc AND Signal-Level - which is important)
-  - Not sure if it's original FTDI-Chip (has not the 2014 'bug', but text seems to be printed not laser-engraved), but overall quality looks very good, including RX/TX LEDs
+  - Not sure if it is an original FTDI-Chip (has not the 2014 'bug', but text seems to be printed andnot laser-engraved), but overall quality looks very good
+  - RX/TX LEDs
+  - RTS-PIN for software-controlled reset of ESP
+- AliExpress Cheap Adapter with CH340
+  - <https://aliexpress.com/item/32761423124.html>
+  - less than 1 EUR and long delivery time
+  - Vcc Pin be jumpered from 5V to 3.3V (has to be changed to 3.3V)
 - AliExpress Cheap Adaptter with Profilic PL2303
   - <https://www.aliexpress.com/item/32893637666.html>
   - 3 EUR and long delivery time
