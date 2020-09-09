@@ -83,7 +83,7 @@ class WClock : public WDevice {
 
     //WClock(bool debug, WNetwork *network) {
     WClock(WNetwork* network, String applicationName)
-        : WDevice(network, "clock", "clock", network->getIdx(), DEVICE_TYPE_TEXT_DISPLAY) {
+        : WDevice(network, "clock", "Clock", network->getIdx(), DEVICE_TYPE_TEXT_DISPLAY) {
         this->mainDevice = false;
         this->visibility = MQTT;
 
@@ -167,7 +167,7 @@ class WClock : public WDevice {
             p->setLong(getUptime());
         });
         this->addProperty(uptime);
-        lastTry = lastNtpSync = ntpTime =  lastRun = 0;
+        lastTry = lastNtpSync = ntpTime =  lastRun, lastDiff = 0;
     }
 
     void loop(unsigned long now) {
@@ -203,6 +203,7 @@ class WClock : public WDevice {
                 //ntpTime = 1585555170; // Full Hour Test
                 if (ntpTime > START_VALID_TIME) {
                     uint32_t oldutc = getEpochTime();
+                    lastDiff=ntpTime - oldutc;
                     Rtc.utc_time = ntpTime;
                     BreakTime(ntpTime, tmpTime);
                     RtcTime.year = tmpTime.year;
@@ -210,7 +211,7 @@ class WClock : public WDevice {
                     Rtc.standard_time = RuleToTime(this->timeRuleStd, RtcTime.year);
                     network->log()->notice(F("NTP time synced: (%04d-%02d-%02d %02d:%02d:%02d, Weekday: %d, Epoch: %d, Dst: %d, Std: %d, Diff: %d, Uptime: %d)"),
                             tmpTime.year, tmpTime.month, tmpTime.day_of_month, tmpTime.hour, tmpTime.minute, tmpTime.second, tmpTime.day_of_week,
-                            ntpTime, Rtc.daylight_saving_time, Rtc.standard_time, ntpTime - oldutc, getUptime() );
+                            ntpTime, Rtc.daylight_saving_time, Rtc.standard_time, lastDiff, getUptime() );
 
                     validTime->setBoolean(true);
                     notify=true;
@@ -477,7 +478,7 @@ class WClock : public WDevice {
    private:
     THandlerFunction onTimeUpdate;
     TErrorHandlerFunction onError;
-    unsigned long lastTry, lastNtpSync, ntpTime, lastRun;
+    unsigned long lastTry, lastNtpSync, ntpTime, lastRun, lastDiff;
     WProperty* epochTime;
     WProperty* epochTimeLocalFormatted;
     WProperty* validTime;
@@ -770,6 +771,11 @@ class WClock : public WDevice {
         } else {
             page->print(F("Never"));
         }
+        htmlTableRowEnd(page);
+
+        htmlTableRowTitle(page, F("Last-NTP-Sync Delta:"));
+        page->print(lastDiff);
+        page->print(" sec");
         htmlTableRowEnd(page);
     }
 

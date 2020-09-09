@@ -213,7 +213,7 @@ public:
     typedef std::function<bool(const char*)> TCommandHandlerFunction;
 
     WBecaDevice(WNetwork* network, WClock* wClock)
-    	: WDevice(network, "thermostat", "thermostat", network->getIdx(), DEVICE_TYPE_THERMOSTAT) {
+    	: WDevice(network, "thermostat", "Thermostat", network->getIdx(), DEVICE_TYPE_THERMOSTAT) {
 		
     	this->receivingDataFromMcu = false;
     	this->schedulesChanged = false;
@@ -488,7 +488,7 @@ public:
 		this->addPage(reinitPage);
 		
 
-		lastHeartBeat = lastNotify = lastScheduleNotify  = lastLongLoop = 0;
+		lastHeartBeat = lastNotify = lastScheduleNotify  = lastLongLoop = lastTimeRequested = lastTimeSent = 0;
 		resetAll();
 		for (int i = 0; i < STATE_COMPLETE; i++) {
 			receivedStates[i] = false;
@@ -607,7 +607,7 @@ public:
     			expChecksum = expChecksum % 0x100;
     			if (expChecksum == receivedCommand[receiveIndex]) {
 					logIncomingCommand("processSerial", LOG_LEVEL_VERBOSE);
-					processSerialCommand();
+					processSerialCommand(now);
     			}
     			resetAll();
 
@@ -743,6 +743,7 @@ public:
     											0x01, year, month, dayOfMonth,
     											hours, minutes, seconds, dayOfWeek};
     	commandCharsToSerial(14, cancelConfigCommand);
+		lastTimeSent=millis();
     }
 
     void bindWebServerCalls(ESP8266WebServer* webServer) {
@@ -1230,7 +1231,9 @@ private:
     WClock *wClock;
     int receiveIndex;
     int commandLength;
-    long lastHeartBeat;
+	unsigned long lastHeartBeat;
+	unsigned long lastTimeRequested;
+	unsigned long lastTimeSent;
     unsigned char receivedCommand[1024];
     boolean receivingDataFromMcu;
     double targetTemperatureManualMode;
@@ -1303,7 +1306,7 @@ private:
 		this->getIncomingCommandAsString().c_str());
 	}
 
-    void processSerialCommand() {
+    void processSerialCommand(unsigned long now) {
     	if (commandLength > -1) {
 			bool knownCommand = false;
     		//unknown
@@ -1577,11 +1580,13 @@ private:
 						//Request for time sync from MCU : 55 aa 01 0c 00 00
 						network->log()->notice(F("Request for GMT time sync from MCU"));
 						this->sendActualTimeToBeca(false);
+						lastTimeRequested=now;
 						knownCommand=true;
 					} else if (receivedCommand[3] == 0x1C) {
 						//Request for time sync from MCU : 55 aa 01 1c 00 00
 						network->log()->notice(F("Request for local time sync from MCU"));
 						this->sendActualTimeToBeca(true);
+						lastTimeRequested=now;
 						knownCommand=true;
 					}
 
@@ -1932,7 +1937,7 @@ private:
 		htmlTableRowEnd(page);
 
 		htmlTableRowTitle(page, F("Eco Mode:"));
-		page->print((schedulesMode->getBoolean() ? "Eco On" : "Eco Off"));
+		page->print((ecoMode->getBoolean() ? "Eco On" : "Eco Off"));
 		htmlTableRowEnd(page);
 
 		htmlTableRowTitle(page, F("Hold State:"));
@@ -1940,7 +1945,7 @@ private:
 		htmlTableRowEnd(page);
 
 		if (getThermostatModel() == MODEL_BAC_002_ALW){
-			htmlTableRowTitle(page, F("System Mode:"));
+			htmlTableRowTitle(page, F("BAC-System Mode:"));
 			page->print(systemMode->c_str());
 			htmlTableRowEnd(page);
 
@@ -1959,6 +1964,33 @@ private:
 			htmlTableRowEnd(page);
 		}
 
+
+		htmlTableRowTitle(page, F("Last Heartbeat:"));
+		if (lastHeartBeat>0){
+			page->print((millis() - lastHeartBeat) / 1000);
+			page->print(" seconds ago");
+		} else {
+			page->print("no pulse");
+		}
+		htmlTableRowEnd(page);
+
+		htmlTableRowTitle(page, F("Last Time Request:"));
+		if (lastTimeRequested>0){
+			page->print((millis() - lastTimeRequested) / 1000);
+			page->print(" seconds ago");
+		} else {
+			page->print("never requested");
+		}
+		htmlTableRowEnd(page);
+
+		htmlTableRowTitle(page, F("Last Time Sent:"));
+		if (lastTimeSent>0){
+			page->print((millis() - lastTimeSent) / 1000);
+			page->print(" seconds ago");
+		} else {
+			page->print("never requested");
+		}
+		htmlTableRowEnd(page);
 	}
 };
 
