@@ -1905,7 +1905,6 @@ private:
 		page->print(this->mcuId->c_str());
 		htmlTableRowEnd(page);
 
-
 		htmlTableRowTitle(page, F("Device On:"));
 		page->print((deviceOn->getBoolean() ? "Device On" : "Device Off"));
 		htmlTableRowEnd(page);
@@ -1925,7 +1924,7 @@ private:
 		htmlTableRowEnd(page);
 
 		htmlTableRowTitle(page, F("Current Mode:"));
-		page->print(systemMode->c_str());
+		page->print(mode->c_str());
 		htmlTableRowEnd(page);
 
 		htmlTableRowTitle(page, F("Schedules Mode:"));
