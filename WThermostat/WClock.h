@@ -76,6 +76,10 @@ static const uint8_t kDaysInMonth[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 3
 static const char kMonthNames[] = "JanFebMarAprMayJunJulAugSepOctNovDec";
 const uint32_t START_VALID_TIME = 1451602800;  // Time is synced and after 2016-01-01
 
+
+WiFiUDP ntpUDP;
+NTPClient ntpClient(ntpUDP);
+
 class WClock : public WDevice {
    public:
     typedef std::function<void(void)> THandlerFunction;
@@ -168,6 +172,8 @@ class WClock : public WDevice {
         });
         this->addProperty(uptime);
         lastTry = lastNtpSync = ntpTime =  lastRun, lastDiff = 0;
+
+        ntpClient = NTPClient(ntpUDP, ntpServer->c_str());
     }
 
     void loop(unsigned long now) {
@@ -192,26 +198,25 @@ class WClock : public WDevice {
                 || (now > nextSync) 
             ) && (WiFi.status() == WL_CONNECTED)) {
             network->log()->trace(F("Time via NTP server '%s'"), ntpServer->c_str());
-            WiFiUDP ntpUDP;
-            NTPClient ntpClient(ntpUDP, ntpServer->c_str());
-            //ntpClient.begin();
-            //delay(500);
             lastTry = now;
             if (ntpClient.update()) {
+                uint32_t oldutc = getEpochTime();
                 ntpTime = ntpClient.getEpochTime();
                 //ntpTime = 1603587544; // DST-Test
                 //ntpTime = 1585555170; // Full Hour Test
                 if (ntpTime > START_VALID_TIME) {
-                    uint32_t oldutc = getEpochTime();
-                    lastDiff=ntpTime - oldutc;
+                    if (validTime->getBoolean()){
+                        // don't save first diff
+                        lastDiff=ntpTime - oldutc;
+                    }
                     Rtc.utc_time = ntpTime;
                     BreakTime(ntpTime, tmpTime);
                     RtcTime.year = tmpTime.year;
                     Rtc.daylight_saving_time = RuleToTime(this->timeRuleDst, RtcTime.year);
                     Rtc.standard_time = RuleToTime(this->timeRuleStd, RtcTime.year);
-                    network->log()->notice(F("NTP time synced: (%04d-%02d-%02d %02d:%02d:%02d, Weekday: %d, Epoch: %d, Dst: %d, Std: %d, Diff: %d, Uptime: %d)"),
+                    network->log()->notice(F("NTP time synced: (%04d-%02d-%02d %02d:%02d:%02d, Weekday: %d, Epoch: %d, Dst: %d, Std: %d, OldUTC: %d, ntpTime: %d, Diff: %d, Uptime: %d)"),
                             tmpTime.year, tmpTime.month, tmpTime.day_of_month, tmpTime.hour, tmpTime.minute, tmpTime.second, tmpTime.day_of_week,
-                            ntpTime, Rtc.daylight_saving_time, Rtc.standard_time, lastDiff, getUptime() );
+                            ntpTime, Rtc.daylight_saving_time, Rtc.standard_time, oldutc, ntpTime, lastDiff, getUptime() );
 
                     validTime->setBoolean(true);
                     notify=true;
@@ -301,11 +306,11 @@ class WClock : public WDevice {
     }
 
     unsigned long getEpochTime() {
-        return (lastNtpSync > 0 ? ntpTime + ((millis() - lastNtpSync) / 1000) : 0);
+        return (lastNtpSync > 0 ? ntpClient.getEpochTime() : 0);
     }
 
     unsigned long getEpochTimeLocal() {
-        return (lastNtpSync > 0 ? ntpTime + getOffset() + ((millis() - lastNtpSync) / 1000) : 0);
+        return (lastNtpSync > 0 ? ntpClient.getEpochTime() + getOffset() : 0);
     }
 
     unsigned long getUptime() {
@@ -478,7 +483,8 @@ class WClock : public WDevice {
    private:
     THandlerFunction onTimeUpdate;
     TErrorHandlerFunction onError;
-    unsigned long lastTry, lastNtpSync, ntpTime, lastRun, lastDiff;
+    unsigned long lastTry, lastNtpSync, ntpTime, lastRun;
+    long lastDiff;
     WProperty* epochTime;
     WProperty* epochTimeLocalFormatted;
     WProperty* validTime;
