@@ -184,8 +184,8 @@ const byte STORED_FLAG_BECA = 0x36;
 const char SCHEDULES_PERIODS[] = "123456";
 const char SCHEDULES_DAYS[] = "wau";
 
-const byte BECABITS1_RELAIS_HEAT    =   1;
-const byte BECABITS1_RELAIS_COOL    =   2;
+const byte BECABITS1_RELAY_HEAT    =   1;
+const byte BECABITS1_RELAY_COOL    =   2;
 const byte BECABITS1_TEMP_01        =   4;
 const byte BECABITS1_TEMP_10        =   8;
 const byte BECABITS1_SWITCHBACKOFF  =  16;
@@ -246,13 +246,13 @@ public:
 		this->becaBits2 = network->getSettings()->setByte("becabits2",
 			(network->getSettingsOld() && network->getSettingsOld()->existsSetting("becabits2") ? network->getSettingsOld()->getByte("becabits2") : 0x00));
 		// Split mqtt setting into bits - so we keep settings storage compatibility
-		if (this->becaBits1->getByte() == 0xFF) this->becaBits1->setByte(BECABITS1_RELAIS_HEAT); // compatibility
+		if (this->becaBits1->getByte() == 0xFF) this->becaBits1->setByte(BECABITS1_RELAY_HEAT); // compatibility
 
 		// Heating Relay and State property
 		this->supportingHeatingRelay = new WProperty("supportingHeatingRelay", "supportingHeatingRelay", BOOLEAN);
-		this->supportingHeatingRelay->setBoolean(this->becaBits1->getByte() & BECABITS1_RELAIS_HEAT);
+		this->supportingHeatingRelay->setBoolean(this->becaBits1->getByte() & BECABITS1_RELAY_HEAT);
 		this->supportingCoolingRelay = new WProperty("supportingCoolingRelay", "supportingCoolingRelay", BOOLEAN);
-		this->supportingCoolingRelay->setBoolean(this->becaBits1->getByte() & BECABITS1_RELAIS_COOL);
+		this->supportingCoolingRelay->setBoolean(this->becaBits1->getByte() & BECABITS1_RELAY_COOL);
 
 		if (this->supportingHeatingRelay->getBoolean() && this->supportingCoolingRelay->getBoolean()) {
 			this->supportingCoolingRelay->setBoolean(false);
@@ -553,9 +553,9 @@ public:
 		byte bb1 = 0;
 		byte bb2 = 0;
 		if (webServer->arg("rs") == "h"){
-			bb1 |= BECABITS1_RELAIS_HEAT;
+			bb1 |= BECABITS1_RELAY_HEAT;
 		} else if (webServer->arg("rs") == "c"){
-			bb1 |= BECABITS1_RELAIS_COOL;
+			bb1 |= BECABITS1_RELAY_COOL;
 		} else {
 			// default no relaus
 		}

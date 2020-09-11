@@ -8,7 +8,7 @@
 
 Fork of <https://github.com/klausahrenberg/WThermostatBeca> with some new features.
 
-Replaces original Tuya firmware on Beca thermostat with ESP8266 wifi module.
+Replaces original Tuya firmware on Beca thermostat with ESP8266 WiFi module.
 
 ## Supported Devices
 
@@ -16,7 +16,7 @@ The firmware has been tested or reported to work with following devices:
 
 * BHT-002 WiFi Thermostat
   * BHT-002-GALW (Water/Gas heating)
-  * BHT-002-GBLW (floor heating)
+  * BHT-002-GBLW (Electrical floor heating)
   * BHT-002-GCLW (Water/Gas Boiler)
 * BHT-6000 WiFi Thermostat
   * BHT-6000-GALW, BHT-6000-GBLW, BHT-6000-GCLW
@@ -26,7 +26,7 @@ The firmware has been tested or reported to work with following devices:
 * BAC-1000-ALW WiFi Thermostat for Conditioning (heating, cooling, ventilation)
   * also known as BAC-002-ALW
 
-Also selled by Moes or Qiumi.
+Also also sold through Moes or Qiumi.
 
 ![homeassistant](docs/images/bac-002-wifi.jpg)
 
@@ -52,7 +52,7 @@ _(fas)_: Only available in -fas version
 
 ## Hardware-Versions
 
-You need the WiFi Version! (W in productname suffix, like -GAL**W**). There is also a version without WLAN. See [Diagnose Can we add WiFi to Non-Wifi Thermostat bac-002.pdf](./docs/Diagnose%20Can%20we%20add%20WiFi%20to%20Non-Wifi%20Thermostat%20bac-002.pdf)
+You need the WiFi Version! (W in product name suffix, like -GAL**W**). There is also a version without WLAN. See [Diagnose Can we add WiFi to Non-Wifi Thermostat bac-002.pdf](./docs/Diagnose%20Can%20we%20add%20WiFi%20to%20Non-Wifi%20Thermostat%20bac-002.pdf)
 
 The BHT Version is for heating only. The BAC-Version has modes Cooling, Heating and Ventilation.
 The BHT-002-GA/GB/GC versions only differs in relays-wiring.
@@ -83,12 +83,12 @@ In settings menu of MCU (option 4) you can switch between internal (IN), externa
 * AL-Mode: MCU reports both temperatures, uses internal sensor for room-temperature and external sensor for maximum floor temperature overheating protection. Values "temperature" and "floorTemperature" are both valid.
   * It's not possible to change MCU behavior to other modes, e.g. using external temperature sensor to control relays and only display value of internal sensor is not possible.
   * See [Issue #27](https://github.com/fashberg/WThermostatBeca/issues/27) with Workaround by @IanAdd with Home Assistant controlled Heating/Idle state depending on floorTemperature
-  * Hint: Long pressing the most right button for 5 seconds (while device switched on) the displays shows external temperature.
+  * Hint: Long pressing the rightest button for 5 seconds (while device switched on) the displays shows external temperature.
 
 ### Hardware Installation
 
-Here a description of how to install the hardware - indepentent from Open Source WThermostat.
-**No special Hardware installation neccessary for Upgrading to this firmware!**
+Here a description of how to install the hardware - indepentdent from Open Source WThermostat.
+**No special Hardware installation necessary for Upgrading to this firmware!**
 
 * see [Installation.md](Installation.md)
 
@@ -102,7 +102,7 @@ You can install the firmware either
 
 * by using tuya-convert - no Hardware Modifications necessary
 * by soldering cables to the ESP-Modules using an ESP/Arduino-Programmer (3,3 Volt TTL)
-* by using OTA Upgrade on tasmota or other OpenSource ESP Firmware
+* by using OTA Upgrade on tasmota or other Open Source ESP Firmware
 
 Yoube video of converting to 1.14-fas with tuya-convert: <https://youtu.be/fqfghJqnK_8>
 
@@ -124,14 +124,14 @@ See [Configuration.md](Configuration.md) for a detailed explanation of the setup
 You can Upgrade over the Air from other versions of WThermostatBeca on the Web-GUI.
 Please check all settings after Upgrade!
 
-If you upgrade from original Klaus-Ahrenberg's Original-Version please note:
+If you upgrade from Klaus-Ahrenberg's version, please note:
 
 * Only WLAN settings are kept
-* If you get "Not Enough Space" you can use WThermostat_1.xx-fas-minial.bin as interim-version.
+* If you get "Not Enough Space" you can use WThermostat_1.xx-fas-minial.bin as interim version.
   * WLAN settings are kept
   * no MQTT, no Beca-control, no Clock in -minimal
-  * Then Upgrade to normal-version
-  * Not neccessary when upgrading from fas to fas versions
+  * Then Upgrade to normal version
+  * Not necessary when upgrading from fas to fas versions
 
 ## Screenshots
 
@@ -158,7 +158,7 @@ There is also a detailed view available:
 
 ![webthing](docs/images/Webthing_Complete.png)  
 
-## Integration in Home Assisant
+## Integration in Home Assistant
 
 ![homeassistant](docs/images/homeassistant.png)  ![hass_discovery](docs/images/hass_discovery.png)
 
@@ -166,11 +166,10 @@ There is also a detailed view available:
 
 ![homeassistant](docs/images/hass-bac.png)
 
-
 ### HASS Autodiscovery
 
 WThermostatBeca supports optional HASS-Autodiscovery since Version 1.08-fas.
-You have to enable it at Thermostat (settings network) and of course it must be enabled in your HASS configuration.yaml file:
+You must enable it at Thermostat (settings network) and of course it must be enabled in your HASS configuration.yaml file:
 
 ```yaml
 mqtt:
@@ -179,11 +178,11 @@ mqtt:
   discovery_prefix: homeassistant
 ```
 
-#### Use a persistant MQTT-Broker
+#### Use a persistent MQTT-Broker
 
 You should use a persistent MQTT-Broker, keeping all retained messages during reboot/restart.
 HASS integrated MQTT broker is not persistent.
-Otherwise all autodiscovered messages are getting lost and you have to reboot all devices, to send HASS autodiscover messages again!
+Otherwise all autodiscovered messages are getting lost and you must reboot all devices, to send HASS autodiscover messages again!
 See: <https://www.home-assistant.io/docs/mqtt/discovery/>
 
 Example for users of mosquitto, file mosquitto.conf:
@@ -237,7 +236,7 @@ climate:
 
 **Air Conditioning:**
 
-The BAC-002/BAC-1000 does not support auto mode. The Device (MCU) cannoy not switch between heating, cooling or fan automatically.
+The BAC-002/BAC-1000 does not support auto mode. The Device (MCU) can not switch automatically between heating, cooling or fan mode.
 
 To Switch between Automatic Scheduling and Manual Mode we use 'holdState' with the following mode: 'scheduler' and 'manual', combined with mode 'eco'.
 If you choose 'None' it disables 'eco' and device jumps back to last mode (scheduler/manual).
@@ -276,7 +275,7 @@ climate:
     precision: 0.5
 ```
 
-If you have several thermostats you can anchor some settings while defining the first device and refer later on. Example:
+If you have several thermostats you can anchor some settings while defining the first device and refer later. Example:
 
 ```yaml
 climate:
@@ -430,7 +429,7 @@ If logging is enabled (webgui/mqtt) you will see messages like:
 
 Send a json with changed parameters to `<your_topic>/cmnd/things/thermostat/properties`.  
 Send a json with changed schedules to `<your_topic>/cmnd/things/thermostat/schedules`.
-Also you can change single values by sending the value to `<your_topic>/cmnd/things/thermostat/properties/parameterName`.
+You also can change single values by sending the value to `<your_topic>/cmnd/things/thermostat/properties/parameterName`.
 
 Examples:
 
@@ -485,10 +484,10 @@ The Hardware itself has two Microcontrollers:
   * The software on the MCU gets not upgraded with WThermostat, so no changes are possible here!
   * It controls Temperature, Display, the Relay, Scheduling, has RTC, etc.
   * Sonix SN8F57083 8 bit Microcontroller
-* **The ESP8266-based Tuya-Wifi-Module.**
+* **The ESP8266-based Tuya-WiFi-Module.**
   * ___The Software of ESP can be flashed with this Open Source WThermostat___
-  * There is a serial connection between MCU and ESP. Via this connection the we can control the MCU
-  * Only the Wifi-Verisons of thermostats have the ESP-Module.
+  * There is a serial connection between MCU and ESP. Via this connection we can control the MCU
+  * Only the WiFi-Versions of thermostats have the ESP-Module.
 
 Both devices are communication using a binary serial protocol, called "MCU protocol". See [Tuya Cloud Universal Serial Port Access Protocol_Tuya Smart_Docs.pdf](./docs/Tuya%20Cloud%20Universal%20Serial%20Port%20Access%20Protocol_Tuya%20Smart_Docs.pdf")
 
@@ -498,8 +497,8 @@ Because ESP8266 runs with 3.3 Volt and Sonix MCU runs with 5.0 Volt the Serial-T
 
 ### Can you add xxx as a feature
 
-I have been often asked if i can implement a specific feature.
-Often the answer is: Because all internal routines (reading temperature, controlling the relay, reading the buttons, controlling the display) are controlled by MCU, which still runs proprietary closed source software, the behaviour cannot be changed!
+I have been often asked if I can implement a specific feature.
+Often the answer is: Because all internal routines (reading temperature, controlling the relay, reading the buttons, controlling the display) are controlled by MCU, which still runs proprietary closed source software, the behavior cannot be changed!
 
 ## Don't like it or it doesn't work
 
@@ -507,7 +506,7 @@ Flash the original firmware (see installation). Write me a message with your exa
 
 ## Build this firmware from source
 
-For building from sources and coding i suggest VS Code and PlatformIO. Also you can use Gitpod.
+For building from sources and coding i suggest VS Code and PlatformIO. You can also use Gitpod.
 
 ### Visual Studio Code: Install and Prepare to build
 
@@ -523,7 +522,7 @@ git submodule update
 ```
 
 * Open the folder 'WThermostatBeca' in VS Code
-* Go To PlatformIO Icon
+* Go to PlatformIO Icon
 * Click Build
   * Binary Firmware can be found in build_output\firmware\wthermostat-1.xx-fas.bin (or -debug or -minimal)
 
