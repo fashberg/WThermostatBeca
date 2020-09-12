@@ -144,6 +144,9 @@ const static char MQTT_HASS_AUTODISCOVERY_SENSORRSSI[]         PROGMEM = R"=====
 #define PIN_STATE_COOLING_RELAY 4
 #define ECOMODETEMP 20.0
 #define ECOMODETEMP_COOL 26.0
+// tuya doc says local time seconds is from 0 to 15 but this seems to be not right
+// for beca
+#define SECONDS_DIVIDER 1
 
 const unsigned char COMMAND_START[] = {0x55, 0xAA};
 const char AR_COMMAND_END = '\n';
@@ -489,6 +492,7 @@ public:
 		
 
 		lastHeartBeat = lastNotify = lastScheduleNotify  = lastLongLoop = lastTimeRequested = lastTimeSent = 0;
+		timeIsRequested = timeIsRequestedLocaltime = timeIsRequestedSendZeroSecs = false;
 		resetAll();
 		for (int i = 0; i < STATE_COMPLETE; i++) {
 			receivedStates[i] = false;
@@ -642,6 +646,23 @@ public:
 		if (!isMcuInitialized()){
 			mcuInitialize();
 		}
+		
+		if (timeIsRequested && isMcuInitialized() &&  wClock->isClockSynced()){
+			if (lastTimeSent>0){
+				// update time only if seconds == 30
+				if (wClock->getSeconds()==30){
+					timeIsRequestedSendZeroSecs=false;
+					sendActualTimeToBeca(timeIsRequestedLocaltime);
+					timeIsRequested=false;
+				} else if (timeIsRequestedSendZeroSecs && wClock->getSeconds()%10==0 && now - lastTimeSent > 2000){
+					sendActualTimeToBeca(timeIsRequestedLocaltime);
+				}
+			}  else {
+				// send time immediately if it was never set, but do again at next full minute
+				timeIsRequestedSendZeroSecs=true;
+				sendActualTimeToBeca(timeIsRequestedLocaltime);
+			}
+		}
     }
 
     unsigned char* getCommand() {
@@ -719,6 +740,11 @@ public:
 		//		0x01, 0x00 };
 	}
 
+	void sendActualTimeToBecaRequested(bool localtime) {
+		timeIsRequested=true;
+		timeIsRequestedLocaltime=localtime;
+	}
+
     void sendActualTimeToBeca(bool localtime) {
     	//Command: Set date and time
     	//                       OK YY MM DD HH MM SS Weekday
@@ -733,16 +759,27 @@ public:
     	byte dayOfMonth = wClock->getDay(epochTime);
     	byte hours = wClock->getHours(epochTime) ;
     	byte minutes = wClock->getMinutes(epochTime);
-    	byte seconds = wClock->getSeconds(epochTime);
+		// Tuya doc says: if localtime is requested: data[6] represents second, from 0 to 15. whaaa? divide by 4?
+		// My BAC-002 and BHT-002 have another behaviour:
+		// if secs is <30 it gets ceiled to 30
+		// everything >59 gets floored to 59
+		// so we set the clock after first ntp-sync to 0 seconds (gets rounded to 30), just to have a valid time immediately
+		// then we renew seconds=0 every 10 seconds
+		// finally we set at second 30 to real seconds (30, not 30/4)
+		// and all further timesettings are executed at second 30
+		// then we have a swiss clock in each room :)
+    	byte secondsDivided = wClock->getSeconds(epochTime) / (localtime ? SECONDS_DIVIDER : 1 );
     	byte dayOfWeek = getDayOfWeek();
 
+		if (timeIsRequestedSendZeroSecs) secondsDivided=0;
 
-		network->log()->trace(F("sendActual%sTimeToBeca %d + %d days: %02d.%02d.%02d %02d:%02d:%02d (dow: %d)" ),
-		(localtime ? "Local" : "GMT"), epochTime, getSchedulesDayOffset(), year, month, dayOfMonth, hours, minutes, seconds, dayOfWeek );
-    	unsigned char cancelConfigCommand[] = { 0x55, 0xaa, 0x00, (localtime ?  (char)0x1c : (char)0x0c), 0x00, 0x08,
+		network->log()->trace(F("sendActual%sTimeToBeca %d + %d days: %02d.%02d.%02d %02d:%02d:%02d (/%d=%d) (dow: %d)" ),
+		(localtime ? "Local" : "GMT"), epochTime, getSchedulesDayOffset(), year, month, dayOfMonth, hours, minutes,
+			wClock->getSeconds(epochTime), (localtime ? SECONDS_DIVIDER : 1), secondsDivided, dayOfWeek );
+    	unsigned char sendTimeCommand[] = { 0x55, 0xaa, 0x00, (localtime ?  (char)0x1c : (char)0x0c), 0x00, 0x08,
     											0x01, year, month, dayOfMonth,
-    											hours, minutes, seconds, dayOfWeek};
-    	commandCharsToSerial(14, cancelConfigCommand);
+    											hours, minutes, secondsDivided, dayOfWeek};
+    	commandCharsToSerial(14, sendTimeCommand);
 		lastTimeSent=millis();
     }
 
@@ -1270,6 +1307,7 @@ private:
     bool schedulesChanged;
 	int currentSchedulePeriod;
 	bool mqttHassAutodiscoverSent;
+	bool timeIsRequested, timeIsRequestedLocaltime, timeIsRequestedSendZeroSecs;
 
 	bool mcuInitialized;
 	int mcuInitializeState;

@@ -81,7 +81,7 @@ void setup() {
     wClock = new WClock(network, APPLICATION);
     network->log()->trace(F("Loading ClockDevice"));
     network->addDevice(wClock);
-    wClock->setOnTimeUpdate([]() { becaDevice->sendActualTimeToBeca(true); });
+    wClock->setOnTimeUpdate([]() { becaDevice->sendActualTimeToBecaRequested(true); });
     wClock->setOnError([](const char *error) {
         network->log()->error(F("Clock Error: %s"), error);
     });
