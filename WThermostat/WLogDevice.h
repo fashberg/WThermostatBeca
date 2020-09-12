@@ -18,7 +18,7 @@ class WLogDevice: public WDevice {
 public:
 
     WLogDevice(WNetwork* network) 
-        	: WDevice(network, "logging", "logging", network->getIdx(), DEVICE_TYPE_LOG) {
+        	: WDevice(network, "logging", "Logging", network->getIdx(), DEVICE_TYPE_LOG) {
 		
 		this->providingConfigPage = true;
 		this->configNeedsReboot = false;
