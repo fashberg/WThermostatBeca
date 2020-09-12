@@ -122,9 +122,9 @@ void setup() {
         #endif
     }
 
-    network->setOnMqttHassAutodiscover([]() {
+    network->setOnMqttHassAutodiscover([](bool removeDiscovery) {
         // https://www.home-assistant.io/integrations/climate.mqtt/
-        return becaDevice->sendMqttHassAutodiscover();
+        return becaDevice->sendMqttHassAutodiscover(removeDiscovery);
     });
 #endif
     network->startWebServer();

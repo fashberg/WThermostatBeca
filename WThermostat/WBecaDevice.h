@@ -229,7 +229,6 @@ public:
 		this->stateNotifyInterval=60000;
 		this->onConfigurationRequest=nullptr;
 		this->onPowerButtonOn=nullptr;
-		this->mqttHassAutodiscoverSent=false;
 		startMcuInitialize();
 		/* properties */
 
@@ -551,6 +550,8 @@ public:
     }
 
     void saveConfigPage(ESP8266WebServer* webServer) {
+		// remove old autoconfiguration
+		network->sendMqttHassAutodiscover(true);
         network->log()->notice(PSTR("Save Beca config page"));
         this->thermostatModel->setByte(webServer->arg("tm").toInt());
         this->schedulesDayOffset->setByte(webServer->arg("ws").toInt());
@@ -1150,10 +1151,9 @@ public:
     	return schedulesDayOffset->getByte();
     }
 
-	bool sendMqttHassAutodiscover(){
-		if (mqttHassAutodiscoverSent) return true;
+	bool sendMqttHassAutodiscover(bool removeDiscovery){
 		if (!hasDevicesWithHassAutodiscoverSupport()) return true;
-		network->log()->notice(F("sendMqttHassAutodiscover"));
+		network->log()->notice(F("sendMqttHassAutodiscover-%s"), (removeDiscovery ? "remove" : "add"));
 		// https://www.home-assistant.io/docs/mqtt/discovery/
 		String topic="homeassistant/climate/";
 		String unique_id = (String)network->getIdx();
@@ -1164,28 +1164,30 @@ public:
 		response->flush();
 		char str_temp[6];
 		dtostrf(this->temperaturePrecision->getDouble(), 3, 1, str_temp);
-		if (getThermostatModel() == MODEL_BHT_002_GBLW ){
-			response->printf_P(MQTT_HASS_AUTODISCOVERY_CLIMATE,
-				network->getIdx(),
-				unique_id.c_str(),
-				network->getMacAddress().c_str(),
-				network->getIdx(),
-				network->getApplicationName().c_str(),
-				network->getFirmwareVersion().c_str(),
-				network->getMqttTopic(),
-				str_temp 
-			);
-		} else if (getThermostatModel() == MODEL_BAC_002_ALW ){
-			response->printf_P(MQTT_HASS_AUTODISCOVERY_AIRCO,
-				network->getIdx(),
-				unique_id.c_str(),
-				network->getMacAddress().c_str(),
-				network->getIdx(),
-				network->getApplicationName().c_str(),
-				network->getFirmwareVersion().c_str(),
-				network->getMqttTopic(),
-				str_temp 
-			);
+		if (!removeDiscovery){
+			if (getThermostatModel() == MODEL_BHT_002_GBLW ){
+				response->printf_P(MQTT_HASS_AUTODISCOVERY_CLIMATE,
+					network->getIdx(),
+					unique_id.c_str(),
+					network->getMacAddress().c_str(),
+					network->getIdx(),
+					network->getApplicationName().c_str(),
+					network->getFirmwareVersion().c_str(),
+					network->getMqttTopic(),
+					str_temp 
+				);
+			} else if (getThermostatModel() == MODEL_BAC_002_ALW ){
+				response->printf_P(MQTT_HASS_AUTODISCOVERY_AIRCO,
+					network->getIdx(),
+					unique_id.c_str(),
+					network->getMacAddress().c_str(),
+					network->getIdx(),
+					network->getApplicationName().c_str(),
+					network->getFirmwareVersion().c_str(),
+					network->getMqttTopic(),
+					str_temp 
+				);
+			}
 		}
 		delay(50); // some extra time
 		if (!network->publishMqtt(topic.c_str(), response, true)) return false;
@@ -1196,12 +1198,14 @@ public:
 		topic="homeassistant/sensor/"; 
 		topic.concat(unique_id);
 		topic.concat("/config");
-		response->printf_P(MQTT_HASS_AUTODISCOVERY_SENSOR,
-			network->getIdx(),
-			unique_id.c_str(),
-			network->getMacAddress().c_str(),
-			network->getMqttTopic()
-		);
+		if (!removeDiscovery){
+				response->printf_P(MQTT_HASS_AUTODISCOVERY_SENSOR,
+				network->getIdx(),
+				unique_id.c_str(),
+				network->getMacAddress().c_str(),
+				network->getMqttTopic()
+			);
+		}
 		if (!network->publishMqtt(topic.c_str(), response, true)) return false;
 		response->flush();
 		delay(50); // some extra time
@@ -1212,12 +1216,14 @@ public:
 			topic="homeassistant/sensor/"; 
 			topic.concat(unique_id);
 			topic.concat("/config");
-			response->printf_P(MQTT_HASS_AUTODISCOVERY_SENSORFLOOR,
-				network->getIdx(),
-				unique_id.c_str(),
-				network->getMacAddress().c_str(),
-				network->getMqttTopic()
-			);
+			if (!removeDiscovery){
+				response->printf_P(MQTT_HASS_AUTODISCOVERY_SENSORFLOOR,
+					network->getIdx(),
+					unique_id.c_str(),
+					network->getMacAddress().c_str(),
+					network->getMqttTopic()
+				);
+			}
 			if (!network->publishMqtt(topic.c_str(), response, true)) return false;
 			delay(50); // some extra time
 			response->flush();
@@ -1228,18 +1234,17 @@ public:
 		topic="homeassistant/sensor/"; 
 		topic.concat(unique_id);
 		topic.concat("/config");
-		response->printf_P(MQTT_HASS_AUTODISCOVERY_SENSORRSSI,
-			network->getIdx(),
-			unique_id.c_str(),
-			network->getMacAddress().c_str(),
-			network->getMqttTopic()
-		);
+		if (!removeDiscovery){
+			response->printf_P(MQTT_HASS_AUTODISCOVERY_SENSORRSSI,
+				network->getIdx(),
+				unique_id.c_str(),
+				network->getMacAddress().c_str(),
+				network->getMqttTopic()
+			);
+		}
 		if (!network->publishMqtt(topic.c_str(), response, true)) return false;
 		response->flush();
 		delay(50); // some extra time
-
-
-		mqttHassAutodiscoverSent=true;
 		return true;
 	}
 
@@ -1306,7 +1311,6 @@ private:
     unsigned long lastNotify, lastScheduleNotify, lastLongLoop;
     bool schedulesChanged;
 	int currentSchedulePeriod;
-	bool mqttHassAutodiscoverSent;
 	bool timeIsRequested, timeIsRequestedLocaltime, timeIsRequestedSendZeroSecs;
 
 	bool mcuInitialized;

@@ -472,6 +472,9 @@ mosquitto_pub -h mqtt -t home/test/cmnd/things/logging/properties/logLevel -m "t
 # show logs
 mosquitto_sub -h mqtt -v -t "home/test/tele/log/#"
 
+# send MCU command by MQTT
+mosquitto_pub -t "home/test/cmnd/things/thermostat/mcucommand" -m "55 aa 00 1c 00 08 01 14 09 0c 10 30 0f 06"
+
 ```
 
 ## How it works
