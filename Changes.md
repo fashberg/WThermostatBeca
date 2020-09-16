@@ -18,6 +18,9 @@
 * Typos
 * Gitpd support (<https://github.com/fashberg/WThermostatBeca#cloud-development-using-gitpod>)
 * Travis CI support (<https://travis-ci.org/github/fashberg/WThermostatBeca>)
+* Fixed info page not opening #42
+* MCU second bug workaround. Time is now more precise
+* Removing old HASS autodiscvery before saving changes (Name, Model, etc.)
 
 ## Version 1.15-fas
 
