@@ -424,15 +424,15 @@ public:
 		this->mcuId = new WProperty("mcuId", "mcuId", STRING);
 		this->mcuId->setReadOnly(true);
 		this->addProperty(mcuId);
-		// Pages		
+		// Pages
 		WPage * schedulePage=new WPage("schedules", "Configure Schedules");
-		schedulePage->setPrintPage([this,schedulePage](ESP8266WebServer* webServer, WStringStream* page) {
+		schedulePage->setPrintPage([this,schedulePage](AsyncWebServerRequest* request, AsyncResponseStream* page) {
 			this->network->log()->notice(PSTR("Schedules"));
-			page->printAndReplace(FPSTR(HTTP_CONFIG_PAGE_BEGIN), ((String)getId()+"_"+schedulePage->getId()).c_str());
+			page->printf_P(HTTP_CONFIG_PAGE_BEGIN, ((String)getId()+"_"+schedulePage->getId()).c_str());
 			page->print(FPSTR(HTTP_CONFIG_SCHTAB_HEAD));
 			for (char *period=(char*)SCHEDULES_PERIODS; *period > 0; period++){
-				page->printf(F("<tr>"));
-				page->printf(F("<td>Period %c</td>"), *period);
+				page->print(F("<tr>"));
+				page->printf_P("<td>Period %c</td>", *period);
 				for (char *day=(char*)SCHEDULES_DAYS; *day > 0; day++){
 					char keyH[4];
 					char keyT[4];
@@ -443,13 +443,13 @@ public:
 					*day, *period, this->getSchedulesValue(keyH).c_str(),
 					*day, *period, this->getSchedulesValue(keyT).c_str());
 				}
-				page->printf(F("</tr>"));
+				page->print(F("</tr>"));
 			}
-			page->print(FPSTR(HTTP_CONFIG_SCHTAB_FOOT));
-			page->print(FPSTR(HTTP_CONFIG_SAVE_BUTTON));
+			page->printf_P(HTTP_CONFIG_SCHTAB_FOOT);
+			page->printf_P(HTTP_CONFIG_SAVE_BUTTON);
 
 		});
-		schedulePage->setSubmittedPage([this](ESP8266WebServer* webServer, WStringStream* page) {
+		schedulePage->setSubmittedPage([this,schedulePage](AsyncWebServerRequest* request, AsyncResponseStream* page) {
 			this->network->log()->notice(PSTR("submitted"));
 			schedulesChanged = false;
 			for (char *period=(char*)SCHEDULES_PERIODS; *period > 0; period++){
@@ -458,8 +458,8 @@ public:
 					char keyT[4];
 					snprintf(keyH, 4, "%c%ch", *day, *period);
 					snprintf(keyT, 4, "%c%ct", *day, *period);
-					const char * valueH = webServer->arg(keyH).c_str();
-					const char * valueT = webServer->arg(keyT).c_str();
+					const char * valueH = request->getParam(keyH)->value().c_str();
+					const char * valueT = request->getParam(keyT)->value().c_str();
 					processSchedulesKeyValue(keyH, valueH);
 					processSchedulesKeyValue(keyT, valueT);
 				}
@@ -471,20 +471,18 @@ public:
 			} else {
 				page->print(F("Nothing has been changed"));
 			}
-			
 		});
 		this->addPage(schedulePage);
-		
 
 		// Pages reinit		
 		WPage * reinitPage=new WPage("reinit", "Reinit Thermostat");
-		reinitPage->setPrintPage([this,reinitPage](ESP8266WebServer* webServer, WStringStream* page) {
+		reinitPage->setPrintPage([this,reinitPage](AsyncWebServerRequest *request, AsyncResponseStream* page) {
 			this->network->log()->notice(PSTR("Reinit"));
 			page->print(F("Reinitialized"));
 			page->print(FPSTR(HTTP_HOME_BUTTON));
 			startMcuInitialize();
 		});
-		reinitPage->setSubmittedPage([this](ESP8266WebServer* webServer, WStringStream* page) {
+		reinitPage->setSubmittedPage([this,reinitPage](AsyncWebServerRequest *request, AsyncResponseStream* page) {
 			page->print(F("VOID"));			
 		});
 		this->addPage(reinitPage);
@@ -499,80 +497,80 @@ public:
 		this->schedulesDataPoint = 0x00;
 	}
 
-    virtual void printConfigPage(WStringStream* page) {
+    virtual void printConfigPage(AsyncWebServerRequest *request, AsyncResponseStream* page) {
     	network->log()->notice(PSTR("Beca thermostat config page"));
-    	page->printAndReplace(FPSTR(HTTP_CONFIG_PAGE_BEGIN), getId());
+    	page->printf_P(HTTP_CONFIG_PAGE_BEGIN, getId());
 
     	//ComboBox with model selection
-    	page->printAndReplace(FPSTR(HTTP_COMBOBOX_BEGIN), "Thermostat model:", "tm");
-    	page->printAndReplace(FPSTR(HTTP_COMBOBOX_ITEM), "0", (getThermostatModel() == 0 ? HTTP_SELECTED : ""), "Floor heating (BHT-002-GxLW)");
-    	page->printAndReplace(FPSTR(HTTP_COMBOBOX_ITEM), "1", (getThermostatModel() == 1 ? HTTP_SELECTED : ""), "Heating, Cooling, Ventilation (BAC-002-ALW)");
-    	page->print(FPSTR(HTTP_COMBOBOX_END));
+    	page->printf_P(HTTP_COMBOBOX_BEGIN, "Thermostat model:", "tm");
+    	page->printf_P(HTTP_COMBOBOX_ITEM), "0", (getThermostatModel() == 0 ? HTTP_SELECTED : "", "Floor heating (BHT-002-GxLW)");
+    	page->printf_P(HTTP_COMBOBOX_ITEM), "1", (getThermostatModel() == 1 ? HTTP_SELECTED : "", "Heating, Cooling, Ventilation (BAC-002-ALW)");
+    	page->print(HTTP_COMBOBOX_END);
 
 		// Temp precision
-		page->printAndReplace(FPSTR(HTTP_COMBOBOX_BEGIN), "Temperature Precision (must match your hardware):", "tp");
-		page->printAndReplace(FPSTR(HTTP_COMBOBOX_ITEM), "05", (getTemperatureFactor() ==  2.0f ? HTTP_SELECTED : ""), "0.5 (default for most Devices)");
-		page->printAndReplace(FPSTR(HTTP_COMBOBOX_ITEM), "10", (getTemperatureFactor() ==  1.0f ? HTTP_SELECTED : ""), "1.0 (untested)");
-		//page->printAndReplace(FPSTR(HTTP_COMBOBOX_ITEM), "01", (getTemperatureFactor() == 10.0f ? HTTP_SELECTED : ""), "0.1");
-		page->print(FPSTR(HTTP_COMBOBOX_END));
+		page->printf_P(HTTP_COMBOBOX_BEGIN, "Temperature Precision (must match your hardware):", "tp");
+		page->printf_P(HTTP_COMBOBOX_ITEM), "05", (getTemperatureFactor() ==  2.0f ? HTTP_SELECTED : "", "0.5 (default for most Devices)");
+		page->printf_P(HTTP_COMBOBOX_ITEM), "10", (getTemperatureFactor() ==  1.0f ? HTTP_SELECTED : "", "1.0 (untested)");
+		//page->printf_P(HTTP_COMBOBOX_ITEM), "01", (getTemperatureFactor() == 10.0f ? HTTP_SELECTED : "", "0.1");
+		page->print(HTTP_COMBOBOX_END);
 
 		//Checkbox with support for relay
 		int rsMode=(this->isSupportingHeatingRelay() ? 1 :  (this->isSupportingCoolingRelay() ? 2 : 0));
-		page->printAndReplace(FPSTR(HTTP_COMBOBOX_BEGIN), "Relais connected to GPIO Inputs:", "rs");
-		page->printAndReplace(FPSTR(HTTP_COMBOBOX_ITEM), "_", (rsMode == 0 ? HTTP_SELECTED : ""), "No Hardware Hack");
-		page->printAndReplace(FPSTR(HTTP_COMBOBOX_ITEM), "h", (rsMode == 1 ? HTTP_SELECTED : ""), "Heating-Relay at GPIO 5");
-		page->printAndReplace(FPSTR(HTTP_COMBOBOX_ITEM), "c", (rsMode == 2 ? HTTP_SELECTED : ""), "Cooling-Relay at GPIO 5");
-		page->print(FPSTR(HTTP_COMBOBOX_END));
+		page->printf_P(HTTP_COMBOBOX_BEGIN, "Relais connected to GPIO Inputs:", "rs");
+		page->printf_P(HTTP_COMBOBOX_ITEM), "_", (rsMode == 0 ? HTTP_SELECTED : "", "No Hardware Hack");
+		page->printf_P(HTTP_COMBOBOX_ITEM), "h", (rsMode == 1 ? HTTP_SELECTED : "", "Heating-Relay at GPIO 5");
+		page->printf_P(HTTP_COMBOBOX_ITEM), "c", (rsMode == 2 ? HTTP_SELECTED : "", "Cooling-Relay at GPIO 5");
+		page->print(HTTP_COMBOBOX_END);
 
 		// FloorSensor 
-		page->printAndReplace(FPSTR(HTTP_CHECKBOX_OPTION), "Floor Sensor enabled",
+		page->printf_P(HTTP_CHECKBOX_OPTION, "Floor Sensor enabled",
 		"fs", "fs", (this->floorSensor->getBoolean() ? HTTP_CHECKED : ""), "", "Enabled");
 
 		// Switch back from manual temo
-		page->printAndReplace(FPSTR(HTTP_CHECKBOX_OPTION), "Switch back to Auto mode from manual at next schedule period change",
+		page->printf_P(HTTP_CHECKBOX_OPTION, "Switch back to Auto mode from manual at next schedule period change",
 		"sb", "sb", (this->switchBackToAuto->getBoolean() ? HTTP_CHECKED : ""), "", "Enabled");
 
 		//ComboBox with weekday
     	byte dayOffset = getSchedulesDayOffset();
-		page->printAndReplace(FPSTR(HTTP_COMBOBOX_BEGIN), "Workday schedules:", "ws");
-    	page->printAndReplace(FPSTR(HTTP_COMBOBOX_ITEM), "0", (dayOffset == 0 ? HTTP_SELECTED : ""), "Workday (1-5): Mon-Fri; Weekend (6 - 7): Sat-Sun");
-    	page->printAndReplace(FPSTR(HTTP_COMBOBOX_ITEM), "1", (dayOffset == 1 ? HTTP_SELECTED : ""), "Workday (1-5): Sun-Thu; Weekend (6 - 7): Fri-Sat");
-    	page->printAndReplace(FPSTR(HTTP_COMBOBOX_ITEM), "2", (dayOffset == 2 ? HTTP_SELECTED : ""), "Workday (1-5): Sat-Wed; Weekend (6 - 7): Thu-Fri");
-    	page->printAndReplace(FPSTR(HTTP_COMBOBOX_ITEM), "3", (dayOffset == 3 ? HTTP_SELECTED : ""), "Workday (1-5): Fri-Tue; Weekend (6 - 7): Wed-Thu");
-    	page->printAndReplace(FPSTR(HTTP_COMBOBOX_ITEM), "4", (dayOffset == 4 ? HTTP_SELECTED : ""), "Workday (1-5): Thu-Mon; Weekend (6 - 7): Tue-Wed");
-    	page->printAndReplace(FPSTR(HTTP_COMBOBOX_ITEM), "5", (dayOffset == 5 ? HTTP_SELECTED : ""), "Workday (1-5): Wed-Sun; Weekend (6 - 7): Mon-Tue");
-    	page->printAndReplace(FPSTR(HTTP_COMBOBOX_ITEM), "6", (dayOffset == 6 ? HTTP_SELECTED : ""), "Workday (1-5): Tue-Sat; Weekend (6 - 7): Sun-Mon");
-    	page->print(FPSTR(HTTP_COMBOBOX_END));
+		page->printf_P(HTTP_COMBOBOX_BEGIN, "Workday schedules:", "ws");
+    	page->printf_P(HTTP_COMBOBOX_ITEM), "0", (dayOffset == 0 ? HTTP_SELECTED : "", "Workday (1-5): Mon-Fri; Weekend (6 - 7): Sat-Sun");
+    	page->printf_P(HTTP_COMBOBOX_ITEM), "1", (dayOffset == 1 ? HTTP_SELECTED : "", "Workday (1-5): Sun-Thu; Weekend (6 - 7): Fri-Sat");
+    	page->printf_P(HTTP_COMBOBOX_ITEM), "2", (dayOffset == 2 ? HTTP_SELECTED : "", "Workday (1-5): Sat-Wed; Weekend (6 - 7): Thu-Fri");
+    	page->printf_P(HTTP_COMBOBOX_ITEM), "3", (dayOffset == 3 ? HTTP_SELECTED : "", "Workday (1-5): Fri-Tue; Weekend (6 - 7): Wed-Thu");
+    	page->printf_P(HTTP_COMBOBOX_ITEM), "4", (dayOffset == 4 ? HTTP_SELECTED : "", "Workday (1-5): Thu-Mon; Weekend (6 - 7): Tue-Wed");
+    	page->printf_P(HTTP_COMBOBOX_ITEM), "5", (dayOffset == 5 ? HTTP_SELECTED : "", "Workday (1-5): Wed-Sun; Weekend (6 - 7): Mon-Tue");
+    	page->printf_P(HTTP_COMBOBOX_ITEM), "6", (dayOffset == 6 ? HTTP_SELECTED : "", "Workday (1-5): Tue-Sat; Weekend (6 - 7): Sun-Mon");
+    	page->print(HTTP_COMBOBOX_END);
 
-		page->print(FPSTR(HTTP_CONFIG_SAVE_BUTTON));
+		page->print(HTTP_CONFIG_SAVE_BUTTON);
 		network->log()->notice(PSTR("Beca thermostat config page DONE"));
 		return;
     }
 
-    void saveConfigPage(ESP8266WebServer* webServer) {
+    void saveConfigPage(AsyncWebServerRequest *request) {
 		// remove old autoconfiguration
 		network->sendMqttHassAutodiscover(true);
         network->log()->notice(PSTR("Save Beca config page"));
-        this->thermostatModel->setByte(webServer->arg("tm").toInt());
-        this->schedulesDayOffset->setByte(webServer->arg("ws").toInt());
+        this->thermostatModel->setByte(request->getHeader("tm")->value().toInt());
+        this->schedulesDayOffset->setByte(request->getHeader("ws")->value().toInt());
 		byte bb1 = 0;
 		byte bb2 = 0;
-		if (webServer->arg("rs") == "h"){
+		if (request->getHeader("rs")->value() == "h"){
 			bb1 |= BECABITS1_RELAY_HEAT;
-		} else if (webServer->arg("rs") == "c"){
+		} else if (request->getHeader("rs")->value() == "c"){
 			bb1 |= BECABITS1_RELAY_COOL;
 		} else {
 			// default no relaus
 		}
-		if (webServer->arg("tp") == "10"){
+		if (request->getHeader("tp")->value() == "10"){
 			bb1 |= BECABITS1_TEMP_10;
-		} else if (webServer->arg("tp") == "01"){
+		} else if (request->getHeader("tp")->value() == "01"){
 			bb1 |= BECABITS1_TEMP_01;
 		} else {
 			// default 0.5
 		}
-		bb1 |= ((webServer->arg("sb") == HTTP_TRUE) ? 0 : BECABITS1_SWITCHBACKOFF); //logic reversed!
-		bb1 |= ((webServer->arg("fs") == HTTP_TRUE) ? BECABITS1_FLOORSENSOR : 0);
+		bb1 |= ((request->getHeader("sb")->value() == HTTP_TRUE) ? 0 : BECABITS1_SWITCHBACKOFF); //logic reversed!
+		bb1 |= ((request->getHeader("fs")->value() == HTTP_TRUE) ? BECABITS1_FLOORSENSOR : 0);
 		this->becaBits1->setByte(bb1);
 		this->becaBits2->setByte(bb2); // meets r2d2
     }
@@ -784,7 +782,7 @@ public:
 		lastTimeSent=millis();
     }
 
-    void bindWebServerCalls(ESP8266WebServer* webServer) {
+    void bindWebServerCalls(AsyncWebServer* webServer) {
     	String deviceBase("/things/");
     	deviceBase.concat(getId());
     	deviceBase.concat("/");
@@ -920,7 +918,7 @@ public:
 		}
     }
 
-    void sendSchedules(ESP8266WebServer* webServer) {
+    void sendSchedules(AsyncWebServer* webServer) {
     	WStringStream* response = network->getResponseStream();
     	WJson json(response);
     	json.beginObject();
@@ -928,7 +926,7 @@ public:
     	this->toJsonSchedules(&json, 1);// SCHEDULE_SATURDAY);
     	this->toJsonSchedules(&json, 2);// SCHEDULE_SUNDAY);
     	json.endObject();
-    	webServer->send(200, APPLICATION_JSON, response->c_str());
+    	//FIXME webServer->send(200, APPLICATION_JSON, response->c_str());
     }
 
     virtual void toJsonSchedules(WJson* json, byte schedulesDay) {
@@ -1942,7 +1940,7 @@ private:
 		return true;
 	}
 
-	void printInfoPage(WStringStream* page) {
+	void printInfoPage(AsyncResponseStream* page) {
 
 		htmlTableRowTitle(page, F("MCU-Initialized:"));
 		page->print((this->isMcuInitialized() ? "Yes" : "No"));

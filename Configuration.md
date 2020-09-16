@@ -111,6 +111,6 @@ If you cannot access your device, try to switch to Access-Point mode:
 * Power off the device by Pressing the button in the middle.
 * Then press the "down" button (most right) for about 8 seconds.
 * The Screen starts to blink and shows a WiFi-Icon.
-* The thermostat is now an Access Point named `Thermostat-Beca-xxxxxx`. Default password is `12345678`
+* The thermostat is now an Access Point named `Thermostat-xxxxxx`. Default password is `12345678`
 * Now you can fix network settings.
 * Saving settings or pressing power button switches back to Station mode

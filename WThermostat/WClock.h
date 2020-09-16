@@ -460,23 +460,23 @@ class WClock : public WDevice {
         return offset->getInteger();
     }
 
-    void printConfigPage(WStringStream* page) {
+    void printConfigPage(AsyncWebServerRequest *request, AsyncResponseStream* page) {
         network->log()->notice(F("Clock config page"));
-        page->printAndReplace(FPSTR(HTTP_CONFIG_PAGE_BEGIN), getId());
-        page->printAndReplace(FPSTR(HTTP_TEXT_FIELD), "NTP server:", "ntp", "32", ntpServer->c_str());
-        page->printAndReplace(FPSTR(HTTP_TEXT_FIELD), "Timezone:", "tzone", "6", timeZoneConfig->c_str());
-        page->printAndReplace(FPSTR(HTTP_TEXT_FIELD), "TimeRule switch to Daylight Saving Time:", "tdst", "14", timeDST->c_str());
-        page->printAndReplace(FPSTR(HTTP_TEXT_FIELD), "TimeRule switch Back to Standard Time:", "tstd", "14", timeSTD->c_str());
-        page->print(FPSTR(HTTP_TEXT_CLOCK_HOWTO));
-        page->print(FPSTR(HTTP_CONFIG_SAVE_BUTTON));
+        page->printf_P(HTTP_CONFIG_PAGE_BEGIN, getId());
+        page->printf_P(HTTP_TEXT_FIELD, "NTP server:", "ntp", "32", ntpServer->c_str());
+        page->printf_P(HTTP_TEXT_FIELD, "Timezone:", "tzone", "6", timeZoneConfig->c_str());
+        page->printf_P(HTTP_TEXT_FIELD, "TimeRule switch to Daylight Saving Time:", "tdst", "14", timeDST->c_str());
+        page->printf_P(HTTP_TEXT_FIELD, "TimeRule switch Back to Standard Time:", "tstd", "14", timeSTD->c_str());
+        page->printf_P(HTTP_TEXT_CLOCK_HOWTO);
+        page->printf_P(HTTP_CONFIG_SAVE_BUTTON);
     }
 
-    void saveConfigPage(ESP8266WebServer* webServer) {
+    void saveConfigPage(AsyncWebServerRequest *request) {
         network->log()->notice(F("Save clock config page"));
-        this->ntpServer->setString(webServer->arg("ntp").c_str());
-        this->timeZoneConfig->setString(webServer->arg("tzone").c_str());
-        this->timeDST->setString(webServer->arg("tdst").c_str());
-        this->timeSTD->setString(webServer->arg("tstd").c_str());
+        this->ntpServer->setString(request->getParam("ntp")->value().c_str());
+        this->timeZoneConfig->setString(request->getParam("tzone")->value().c_str());
+        this->timeDST->setString(request->getParam("tdst")->value().c_str());
+        this->timeSTD->setString(request->getParam("tstd")->value().c_str());
         /* reboot follows */
     }
 
@@ -750,7 +750,7 @@ class WClock : public WDevice {
         return true;
     }
 
-    void printInfoPage(WStringStream* page) {
+    void printInfoPage(AsyncResponseStream* page) {
         htmlTableRowTitle(page, F("Time-Valid:"));
         page->print((isValidTime()  ? "Yes" : "No"));
         htmlTableRowEnd(page);

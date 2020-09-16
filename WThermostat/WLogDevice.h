@@ -14,6 +14,21 @@ const char* LOG_MODE_NOTICE  = "notice";
 const char* LOG_MODE_TRACE   = "trace";
 const char* LOG_MODE_VERBOSE = "verbose";
 
+
+const static char HTTP_WEBLOG[]         PROGMEM = R"=====(
+	<textarea readonly id="t1" cols="340" rows="25" wrap="off" name="t1" style="resize:vertical;width:98%;height:318px;padding:5px;overflow:auto;background:#1f1f1f;color:#65c115"></textarea>
+)=====";
+
+
+
+const static char HTTP_WEBLOG_SCRIPT[]             PROGMEM = R"=====(<script>
+	var ws = new WebSocket("ws://" + location.host + "/ws", ["log"]);
+	exampleSocket.onmessage = function(event){
+		eb('t1').value+=event.data;
+	}
+</script>
+)=====";
+
 class WLogDevice: public WDevice {
 public:
 
@@ -54,29 +69,39 @@ public:
 		this->setlogLevel(getlogLevelByte());
 		// then set Handler, because now logLevelByte follows String logLevel
 		this->logLevel->setOnChange(std::bind(&WLogDevice::onlogLevelChange, this, std::placeholders::_1));
+
+		// Pages		
+		WPage * weblogPage=new WPage("weblog", "Live WebLog");
+		weblogPage->setPrintPage([this,weblogPage](AsyncWebServerRequest *request, AsyncResponseStream* page) {
+			this->network->log()->notice(PSTR("weblog"));
+			page->print(FPSTR(HTTP_WEBLOG));
+			page->print(FPSTR(HTTP_HOME_BUTTON));
+			page->print(FPSTR(HTTP_WEBLOG_SCRIPT));
+		});
+		this->addPage(weblogPage);
     
     }
 
-    virtual void printConfigPage(WStringStream* page) {
+    virtual void printConfigPage(AsyncWebServerRequest *request, AsyncResponseStream* page) {
     	network->log()->notice(F("Log config page"));
-    	page->printAndReplace(FPSTR(HTTP_CONFIG_PAGE_BEGIN), getId());
+    	page->printf_P(HTTP_CONFIG_PAGE_BEGIN, getId());
     	//ComboBox with model selection
 
-    	page->printAndReplace(FPSTR(HTTP_COMBOBOX_BEGIN), "Log Mode (Logging to MQTT Only!):", "lm");
-    	page->printAndReplace(FPSTR(HTTP_COMBOBOX_ITEM), "0", (getlogLevelByte() == LOG_LEVEL_SILENT  ? HTTP_SELECTED : ""), "Logging Disabled");
-    	page->printAndReplace(FPSTR(HTTP_COMBOBOX_ITEM), "1", (getlogLevelByte() == LOG_LEVEL_FATAL  ? HTTP_SELECTED : ""), "Fatal Messages");
-    	page->printAndReplace(FPSTR(HTTP_COMBOBOX_ITEM), "2", (getlogLevelByte() == LOG_LEVEL_ERROR   ? HTTP_SELECTED : ""), "Error Messages");
-    	page->printAndReplace(FPSTR(HTTP_COMBOBOX_ITEM), "3", (getlogLevelByte() == LOG_LEVEL_WARNING ? HTTP_SELECTED : ""), "Warning Messages");
-    	page->printAndReplace(FPSTR(HTTP_COMBOBOX_ITEM), "4", (getlogLevelByte() == LOG_LEVEL_NOTICE ? HTTP_SELECTED : ""), "Notice Messages");
-    	page->printAndReplace(FPSTR(HTTP_COMBOBOX_ITEM), "5", (getlogLevelByte() == LOG_LEVEL_TRACE ? HTTP_SELECTED : ""), "Trace Messages");
-    	page->printAndReplace(FPSTR(HTTP_COMBOBOX_ITEM), "6", (getlogLevelByte() == LOG_LEVEL_VERBOSE ? HTTP_SELECTED : ""), "Verbose Messages");
-    	page->print(FPSTR(HTTP_COMBOBOX_END));
+    	page->printf_P(HTTP_COMBOBOX_BEGIN, "Log Mode (Logging to MQTT Only!):", "lm");
+    	page->printf_P(HTTP_COMBOBOX_ITEM), "0", (getlogLevelByte() == LOG_LEVEL_SILENT  ? HTTP_SELECTED : "", "Logging Disabled");
+    	page->printf_P(HTTP_COMBOBOX_ITEM), "1", (getlogLevelByte() == LOG_LEVEL_FATAL  ? HTTP_SELECTED : "", "Fatal Messages");
+    	page->printf_P(HTTP_COMBOBOX_ITEM), "2", (getlogLevelByte() == LOG_LEVEL_ERROR   ? HTTP_SELECTED : "", "Error Messages");
+    	page->printf_P(HTTP_COMBOBOX_ITEM), "3", (getlogLevelByte() == LOG_LEVEL_WARNING ? HTTP_SELECTED : "", "Warning Messages");
+    	page->printf_P(HTTP_COMBOBOX_ITEM), "4", (getlogLevelByte() == LOG_LEVEL_NOTICE ? HTTP_SELECTED : "", "Notice Messages");
+    	page->printf_P(HTTP_COMBOBOX_ITEM), "5", (getlogLevelByte() == LOG_LEVEL_TRACE ? HTTP_SELECTED : "", "Trace Messages");
+    	page->printf_P(HTTP_COMBOBOX_ITEM), "6", (getlogLevelByte() == LOG_LEVEL_VERBOSE ? HTTP_SELECTED : "", "Verbose Messages");
+    	page->print(HTTP_COMBOBOX_END);
 
-    	page->print(FPSTR(HTTP_CONFIG_SAVE_BUTTON));
+    	page->print(HTTP_CONFIG_SAVE_BUTTON);
     }
-    void saveConfigPage(ESP8266WebServer* webServer) {
-        network->log()->notice(F("Log Beca config save lm=%s/%d"), webServer->arg("lm").c_str(), webServer->arg("lm").toInt());
-        setlogLevelByte(constrain(webServer->arg("lm").toInt(),LOG_LEVEL_SILENT, LOG_LEVEL_VERBOSE ));
+    void saveConfigPage(AsyncWebServerRequest *request) {
+        network->log()->notice(F("Log Beca config save lm=%s/%d"), request->getParam("lm")->value().c_str(), request->getParam("lm")->value().toInt());
+        setlogLevelByte(constrain(request->getParam("lm")->value().toInt(),LOG_LEVEL_SILENT, LOG_LEVEL_VERBOSE ));
 		this->setlogLevel(getlogLevelByte());
     }
 
