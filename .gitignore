@@ -10,3 +10,4 @@ firmware.map
 docs/Originals/
 docs/large/
 thermostat.code-workspace
+debug.log
