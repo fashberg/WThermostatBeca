@@ -478,7 +478,7 @@ public:
 			page->print(FPSTR(HTTP_CONFIG_SCHTAB_HEAD));
 			for (char *period=(char*)SCHEDULES_PERIODS; *period > 0; period++){
 				page->print(F("<tr>"));
-				page->printf_P("<td>Period %c</td>", *period);
+				page->printf("<td>Period %c</td>", *period);
 				for (char *day=(char*)SCHEDULES_DAYS; *day > 0; day++){
 					char keyH[4];
 					char keyT[4];
@@ -504,8 +504,8 @@ public:
 					char keyT[4];
 					snprintf(keyH, 4, "%c%ch", *day, *period);
 					snprintf(keyT, 4, "%c%ct", *day, *period);
-					const char * valueH = request->getParam(keyH)->value().c_str();
-					const char * valueT = request->getParam(keyT)->value().c_str();
+					const char * valueH = getValueOrEmpty(request, keyH).c_str();
+					const char * valueT = getValueOrEmpty(request, keyT).c_str();
 					processSchedulesKeyValue(keyH, valueH);
 					processSchedulesKeyValue(keyT, valueT);
 				}
@@ -546,28 +546,35 @@ public:
     virtual void printConfigPage(AsyncWebServerRequest *request, AsyncResponseStream* page) {
     	network->log()->notice(PSTR("Beca thermostat config page"));
     	page->printf_P(HTTP_CONFIG_PAGE_BEGIN, getId());
+		network->log()->notice(PSTR("111"));
 
     	//ComboBox with model selection
     	page->printf_P(HTTP_COMBOBOX_BEGIN, F("Thermostat model:"), "tm");
-    	page->printf_P(HTTP_COMBOBOX_ITEM), "0", (getThermostatModel() == 0 ? HTTP_SELECTED : "", F("Floor heating (BHT-002-GxLW)"));
-    	page->printf_P(HTTP_COMBOBOX_ITEM), "1", (getThermostatModel() == 1 ? HTTP_SELECTED : "", F("Heating, Cooling, Ventilation (BAC-002-ALW)"));
-    	page->print(HTTP_COMBOBOX_END);
+		network->log()->notice(PSTR("1.1"));
+    	page->printf_P(HTTP_COMBOBOX_ITEM, "0", (getThermostatModel() == 0 ? HTTP_SELECTED : ""), F("Floor heating (BHT-002-GxLW)"));
+		network->log()->notice(PSTR("1.2"));
+    	page->printf_P(HTTP_COMBOBOX_ITEM, "1", (getThermostatModel() == 1 ? HTTP_SELECTED : ""), F("Heating, Cooling, Ventilation (BAC-002-ALW)"));
+		network->log()->notice(PSTR("1.3"));
+    	page->printf_P(HTTP_COMBOBOX_END);
+		network->log()->notice(PSTR("222"));
 
 		// Temp precision
 		page->printf_P(HTTP_COMBOBOX_BEGIN, F("Temperature Precision (must match your hardware):"), "tp");
-		page->printf_P(HTTP_COMBOBOX_ITEM), "05", (getTemperatureFactor() ==  2.0f ? HTTP_SELECTED : "", F("0.5 (default for most Devices)"));
-		page->printf_P(HTTP_COMBOBOX_ITEM), "10", (getTemperatureFactor() ==  1.0f ? HTTP_SELECTED : "", F("1.0 (untested)"));
+		page->printf_P(HTTP_COMBOBOX_ITEM, "05", (getTemperatureFactor() ==  2.0f ? HTTP_SELECTED : ""), F("0.5 (default for most Devices)"));
+		page->printf_P(HTTP_COMBOBOX_ITEM, "10", (getTemperatureFactor() ==  1.0f ? HTTP_SELECTED : ""), F("1.0 (untested)"));
 		//page->printf_P(HTTP_COMBOBOX_ITEM), "01", (getTemperatureFactor() == 10.0f ? HTTP_SELECTED : "", "0.1");
-		page->print(HTTP_COMBOBOX_END);
+		page->printf_P(HTTP_COMBOBOX_END);
+		network->log()->notice(PSTR("333"));
 
 		//Checkbox with support for relay
 		int rsMode=(this->isSupportingHeatingRelay() ? 1 :  (this->isSupportingCoolingRelay() ? 2 : 0));
 		page->printf_P(HTTP_COMBOBOX_BEGIN, F("Relais connected to GPIO Inputs:"), "rs");
-		page->printf_P(HTTP_COMBOBOX_ITEM), "_", (rsMode == 0 ? HTTP_SELECTED : "", F("No Hardware Hack"));
-		page->printf_P(HTTP_COMBOBOX_ITEM), "h", (rsMode == 1 ? HTTP_SELECTED : "", F("Heating-Relay at GPIO 5"));
-		page->printf_P(HTTP_COMBOBOX_ITEM), "c", (rsMode == 2 ? HTTP_SELECTED : "", F("Cooling-Relay at GPIO 5"));
-		page->print(HTTP_COMBOBOX_END);
+		page->printf_P(HTTP_COMBOBOX_ITEM, "_", (rsMode == 0 ? HTTP_SELECTED : ""), F("No Hardware Hack"));
+		page->printf_P(HTTP_COMBOBOX_ITEM, "h", (rsMode == 1 ? HTTP_SELECTED : ""), F("Heating-Relay at GPIO 5"));
+		page->printf_P(HTTP_COMBOBOX_ITEM, "c", (rsMode == 2 ? HTTP_SELECTED : ""), F("Cooling-Relay at GPIO 5"));
+		page->printf_P(HTTP_COMBOBOX_END);
 
+		network->log()->notice(PSTR("444"));
 		// FloorSensor 
 		page->printf_P(HTTP_CHECKBOX_OPTION, F("Floor Sensor enabled"),
 		"fs", "fs", (this->floorSensor->getBoolean() ? HTTP_CHECKED : ""), "", F("Enabled"));
@@ -579,16 +586,17 @@ public:
 		//ComboBox with weekday
     	byte dayOffset = getSchedulesDayOffset();
 		page->printf_P(HTTP_COMBOBOX_BEGIN, "Workday schedules:", "ws");
-    	page->printf_P(HTTP_COMBOBOX_ITEM), "0", (dayOffset == 0 ? HTTP_SELECTED : "", F("Workday (1-5): Mon-Fri; Weekend (6 - 7): Sat-Sun"));
-    	page->printf_P(HTTP_COMBOBOX_ITEM), "1", (dayOffset == 1 ? HTTP_SELECTED : "", F("Workday (1-5): Sun-Thu; Weekend (6 - 7): Fri-Sat"));
-    	page->printf_P(HTTP_COMBOBOX_ITEM), "2", (dayOffset == 2 ? HTTP_SELECTED : "", F("Workday (1-5): Sat-Wed; Weekend (6 - 7): Thu-Fri"));
-    	page->printf_P(HTTP_COMBOBOX_ITEM), "3", (dayOffset == 3 ? HTTP_SELECTED : "", F("Workday (1-5): Fri-Tue; Weekend (6 - 7): Wed-Thu"));
-    	page->printf_P(HTTP_COMBOBOX_ITEM), "4", (dayOffset == 4 ? HTTP_SELECTED : "", F("Workday (1-5): Thu-Mon; Weekend (6 - 7): Tue-Wed"));
-    	page->printf_P(HTTP_COMBOBOX_ITEM), "5", (dayOffset == 5 ? HTTP_SELECTED : "", F("Workday (1-5): Wed-Sun; Weekend (6 - 7): Mon-Tue"));
-    	page->printf_P(HTTP_COMBOBOX_ITEM), "6", (dayOffset == 6 ? HTTP_SELECTED : "", F("Workday (1-5): Tue-Sat; Weekend (6 - 7): Sun-Mon"));
-    	page->print(HTTP_COMBOBOX_END);
+    	page->printf_P(HTTP_COMBOBOX_ITEM, "0", (dayOffset == 0 ? HTTP_SELECTED : ""), F("Workday (1-5): Mon-Fri; Weekend (6 - 7): Sat-Sun"));
+    	page->printf_P(HTTP_COMBOBOX_ITEM, "1", (dayOffset == 1 ? HTTP_SELECTED : ""), F("Workday (1-5): Sun-Thu; Weekend (6 - 7): Fri-Sat"));
+    	page->printf_P(HTTP_COMBOBOX_ITEM, "2", (dayOffset == 2 ? HTTP_SELECTED : ""), F("Workday (1-5): Sat-Wed; Weekend (6 - 7): Thu-Fri"));
+    	page->printf_P(HTTP_COMBOBOX_ITEM, "3", (dayOffset == 3 ? HTTP_SELECTED : ""), F("Workday (1-5): Fri-Tue; Weekend (6 - 7): Wed-Thu"));
+    	page->printf_P(HTTP_COMBOBOX_ITEM, "4", (dayOffset == 4 ? HTTP_SELECTED : ""), F("Workday (1-5): Thu-Mon; Weekend (6 - 7): Tue-Wed"));
+    	page->printf_P(HTTP_COMBOBOX_ITEM, "5", (dayOffset == 5 ? HTTP_SELECTED : ""), F("Workday (1-5): Wed-Sun; Weekend (6 - 7): Mon-Tue"));
+    	page->printf_P(HTTP_COMBOBOX_ITEM, "6", (dayOffset == 6 ? HTTP_SELECTED : ""), F("Workday (1-5): Tue-Sat; Weekend (6 - 7): Sun-Mon"));
+    	page->printf_P(HTTP_COMBOBOX_END);
+		network->log()->notice(PSTR("555"));
 
-		page->print(HTTP_CONFIG_SAVE_BUTTON);
+		page->printf_P(HTTP_CONFIG_SAVE_BUTTON);
 		network->log()->notice(PSTR("Beca thermostat config page DONE"));
 		return;
     }
@@ -597,26 +605,26 @@ public:
 		// remove old autoconfiguration
 		network->sendMqttHassAutodiscover(true);
         network->log()->notice(PSTR("Save Beca config page"));
-        this->thermostatModel->setByte(request->getHeader("tm")->value().toInt());
-        this->schedulesDayOffset->setByte(request->getHeader("ws")->value().toInt());
+        this->thermostatModel->setByte(getValueOrEmpty(request, "tm").toInt());
+        this->schedulesDayOffset->setByte(getValueOrEmpty(request, "ws").toInt());
 		byte bb1 = 0;
 		byte bb2 = 0;
-		if (request->getHeader("rs")->value() == "h"){
+		if (getValueOrEmpty(request, "rs") == "h"){
 			bb1 |= BECABITS1_RELAY_HEAT;
-		} else if (request->getHeader("rs")->value() == "c"){
+		} else if (getValueOrEmpty(request, "rs") == "c"){
 			bb1 |= BECABITS1_RELAY_COOL;
 		} else {
 			// default no relaus
 		}
-		if (request->getHeader("tp")->value() == "10"){
+		if (getValueOrEmpty(request, "tp") == "10"){
 			bb1 |= BECABITS1_TEMP_10;
-		} else if (request->getHeader("tp")->value() == "01"){
+		} else if (getValueOrEmpty(request, "tp") == "01"){
 			bb1 |= BECABITS1_TEMP_01;
 		} else {
 			// default 0.5
 		}
-		bb1 |= ((request->getHeader("sb")->value() == HTTP_TRUE) ? 0 : BECABITS1_SWITCHBACKOFF); //logic reversed!
-		bb1 |= ((request->getHeader("fs")->value() == HTTP_TRUE) ? BECABITS1_FLOORSENSOR : 0);
+		bb1 |= ((getValueOrEmpty(request, "sb") == HTTP_TRUE) ? 0 : BECABITS1_SWITCHBACKOFF); //logic reversed!
+		bb1 |= ((getValueOrEmpty(request, "fs") == HTTP_TRUE) ? BECABITS1_FLOORSENSOR : 0);
 		this->becaBits1->setByte(bb1);
 		this->becaBits2->setByte(bb2); // meets r2d2
     }
@@ -833,7 +841,9 @@ public:
     	deviceBase.concat(getId());
     	deviceBase.concat("/");
     	deviceBase.concat(SCHEDULES);
-    	webServer->on(deviceBase.c_str(), HTTP_GET, std::bind(&WBecaDevice::sendSchedules, this, webServer));
+    	webServer->on(deviceBase.c_str(), HTTP_GET, [this](AsyncWebServerRequest *request){
+			 sendSchedules(request);
+		});
     }
 
     void handleUnknownMqttCallback(String stat_topic, String partialTopic, String payload, unsigned int length) {
@@ -964,7 +974,7 @@ public:
 		}
     }
 
-    void sendSchedules(AsyncWebServer* webServer) {
+    void sendSchedules(AsyncWebServerRequest* request) {
     	WStringStream* response = network->getResponseStream();
     	WJson json(response);
     	json.beginObject();
@@ -972,7 +982,7 @@ public:
     	this->toJsonSchedules(&json, 1);// SCHEDULE_SATURDAY);
     	this->toJsonSchedules(&json, 2);// SCHEDULE_SUNDAY);
     	json.endObject();
-    	//FIXME webServer->send(200, APPLICATION_JSON, response->c_str());
+		request->send(200, APPLICATION_JSON, response->c_str());
     }
 
     virtual void toJsonSchedules(WJson* json, byte schedulesDay) {
@@ -1233,7 +1243,6 @@ public:
 				);
 			}
 		}
-		delay(50); // some extra time
 		if (!network->publishMqtt(topic.c_str(), response, true)) return false;
 		response->flush();
 
@@ -1252,7 +1261,6 @@ public:
 		}
 		if (!network->publishMqtt(topic.c_str(), response, true)) return false;
 		response->flush();
-		delay(50); // some extra time
 
 		if (this->floorSensor->getBoolean()){
 			unique_id = (String)network->getIdx();
@@ -1269,7 +1277,6 @@ public:
 				);
 			}
 			if (!network->publishMqtt(topic.c_str(), response, true)) return false;
-			delay(50); // some extra time
 			response->flush();
 		}
 
@@ -1288,7 +1295,6 @@ public:
 		}
 		if (!network->publishMqtt(topic.c_str(), response, true)) return false;
 		response->flush();
-		delay(50); // some extra time
 		return true;
 	}
 

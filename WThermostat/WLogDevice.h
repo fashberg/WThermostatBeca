@@ -97,20 +97,20 @@ public:
     	//ComboBox with model selection
 
     	page->printf_P(HTTP_COMBOBOX_BEGIN, F("Log Mode (Logging to MQTT Only!):"), "lm");
-    	page->printf_P(HTTP_COMBOBOX_ITEM), "0", (getlogLevelByte() == LOG_LEVEL_SILENT  ? HTTP_SELECTED : "", F("Logging Disabled"));
-    	page->printf_P(HTTP_COMBOBOX_ITEM), "1", (getlogLevelByte() == LOG_LEVEL_FATAL   ? HTTP_SELECTED : "", F("Fatal Messages"));
-    	page->printf_P(HTTP_COMBOBOX_ITEM), "2", (getlogLevelByte() == LOG_LEVEL_ERROR   ? HTTP_SELECTED : "", F("Error Messages"));
-    	page->printf_P(HTTP_COMBOBOX_ITEM), "3", (getlogLevelByte() == LOG_LEVEL_WARNING ? HTTP_SELECTED : "", F("Warning Messages"));
-    	page->printf_P(HTTP_COMBOBOX_ITEM), "4", (getlogLevelByte() == LOG_LEVEL_NOTICE  ? HTTP_SELECTED : "", F("Notice Messages"));
-    	page->printf_P(HTTP_COMBOBOX_ITEM), "5", (getlogLevelByte() == LOG_LEVEL_TRACE   ? HTTP_SELECTED : "", F("Trace Messages"));
-    	page->printf_P(HTTP_COMBOBOX_ITEM), "6", (getlogLevelByte() == LOG_LEVEL_VERBOSE ? HTTP_SELECTED : "", F("Verbose Messages"));
-    	page->print(HTTP_COMBOBOX_END);
+    	page->printf_P(HTTP_COMBOBOX_ITEM, "0", (getlogLevelByte() == LOG_LEVEL_SILENT  ? HTTP_SELECTED : ""), F("Logging Disabled"));
+    	page->printf_P(HTTP_COMBOBOX_ITEM, "1", (getlogLevelByte() == LOG_LEVEL_FATAL   ? HTTP_SELECTED : ""), F("Fatal Messages"));
+    	page->printf_P(HTTP_COMBOBOX_ITEM, "2", (getlogLevelByte() == LOG_LEVEL_ERROR   ? HTTP_SELECTED : ""), F("Error Messages"));
+    	page->printf_P(HTTP_COMBOBOX_ITEM, "3", (getlogLevelByte() == LOG_LEVEL_WARNING ? HTTP_SELECTED : ""), F("Warning Messages"));
+    	page->printf_P(HTTP_COMBOBOX_ITEM, "4", (getlogLevelByte() == LOG_LEVEL_NOTICE  ? HTTP_SELECTED : ""), F("Notice Messages"));
+    	page->printf_P(HTTP_COMBOBOX_ITEM, "5", (getlogLevelByte() == LOG_LEVEL_TRACE   ? HTTP_SELECTED : ""), F("Trace Messages"));
+    	page->printf_P(HTTP_COMBOBOX_ITEM, "6", (getlogLevelByte() == LOG_LEVEL_VERBOSE ? HTTP_SELECTED : ""), F("Verbose Messages"));
+    	page->printf_P(HTTP_COMBOBOX_END);
 
-    	page->print(HTTP_CONFIG_SAVE_BUTTON);
+    	page->printf_P(HTTP_CONFIG_SAVE_BUTTON);
     }
     void saveConfigPage(AsyncWebServerRequest *request) {
-        network->log()->notice(F("Log Beca config save lm=%s/%d"), request->getParam("lm")->value().c_str(), request->getParam("lm")->value().toInt());
-        setlogLevelByte(constrain(request->getParam("lm")->value().toInt(),LOG_LEVEL_SILENT, LOG_LEVEL_VERBOSE ));
+        network->log()->notice(F("Log Beca config save lm=%s/%d"), getValueOrEmpty(request, "lm").c_str(), getValueOrEmpty(request, "lm").toInt());
+        setlogLevelByte(constrain(getValueOrEmpty(request, "lm").toInt(),LOG_LEVEL_SILENT, LOG_LEVEL_VERBOSE ));
 		this->setlogLevel(getlogLevelByte());
     }
 

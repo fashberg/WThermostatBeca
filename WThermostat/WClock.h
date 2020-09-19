@@ -487,10 +487,11 @@ class WClock : public WDevice {
 
     void saveConfigPage(AsyncWebServerRequest *request) {
         network->log()->notice(F("Save clock config page"));
-        this->ntpServer->setString(request->getParam("ntp")->value().c_str());
-        this->timeZoneConfig->setString(request->getParam("tzone")->value().c_str());
-        this->timeDST->setString(request->getParam("tdst")->value().c_str());
-        this->timeSTD->setString(request->getParam("tstd")->value().c_str());
+        this->ntpServer->setString(getValueOrEmpty(request, "ntp").c_str());
+        this->timeZoneConfig->setString(getValueOrEmpty(request, "tzone").c_str());
+        this->timeDST->setString(getValueOrEmpty(request, "tdst").c_str());
+        this->timeSTD->setString(getValueOrEmpty(request, "tstd").c_str());
+        network->log()->notice(F("Save clock config page DONE"));
         /* reboot follows */
     }
 
