@@ -156,32 +156,78 @@ const char* SCHEDULES_MODE_OFF = "off";
 const char* SCHEDULES_MODE_AUTO = "auto";
 // HOLD_MODE is an alias for SCHEDULE_MODE - Just Different Names/attributes
 // special for HASS
-const char* HOLD_STATE_MANUAL = "manual";
-const char* HOLD_STATE_SCHEDULER = "scheduler";
-const char* HOLD_STATE_ECO = "eco";
-const char* HOLD_STATE_OFF = "off";
-const char* SYSTEM_MODE_NONE = "none";
-const char* SYSTEM_MODE_COOL = "cool";
-const char* SYSTEM_MODE_HEAT = "heat";
-const char* SYSTEM_MODE_FAN = "fan_only";
-const char* STATE_OFF = "off";
-const char* STATE_HEATING = "heating";
-const char* STATE_COOLING = "cooling";
-const char* FAN_MODE_NONE = "none";
-const char* FAN_MODE_AUTO = "auto";
-const char* FAN_MODE_LOW  = "low";
-const char* FAN_MODE_MEDIUM  = "medium";
-const char* FAN_MODE_HIGH = "high";
-const char* MODE_OFF  = "off";
-const char* MODE_AUTO = "auto";
-const char* MODE_HEAT = "heat";
-const char* MODE_COOL = "cool";
-const char* MODE_FAN  = "fan_only";
-const char* ACTION_OFF  = "off";
-const char* ACTION_COOLING  = "cooling";
-const char* ACTION_HEATING  = "heating";
-const char* ACTION_IDLE  = "idle";
-const char* ACTION_FAN = "fan";
+const char* HOLD_STATE_MANUAL PROGMEM = "manual";
+const char* HOLD_STATE_SCHEDULER PROGMEM = "scheduler";
+const char* HOLD_STATE_ECO PROGMEM = "eco";
+const char* HOLD_STATE_OFF PROGMEM = "off";
+const char* SYSTEM_MODE_NONE PROGMEM = "none";
+const char* SYSTEM_MODE_COOL PROGMEM = "cool";
+const char* SYSTEM_MODE_HEAT PROGMEM = "heat";
+const char* SYSTEM_MODE_FAN PROGMEM = "fan_only";
+const char* STATE_OFF PROGMEM = "off";
+const char* STATE_HEATING PROGMEM = "heating";
+const char* STATE_COOLING PROGMEM = "cooling";
+const char* FAN_MODE_NONE PROGMEM = "none";
+const char* FAN_MODE_AUTO PROGMEM = "auto";
+const char* FAN_MODE_LOW  PROGMEM = "low";
+const char* FAN_MODE_MEDIUM  PROGMEM = "medium";
+const char* FAN_MODE_HIGH PROGMEM = "high";
+const char* MODE_OFF  PROGMEM = "off";
+const char* MODE_AUTO PROGMEM = "auto";
+const char* MODE_HEAT PROGMEM = "heat";
+const char* MODE_COOL PROGMEM = "cool";
+const char* MODE_FAN  PROGMEM = "fan_only";
+const char* ACTION_OFF  PROGMEM = "off";
+const char* ACTION_COOLING  PROGMEM = "cooling";
+const char* ACTION_HEATING  PROGMEM = "heating";
+const char* ACTION_IDLE  PROGMEM = "idle";
+const char* ACTION_FAN PROGMEM = "fan";
+
+const char* ID_THERMOSTAT PROGMEM = "thermostat";
+const char* NAME_THERMOSTAT PROGMEM = "Thermostat";
+
+const char* PROP_BECABITS1 PROGMEM = "becabits1";
+const char* PROP_BECABITS2 PROGMEM = "becabits2";
+const char* PROP_THERMOSTATMODEL PROGMEM = "thermostatModel";
+const char* PROP_SCHEDULESDAYOFFSET PROGMEM = "schedulesDayOffset";
+const char* PROP_SUPPORTHEATINGRELAY PROGMEM = "supportingHeatingRelay";
+const char* PROP_SUPPORTCOOLINGRELAY PROGMEM = "supportingCoolingRelay";
+const char* PROP_SWITCHBACKTOAUTO PROGMEM = "switchBackToAuto";
+const char* TITL_SWITCHBACKTOAUTO PROGMEM = "switch Back from Manual to Auto at next Schedule";
+const char* PROP_FLOORSENSOR PROGMEM = "floorSensor";
+const char* PROP_PRECISION PROGMEM = "precision";
+const char* PROP_ACTUALTEMPERATURE PROGMEM = "temperature";
+const char* TITL_ACTUALTEMPERATURE PROGMEM = "Actual";
+const char* PROP_TARGETTEMPERATURE PROGMEM = "targetTemperature";
+const char* TITL_TARGETTEMPERATURE PROGMEM = "Target";
+const char* PROP_DEVICEON PROGMEM = "deviceOn";
+const char* TITL_DEVICEON PROGMEM = "Power";
+const char* PROP_SCHEDULESMODE PROGMEM = "schedulesMode";
+const char* TITL_SCHEDULESMODE PROGMEM = "Schedules";
+const char* PROP_HOLDSTATE PROGMEM = "holdState";
+const char* PROP_ECOMODE PROGMEM = "ecoMode";
+const char* TITL_ECOMODE PROGMEM = "Eco";
+const char* PROP_LOCK PROGMEM = "locked";
+const char* TITL_LOCK PROGMEM = "Lock";
+const char* PROP_FLOORTEMPERATUR PROGMEM = "floorTemperature";
+const char* TITL_FLOORTEMPERATUR PROGMEM = "Floor";
+const char* PROP_SYSTEMMODE PROGMEM = "systemMode";
+const char* TITL_SYSTEMMODE PROGMEM = "System Mode";
+const char* PROP_FANMODE PROGMEM = "fanMode";
+const char* TITL_FANMODE PROGMEM = "Fan";
+const char* PROP_MODE PROGMEM = "mode";
+const char* TITL_MODE PROGMEM = "Mode";
+const char* PROP_ACTION PROGMEM = "action";
+const char* TITL_ACTION PROGMEM = "Action";
+const char* PROP_STATE PROGMEM = "state";
+const char* TITL_STATE PROGMEM = "State";
+const char* PROP_MCUID PROGMEM = "mcuId";
+
+
+const char* ID_PAGE_SCHEDULE PROGMEM = "schedules";
+const char* TITLE_PAGE_SCHEDULE PROGMEM = "Configure Schedules";
+const char* ID_PAGE_REINIT PROGMEM = "reinit";
+const char* TITLE_PAGE_REINIT PROGMEM = "Reinit Thermostat";
 
 const byte STORED_FLAG_BECA = 0x36;
 const char SCHEDULES_PERIODS[] = "123456";
@@ -216,7 +262,7 @@ public:
     typedef std::function<bool(const char*)> TCommandHandlerFunction;
 
     WBecaDevice(WNetwork* network, WClock* wClock)
-    	: WDevice(network, "thermostat", "Thermostat", network->getIdx(), DEVICE_TYPE_THERMOSTAT) {
+    	: WDevice(network, ID_THERMOSTAT, NAME_THERMOSTAT, network->getIdx(), DEVICE_TYPE_THERMOSTAT) {
 		
     	this->receivingDataFromMcu = false;
     	this->schedulesChanged = false;
@@ -235,25 +281,25 @@ public:
 		if (network->getSettingsOld()){
 			if (network->getSettingsOld()->getNetworkSettingsVersion()==NETWORKSETTINGS_PRE_FAS114){
 				network->log()->notice(F("Reading WLogSettings PRE_FAS114"));
-				network->getSettingsOld()->setByte("becabits1", 0x00);
-				network->getSettingsOld()->setByte("becabits2", 0x00);
-				network->getSettingsOld()->setByte("thermostatModel", MODEL_BHT_002_GBLW);
-				network->getSettingsOld()->setByte("schedulesDayOffset", 0);
+				network->getSettingsOld()->setByte(PROP_BECABITS1, 0x00);
+				network->getSettingsOld()->setByte(PROP_BECABITS2, 0x00);
+				network->getSettingsOld()->setByte(PROP_THERMOSTATMODEL, MODEL_BHT_002_GBLW);
+				network->getSettingsOld()->setByte(PROP_SCHEDULESDAYOFFSET, 0);
 			}
 		}
 
 		// read beca bits 
-		this->becaBits1 = network->getSettings()->setByte("becabits1",
-			(network->getSettingsOld() && network->getSettingsOld()->existsSetting("becabits1") ? network->getSettingsOld()->getByte("becabits1") : 0x00));
-		this->becaBits2 = network->getSettings()->setByte("becabits2",
-			(network->getSettingsOld() && network->getSettingsOld()->existsSetting("becabits2") ? network->getSettingsOld()->getByte("becabits2") : 0x00));
+		this->becaBits1 = network->getSettings()->setByte(PROP_BECABITS1,
+			(network->getSettingsOld() && network->getSettingsOld()->existsSetting(PROP_BECABITS1) ? network->getSettingsOld()->getByte(PROP_BECABITS1) : 0x00));
+		this->becaBits2 = network->getSettings()->setByte(PROP_BECABITS2,
+			(network->getSettingsOld() && network->getSettingsOld()->existsSetting(PROP_BECABITS2) ? network->getSettingsOld()->getByte(PROP_BECABITS2) : 0x00));
 		// Split mqtt setting into bits - so we keep settings storage compatibility
 		if (this->becaBits1->getByte() == 0xFF) this->becaBits1->setByte(BECABITS1_RELAY_HEAT); // compatibility
 
 		// Heating Relay and State property
-		this->supportingHeatingRelay = new WProperty("supportingHeatingRelay", "supportingHeatingRelay", BOOLEAN);
+		this->supportingHeatingRelay = new WProperty(PROP_SUPPORTHEATINGRELAY, nullptr, BOOLEAN);
 		this->supportingHeatingRelay->setBoolean(this->becaBits1->getByte() & BECABITS1_RELAY_HEAT);
-		this->supportingCoolingRelay = new WProperty("supportingCoolingRelay", "supportingCoolingRelay", BOOLEAN);
+		this->supportingCoolingRelay = new WProperty(PROP_SUPPORTCOOLINGRELAY, nullptr, BOOLEAN);
 		this->supportingCoolingRelay->setBoolean(this->becaBits1->getByte() & BECABITS1_RELAY_COOL);
 
 		if (this->supportingHeatingRelay->getBoolean() && this->supportingCoolingRelay->getBoolean()) {
@@ -261,7 +307,7 @@ public:
 		}
 
 		// switch back property
-		this->switchBackToAuto = new WProperty("switchBackToAuto", "switch Back from Manual to Auto at next Schedule", BOOLEAN);
+		this->switchBackToAuto = new WProperty(PROP_SWITCHBACKTOAUTO, TITL_SWITCHBACKTOAUTO, BOOLEAN);
 		this->switchBackToAuto->setBoolean(!(this->becaBits1->getByte() & BECABITS1_SWITCHBACKOFF));
 		this->switchBackToAuto->setVisibility(ALL);
 		this->switchBackToAuto->setReadOnly(false);
@@ -270,11 +316,11 @@ public:
 		this->addProperty(switchBackToAuto);
 
 		// Floor Sensor 
-		this->floorSensor = new WProperty("floorSensor", "floorSensor", BOOLEAN);
+		this->floorSensor = new WProperty(PROP_FLOORSENSOR, nullptr, BOOLEAN);
 		this->floorSensor->setBoolean(this->becaBits1->getByte() & BECABITS1_FLOORSENSOR);
 
 		// precicion (must be initialized before Temperature Values)
-		this->temperaturePrecision = new WProperty("precision", "Precision", DOUBLE);
+		this->temperaturePrecision = new WProperty(PROP_PRECISION, nullptr, DOUBLE);
 		if (this->becaBits1->getByte() & BECABITS1_TEMP_01){
 			this->temperaturePrecision->setDouble(0.1f);
 		} else if (this->becaBits1->getByte() & BECABITS1_TEMP_10){
@@ -286,28 +332,28 @@ public:
 		this->temperaturePrecision->setVisibility(ALL);
 
 
-    	this->actualTemperature = new WTemperatureProperty("temperature", "Actual");
+    	this->actualTemperature = new WTemperatureProperty(PROP_ACTUALTEMPERATURE, TITL_ACTUALTEMPERATURE);
     	this->actualTemperature->setReadOnly(true);
 		this->actualTemperature->setMqttSendChangedValues(true);
     	this->addProperty(actualTemperature);
-    	this->targetTemperature = new WTargetTemperatureProperty("targetTemperature", "Target");//, 12.0, 28.0);
+    	this->targetTemperature = new WTargetTemperatureProperty(PROP_TARGETTEMPERATURE, TITL_TARGETTEMPERATURE);//, 12.0, 28.0);
     	this->targetTemperature->setMultipleOf(getTemperaturePrecision());
     	this->targetTemperature->setOnChange(std::bind(&WBecaDevice::setTargetTemperature, this, std::placeholders::_1));
     	this->targetTemperature->setOnValueRequest([this](WProperty* p) {updateTargetTemperature();});
 		this->targetTemperature->setMqttSendChangedValues(true);
     	this->addProperty(targetTemperature);
-    	this->deviceOn = new WOnOffProperty("deviceOn", "Power");
+    	this->deviceOn = new WOnOffProperty(PROP_DEVICEON, TITL_DEVICEON);
     	this->deviceOn->setOnChange(std::bind(&WBecaDevice::deviceOnToMcu, this, std::placeholders::_1));
 		this->deviceOn->setMqttSendChangedValues(true);
     	this->addProperty(deviceOn);
-		this->schedulesMode = new WProperty("schedulesMode", "Schedules", STRING);
+		this->schedulesMode = new WProperty(PROP_SCHEDULESMODE, TITL_SCHEDULESMODE, STRING);
 		this->schedulesMode->setAtType("ThermostatSchedulesModeProperty");
 		this->schedulesMode->addEnumString(SCHEDULES_MODE_OFF);
 		this->schedulesMode->addEnumString(SCHEDULES_MODE_AUTO);
 		this->schedulesMode->setOnChange(std::bind(&WBecaDevice::schedulesModeToMcu, this, std::placeholders::_1));
 		this->schedulesMode->setMqttSendChangedValues(true);
 		this->addProperty(schedulesMode);
-		this->holdState = new WProperty("holdState", "holdState", STRING);
+		this->holdState = new WProperty(PROP_HOLDSTATE, nullptr, STRING);
 		this->holdState->setAtType("ThermostatHoldStateProperty");
 		this->holdState->addEnumString(HOLD_STATE_MANUAL);
 		this->holdState->addEnumString(HOLD_STATE_SCHEDULER);
@@ -318,30 +364,30 @@ public:
 		this->holdState->setMqttSendChangedValues(true);
 		this->holdState->setVisibility(MQTT);
 		this->addProperty(holdState);
-    	this->ecoMode = new WOnOffProperty("ecoMode", "Eco");
+    	this->ecoMode = new WOnOffProperty(PROP_ECOMODE, TITL_ECOMODE);
     	this->ecoMode->setOnChange(std::bind(&WBecaDevice::ecoModeToMcu, this, std::placeholders::_1));
     	this->ecoMode->setVisibility(MQTT);
 		this->ecoMode->setMqttSendChangedValues(true);
     	this->addProperty(ecoMode);
-    	this->locked = new WOnOffProperty("locked", "Lock");
+    	this->locked = new WOnOffProperty(PROP_LOCK, TITL_LOCK);
     	this->locked->setOnChange(std::bind(&WBecaDevice::lockedToMcu, this, std::placeholders::_1));
     	this->locked->setVisibility(MQTT);
 		this->locked->setMqttSendChangedValues(true);
     	this->addProperty(locked);
     	//Model
     	this->actualFloorTemperature = nullptr;
-    	this->thermostatModel = network->getSettings()->setByte("thermostatModel",
-			(network->getSettingsOld() && network->getSettingsOld()->existsSetting("thermostatModel") ? network->getSettingsOld()->getByte("thermostatModel") : MODEL_BHT_002_GBLW));
+    	this->thermostatModel = network->getSettings()->setByte(PROP_THERMOSTATMODEL,
+			(network->getSettingsOld() && network->getSettingsOld()->existsSetting(PROP_THERMOSTATMODEL) ? network->getSettingsOld()->getByte(PROP_THERMOSTATMODEL) : MODEL_BHT_002_GBLW));
     	if (getThermostatModel() == MODEL_BHT_002_GBLW) {
 			if (this->floorSensor->getBoolean()){
-				this->actualFloorTemperature = new WTemperatureProperty("floorTemperature", "Floor");
+				this->actualFloorTemperature = new WTemperatureProperty(PROP_FLOORTEMPERATUR, TITL_FLOORTEMPERATUR);
 				this->actualFloorTemperature->setReadOnly(true);
 				this->actualFloorTemperature->setVisibility(ALL);
 				this->actualFloorTemperature->setMqttSendChangedValues(true);
 				this->addProperty(actualFloorTemperature);
 			}
     	} else if (getThermostatModel() == MODEL_BAC_002_ALW) {
-    		this->systemMode = new WProperty("systemMode", "System Mode", STRING);
+    		this->systemMode = new WProperty(PROP_SYSTEMMODE, TITL_SYSTEMMODE, STRING);
         	this->systemMode->setAtType("ThermostatModeProperty");
 			this->systemMode->addEnumString(SYSTEM_MODE_COOL);
         	this->systemMode->addEnumString(SYSTEM_MODE_HEAT);
@@ -349,7 +395,7 @@ public:
 			this->systemMode->setOnChange(std::bind(&WBecaDevice::systemModeToMcu, this, std::placeholders::_1));
 			this->systemMode->setMqttSendChangedValues(true);
         	this->addProperty(systemMode);
-    		this->fanMode = new WProperty("fanMode", "Fan", STRING);
+    		this->fanMode = new WProperty(PROP_FANMODE, TITL_FANMODE, STRING);
         	this->fanMode->setAtType("FanModeProperty");
         	this->fanMode->addEnumString(FAN_MODE_NONE);
         	this->fanMode->addEnumString(FAN_MODE_LOW);
@@ -366,7 +412,7 @@ public:
 		* https://www.home-assistant.io/integrations/climate.mqtt/
 		*/
 
-    	this->mode = new WProperty("mode", "Mode", STRING);
+    	this->mode = new WProperty(PROP_MODE, TITL_MODE, STRING);
     	this->mode->setAtType("ThermostatModeProperty"); 
     	this->mode->addEnumString(MODE_OFF);
 		if (getThermostatModel() == MODEL_BHT_002_GBLW) {
@@ -382,7 +428,7 @@ public:
 		this->mode->setMqttSendChangedValues(true);
     	this->addProperty(mode);
 
-		this->action = new WProperty("action", "Action", STRING);
+		this->action = new WProperty(PROP_ACTION, TITL_ACTION, STRING);
 		this->action->setAtType("ThermostatactionProperty"); 
 		this->action->addEnumString(ACTION_OFF);
 		this->action->addEnumString(ACTION_HEATING);
@@ -405,7 +451,7 @@ public:
     	else if (isSupportingCoolingRelay()) pinMode(PIN_STATE_COOLING_RELAY, INPUT);
 		this->state = nullptr;
     	if ((isSupportingHeatingRelay()) || (isSupportingCoolingRelay())) {
-    		this->state = new WProperty("state", "State", STRING);
+    		this->state = new WProperty(PROP_STATE, TITL_STATE, STRING);
     		this->state->setAtType("HeatingCoolingProperty");
     		this->state->setReadOnly(true);
     		this->state->addEnumString(STATE_OFF);
@@ -417,15 +463,15 @@ public:
     	}
 
     	//schedulesDayOffset
-    	this->schedulesDayOffset = network->getSettings()->setByte("schedulesDayOffset",
-			(network->getSettingsOld() && network->getSettingsOld()->existsSetting("schedulesDayOffset") ? network->getSettingsOld()->getByte("schedulesDayOffset") : 0));
+    	this->schedulesDayOffset = network->getSettings()->setByte(PROP_SCHEDULESDAYOFFSET,
+			(network->getSettingsOld() && network->getSettingsOld()->existsSetting(PROP_SCHEDULESDAYOFFSET) ? network->getSettingsOld()->getByte(PROP_SCHEDULESDAYOFFSET) : 0));
 
 
-		this->mcuId = new WProperty("mcuId", "mcuId", STRING);
+		this->mcuId = new WProperty(PROP_MCUID, nullptr, STRING);
 		this->mcuId->setReadOnly(true);
 		this->addProperty(mcuId);
 		// Pages
-		WPage * schedulePage=new WPage("schedules", "Configure Schedules");
+		WPage * schedulePage=new WPage(ID_PAGE_SCHEDULE, TITLE_PAGE_SCHEDULE);
 		schedulePage->setPrintPage([this,schedulePage](AsyncWebServerRequest* request, AsyncResponseStream* page) {
 			this->network->log()->notice(PSTR("Schedules"));
 			page->printf_P(HTTP_CONFIG_PAGE_BEGIN, ((String)getId()+"_"+schedulePage->getId()).c_str());
@@ -475,7 +521,7 @@ public:
 		this->addPage(schedulePage);
 
 		// Pages reinit		
-		WPage * reinitPage=new WPage("reinit", "Reinit Thermostat");
+		WPage * reinitPage=new WPage(ID_PAGE_REINIT, TITLE_PAGE_REINIT);
 		reinitPage->setPrintPage([this,reinitPage](AsyncWebServerRequest *request, AsyncResponseStream* page) {
 			this->network->log()->notice(PSTR("Reinit"));
 			page->print(F("Reinitialized"));
@@ -502,44 +548,44 @@ public:
     	page->printf_P(HTTP_CONFIG_PAGE_BEGIN, getId());
 
     	//ComboBox with model selection
-    	page->printf_P(HTTP_COMBOBOX_BEGIN, "Thermostat model:", "tm");
-    	page->printf_P(HTTP_COMBOBOX_ITEM), "0", (getThermostatModel() == 0 ? HTTP_SELECTED : "", "Floor heating (BHT-002-GxLW)");
-    	page->printf_P(HTTP_COMBOBOX_ITEM), "1", (getThermostatModel() == 1 ? HTTP_SELECTED : "", "Heating, Cooling, Ventilation (BAC-002-ALW)");
+    	page->printf_P(HTTP_COMBOBOX_BEGIN, F("Thermostat model:"), "tm");
+    	page->printf_P(HTTP_COMBOBOX_ITEM), "0", (getThermostatModel() == 0 ? HTTP_SELECTED : "", F("Floor heating (BHT-002-GxLW)"));
+    	page->printf_P(HTTP_COMBOBOX_ITEM), "1", (getThermostatModel() == 1 ? HTTP_SELECTED : "", F("Heating, Cooling, Ventilation (BAC-002-ALW)"));
     	page->print(HTTP_COMBOBOX_END);
 
 		// Temp precision
-		page->printf_P(HTTP_COMBOBOX_BEGIN, "Temperature Precision (must match your hardware):", "tp");
-		page->printf_P(HTTP_COMBOBOX_ITEM), "05", (getTemperatureFactor() ==  2.0f ? HTTP_SELECTED : "", "0.5 (default for most Devices)");
-		page->printf_P(HTTP_COMBOBOX_ITEM), "10", (getTemperatureFactor() ==  1.0f ? HTTP_SELECTED : "", "1.0 (untested)");
+		page->printf_P(HTTP_COMBOBOX_BEGIN, F("Temperature Precision (must match your hardware):"), "tp");
+		page->printf_P(HTTP_COMBOBOX_ITEM), "05", (getTemperatureFactor() ==  2.0f ? HTTP_SELECTED : "", F("0.5 (default for most Devices)"));
+		page->printf_P(HTTP_COMBOBOX_ITEM), "10", (getTemperatureFactor() ==  1.0f ? HTTP_SELECTED : "", F("1.0 (untested)"));
 		//page->printf_P(HTTP_COMBOBOX_ITEM), "01", (getTemperatureFactor() == 10.0f ? HTTP_SELECTED : "", "0.1");
 		page->print(HTTP_COMBOBOX_END);
 
 		//Checkbox with support for relay
 		int rsMode=(this->isSupportingHeatingRelay() ? 1 :  (this->isSupportingCoolingRelay() ? 2 : 0));
-		page->printf_P(HTTP_COMBOBOX_BEGIN, "Relais connected to GPIO Inputs:", "rs");
-		page->printf_P(HTTP_COMBOBOX_ITEM), "_", (rsMode == 0 ? HTTP_SELECTED : "", "No Hardware Hack");
-		page->printf_P(HTTP_COMBOBOX_ITEM), "h", (rsMode == 1 ? HTTP_SELECTED : "", "Heating-Relay at GPIO 5");
-		page->printf_P(HTTP_COMBOBOX_ITEM), "c", (rsMode == 2 ? HTTP_SELECTED : "", "Cooling-Relay at GPIO 5");
+		page->printf_P(HTTP_COMBOBOX_BEGIN, F("Relais connected to GPIO Inputs:"), "rs");
+		page->printf_P(HTTP_COMBOBOX_ITEM), "_", (rsMode == 0 ? HTTP_SELECTED : "", F("No Hardware Hack"));
+		page->printf_P(HTTP_COMBOBOX_ITEM), "h", (rsMode == 1 ? HTTP_SELECTED : "", F("Heating-Relay at GPIO 5"));
+		page->printf_P(HTTP_COMBOBOX_ITEM), "c", (rsMode == 2 ? HTTP_SELECTED : "", F("Cooling-Relay at GPIO 5"));
 		page->print(HTTP_COMBOBOX_END);
 
 		// FloorSensor 
-		page->printf_P(HTTP_CHECKBOX_OPTION, "Floor Sensor enabled",
-		"fs", "fs", (this->floorSensor->getBoolean() ? HTTP_CHECKED : ""), "", "Enabled");
+		page->printf_P(HTTP_CHECKBOX_OPTION, F("Floor Sensor enabled"),
+		"fs", "fs", (this->floorSensor->getBoolean() ? HTTP_CHECKED : ""), "", F("Enabled"));
 
 		// Switch back from manual temo
-		page->printf_P(HTTP_CHECKBOX_OPTION, "Switch back to Auto mode from manual at next schedule period change",
-		"sb", "sb", (this->switchBackToAuto->getBoolean() ? HTTP_CHECKED : ""), "", "Enabled");
+		page->printf_P(HTTP_CHECKBOX_OPTION, F("Switch back to Auto mode from manual at next schedule period change"),
+		"sb", "sb", (this->switchBackToAuto->getBoolean() ? HTTP_CHECKED : ""), "", F("Enabled"));
 
 		//ComboBox with weekday
     	byte dayOffset = getSchedulesDayOffset();
 		page->printf_P(HTTP_COMBOBOX_BEGIN, "Workday schedules:", "ws");
-    	page->printf_P(HTTP_COMBOBOX_ITEM), "0", (dayOffset == 0 ? HTTP_SELECTED : "", "Workday (1-5): Mon-Fri; Weekend (6 - 7): Sat-Sun");
-    	page->printf_P(HTTP_COMBOBOX_ITEM), "1", (dayOffset == 1 ? HTTP_SELECTED : "", "Workday (1-5): Sun-Thu; Weekend (6 - 7): Fri-Sat");
-    	page->printf_P(HTTP_COMBOBOX_ITEM), "2", (dayOffset == 2 ? HTTP_SELECTED : "", "Workday (1-5): Sat-Wed; Weekend (6 - 7): Thu-Fri");
-    	page->printf_P(HTTP_COMBOBOX_ITEM), "3", (dayOffset == 3 ? HTTP_SELECTED : "", "Workday (1-5): Fri-Tue; Weekend (6 - 7): Wed-Thu");
-    	page->printf_P(HTTP_COMBOBOX_ITEM), "4", (dayOffset == 4 ? HTTP_SELECTED : "", "Workday (1-5): Thu-Mon; Weekend (6 - 7): Tue-Wed");
-    	page->printf_P(HTTP_COMBOBOX_ITEM), "5", (dayOffset == 5 ? HTTP_SELECTED : "", "Workday (1-5): Wed-Sun; Weekend (6 - 7): Mon-Tue");
-    	page->printf_P(HTTP_COMBOBOX_ITEM), "6", (dayOffset == 6 ? HTTP_SELECTED : "", "Workday (1-5): Tue-Sat; Weekend (6 - 7): Sun-Mon");
+    	page->printf_P(HTTP_COMBOBOX_ITEM), "0", (dayOffset == 0 ? HTTP_SELECTED : "", F("Workday (1-5): Mon-Fri; Weekend (6 - 7): Sat-Sun"));
+    	page->printf_P(HTTP_COMBOBOX_ITEM), "1", (dayOffset == 1 ? HTTP_SELECTED : "", F("Workday (1-5): Sun-Thu; Weekend (6 - 7): Fri-Sat"));
+    	page->printf_P(HTTP_COMBOBOX_ITEM), "2", (dayOffset == 2 ? HTTP_SELECTED : "", F("Workday (1-5): Sat-Wed; Weekend (6 - 7): Thu-Fri"));
+    	page->printf_P(HTTP_COMBOBOX_ITEM), "3", (dayOffset == 3 ? HTTP_SELECTED : "", F("Workday (1-5): Fri-Tue; Weekend (6 - 7): Wed-Thu"));
+    	page->printf_P(HTTP_COMBOBOX_ITEM), "4", (dayOffset == 4 ? HTTP_SELECTED : "", F("Workday (1-5): Thu-Mon; Weekend (6 - 7): Tue-Wed"));
+    	page->printf_P(HTTP_COMBOBOX_ITEM), "5", (dayOffset == 5 ? HTTP_SELECTED : "", F("Workday (1-5): Wed-Sun; Weekend (6 - 7): Mon-Tue"));
+    	page->printf_P(HTTP_COMBOBOX_ITEM), "6", (dayOffset == 6 ? HTTP_SELECTED : "", F("Workday (1-5): Tue-Sat; Weekend (6 - 7): Sun-Mon"));
     	page->print(HTTP_COMBOBOX_END);
 
 		page->print(HTTP_CONFIG_SAVE_BUTTON);
@@ -1153,11 +1199,11 @@ public:
 		if (!hasDevicesWithHassAutodiscoverSupport()) return true;
 		network->log()->notice(F("sendMqttHassAutodiscover-%s"), (removeDiscovery ? "remove" : "add"));
 		// https://www.home-assistant.io/docs/mqtt/discovery/
-		String topic="homeassistant/climate/";
+		String topic=F("homeassistant/climate/");
 		String unique_id = (String)network->getIdx();
-		unique_id.concat("_climate"); 
+		unique_id.concat(F("_climate"));
 		topic.concat(unique_id);
-		topic.concat("/config"); 
+		topic.concat(F("/config"));
 		WStringStream* response = network->getResponseStream();
 		response->flush();
 		char str_temp[6];
@@ -1192,10 +1238,10 @@ public:
 		response->flush();
 
 		unique_id = (String)network->getIdx();
-		unique_id.concat("_sensor"); 
-		topic="homeassistant/sensor/"; 
+		unique_id.concat(F("_sensor"));
+		topic=F("homeassistant/sensor/"); 
 		topic.concat(unique_id);
-		topic.concat("/config");
+		topic.concat(F("/config"));
 		if (!removeDiscovery){
 				response->printf_P(MQTT_HASS_AUTODISCOVERY_SENSOR,
 				network->getIdx(),
@@ -1210,10 +1256,10 @@ public:
 
 		if (this->floorSensor->getBoolean()){
 			unique_id = (String)network->getIdx();
-			unique_id.concat("_floorsensor"); 
-			topic="homeassistant/sensor/"; 
+			unique_id.concat(F("_floorsensor"));
+			topic=F("homeassistant/sensor/"); 
 			topic.concat(unique_id);
-			topic.concat("/config");
+			topic.concat(F("/config"));
 			if (!removeDiscovery){
 				response->printf_P(MQTT_HASS_AUTODISCOVERY_SENSORFLOOR,
 					network->getIdx(),
@@ -1228,10 +1274,10 @@ public:
 		}
 
 		unique_id = (String)network->getIdx();
-		unique_id.concat("_rssi"); 
-		topic="homeassistant/sensor/"; 
+		unique_id.concat(F("_rssi"));
+		topic=F("homeassistant/sensor/"); 
 		topic.concat(unique_id);
-		topic.concat("/config");
+		topic.concat(F("/config"));
 		if (!removeDiscovery){
 			response->printf_P(MQTT_HASS_AUTODISCOVERY_SENSORRSSI,
 				network->getIdx(),

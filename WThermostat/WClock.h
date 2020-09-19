@@ -20,10 +20,10 @@
 #include "../lib/WAdapter/WAdapter/WNetwork.h"
 #include "Arduino.h"
 
-const static char* DEFAULT_NTP_SERVER = "pool.ntp.org";
-const static char* DEFAULT_TIME_ZONE = "99";
-const static char* DEFAULT_TIME_DST = "0,3,0,2,120";
-const static char* DEFAULT_TIME_STD = "0,10,0,3,60";
+const static char* DEFAULT_NTP_SERVER PROGMEM = "pool.ntp.org";
+const static char* DEFAULT_TIME_ZONE PROGMEM = "99";
+const static char* DEFAULT_TIME_DST PROGMEM = "0,3,0,2,120";
+const static char* DEFAULT_TIME_STD PROGMEM = "0,10,0,3,60";
 
 const static char HTTP_TEXT_CLOCK_HOWTO[] PROGMEM = R"=====(
 <div style="max-width: 400px">
@@ -76,6 +76,20 @@ static const uint8_t kDaysInMonth[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 3
 static const char kMonthNames[] = "JanFebMarAprMayJunJulAugSepOctNovDec";
 const uint32_t START_VALID_TIME = 1451602800;  // Time is synced and after 2016-01-01
 
+const char* ID_CLOCK PROGMEM = "clock";
+const char* NAME_CLOCK PROGMEM = "Clock";
+
+
+const char* PROP_NTPSERVER PROGMEM = "ntpServer";
+const char* PROP_TIMEZONE PROGMEM = "timeZone";
+const char* PROP_TIMEDST PROGMEM = "timeDST";
+const char* PROP_TIMESTD PROGMEM = "timeSTD";
+
+const char* PROP_EPOCHTIME PROGMEM = "epochTime";
+const char* PROP_EPOCHTIMELOCALFORMATTED PROGMEM = "epochTimeLocalFormatted";
+const char* PROP_VALIDTIME PROGMEM = "validTime";
+const char* PROP_OFFSET PROGMEM = "offset";
+const char* PROP_UPTIME PROGMEM = "uptime";
 
 WiFiUDP ntpUDP;
 NTPClient ntpClient(ntpUDP);
@@ -87,26 +101,26 @@ class WClock : public WDevice {
 
     //WClock(bool debug, WNetwork *network) {
     WClock(WNetwork* network, String applicationName)
-        : WDevice(network, "clock", "Clock", network->getIdx(), DEVICE_TYPE_TEXT_DISPLAY) {
+        : WDevice(network, ID_CLOCK, NAME_CLOCK, network->getIdx(), DEVICE_TYPE_TEXT_DISPLAY) {
         this->mainDevice = false;
         this->visibility = MQTT;
 
         if (network->getSettingsOld()){
             if (network->getSettingsOld()->getNetworkSettingsVersion()==NETWORKSETTINGS_PRE_FAS114){
                 network->log()->notice(F("Reading WClockSettings PRE_FAS114"));
-                network->getSettingsOld()->setString("ntpServer", 32, "");
-                network->getSettingsOld()->setString("timeZone", 6, "");
-                network->getSettingsOld()->setString("timeDST", 14, "");
-                network->getSettingsOld()->setString("timeSTD", 14, "");
+                network->getSettingsOld()->setString(PROP_NTPSERVER, 32, "");
+                network->getSettingsOld()->setString(PROP_TIMEZONE, 6, "");
+                network->getSettingsOld()->setString(PROP_TIMEDST, 14, "");
+                network->getSettingsOld()->setString(PROP_TIMESTD, 14, "");
             }
         }
-        this->ntpServer = network->getSettings()->setString("ntpServer", 32,
-            (network->getSettingsOld() && network->getSettingsOld()->existsSetting("ntpServer") ? network->getSettingsOld()->getString("ntpServer") : DEFAULT_NTP_SERVER));
+        this->ntpServer = network->getSettings()->setString(PROP_NTPSERVER, 32,
+            (network->getSettingsOld() && network->getSettingsOld()->existsSetting(PROP_NTPSERVER) ? network->getSettingsOld()->getString(PROP_NTPSERVER) : DEFAULT_NTP_SERVER));
         this->ntpServer->setReadOnly(true);
         this->ntpServer->setVisibility(MQTT);
         this->addProperty(ntpServer);
-        this->timeZoneConfig = network->getSettings()->setString("timeZone", 6,
-         (network->getSettingsOld() && network->getSettingsOld()->existsSetting("timeZone") ? network->getSettingsOld()->getString("timeZone") : DEFAULT_TIME_ZONE));
+        this->timeZoneConfig = network->getSettings()->setString(PROP_TIMEZONE, 6,
+         (network->getSettingsOld() && network->getSettingsOld()->existsSetting(PROP_TIMEZONE) ? network->getSettingsOld()->getString(PROP_TIMEZONE) : DEFAULT_TIME_ZONE));
         // upgrade hack
         String tzval=(String)this->timeZoneConfig->c_str();
         if (tzval.startsWith("http://")){
@@ -116,13 +130,13 @@ class WClock : public WDevice {
         this->timeZoneConfig->setReadOnly(true);
         this->timeZoneConfig->setVisibility(MQTT);
         this->addProperty(timeZoneConfig);
-        this->timeDST = network->getSettings()->setString("timeDST", 14,
-            (network->getSettingsOld() && network->getSettingsOld()->existsSetting("timeDST") ? network->getSettingsOld()->getString("timeDST") : DEFAULT_TIME_DST));
+        this->timeDST = network->getSettings()->setString(PROP_TIMEDST, 14,
+            (network->getSettingsOld() && network->getSettingsOld()->existsSetting(PROP_TIMEDST) ? network->getSettingsOld()->getString(PROP_TIMEDST) : DEFAULT_TIME_DST));
         this->timeDST->setReadOnly(true);
         this->timeDST->setVisibility(MQTT);
         this->addProperty(timeDST);
-        this->timeSTD = network->getSettings()->setString("timeSTD", 14,
-            (network->getSettingsOld() && network->getSettingsOld()->existsSetting("timeSTD") ? network->getSettingsOld()->getString("timeSTD") : DEFAULT_TIME_STD));
+        this->timeSTD = network->getSettings()->setString(PROP_TIMESTD, 14,
+            (network->getSettingsOld() && network->getSettingsOld()->existsSetting(PROP_TIMESTD) ? network->getSettingsOld()->getString(PROP_TIMESTD) : DEFAULT_TIME_STD));
         this->timeSTD->setReadOnly(true);
         this->timeSTD->setVisibility(MQTT);
         this->addProperty(timeSTD);
@@ -146,26 +160,26 @@ class WClock : public WDevice {
         Rtc.utc_time = 0;
         BreakTime(Rtc.utc_time, RtcTime);
 
-        this->epochTime = new WLongProperty("epochTime");
+        this->epochTime = new WLongProperty(PROP_EPOCHTIME);
         this->epochTime->setReadOnly(true);
         this->epochTime->setOnValueRequest([this](WProperty* p) {
             p->setLong(getEpochTime());
         });
         this->addProperty(epochTime);
-        this->epochTimeLocalFormatted = new WStringProperty("epochTimeLocalFormatted", "epochTimeLocalFormatted", 20);
+        this->epochTimeLocalFormatted = new WStringProperty(PROP_EPOCHTIMELOCALFORMATTED, nullptr, 20);
         this->epochTimeLocalFormatted->setReadOnly(true);
         this->epochTimeLocalFormatted->setOnValueRequest([this](WProperty* p) { updateLocalFormattedTime(); });
         this->addProperty(epochTimeLocalFormatted);
-        this->validTime = new WOnOffProperty("validTime", "validTime");
+        this->validTime = new WOnOffProperty(PROP_VALIDTIME, nullptr);
         this->validTime->setBoolean(false);
         this->validTime->setReadOnly(true);
         this->addProperty(validTime);
-        this->offset = new WIntegerProperty("offset", "Offset");
+        this->offset = new WIntegerProperty(PROP_OFFSET, nullptr);
         this->offset->setInteger(0);
         this->offset->setReadOnly(true);
         this->addProperty(offset);
 
-        this->uptime = new WLongProperty("uptime");
+        this->uptime = new WLongProperty(PROP_UPTIME);
         this->uptime->setReadOnly(true);
         this->uptime->setOnValueRequest([this](WProperty* p) {
             p->setLong(getUptime());
