@@ -21,8 +21,8 @@ const static char HTTP_CONFIG_SCHTAB_HEAD[]         PROGMEM = R"=====(
 )=====";
 const static char HTTP_CONFIG_SCHTAB_TD[]         PROGMEM = R"=====(
 	<td>
-		Time: <input type="text" name="%c%ch" value="%s" maxlength="5" lenght="5">
-		Temp: <input type="text" name="%c%ct" value="%s" maxlength="4" length="5">
+		Time: <input type="text" name="%c%ch" value="%s">
+		Temp: <input type="text" name="%c%ct" value="%s">
 	</td>
 )=====";
 const static char HTTP_CONFIG_SCHTAB_FOOT[]         PROGMEM = R"=====(
@@ -133,6 +133,9 @@ const static char MQTT_HASS_AUTODISCOVERY_SENSORRSSI[]         PROGMEM = R"=====
 }
 )=====";
 
+const static char PAGE_BECA_JS[]           PROGMEM = R"=====(
+TODO
+)=====";
 
 #define COUNT_DEVICE_MODELS 2
 #define MODEL_BHT_002_GBLW 0
