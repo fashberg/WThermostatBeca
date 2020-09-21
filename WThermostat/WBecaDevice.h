@@ -896,7 +896,7 @@ public:
     }
 
 	void sendSchedulesToMqtt(){
-		WStringStream* response = network->getResponseStream();
+		WStringStream* response = network->getMQTTResponseStream();
 		WJson json(response);
 		json.beginObject();
 		this->toJsonSchedules(&json, 0);// SCHEDULE_WORKDAY);
@@ -978,7 +978,7 @@ public:
     }
 
     void sendSchedules(AsyncWebServerRequest* request) {
-    	WStringStream* response = network->getResponseStream();
+    	WStringStream* response = network->getMQTTResponseStream();
     	WJson json(response);
     	json.beginObject();
     	this->toJsonSchedules(&json, 0);// SCHEDULE_WORKDAY);
@@ -1217,7 +1217,7 @@ public:
 		unique_id.concat(F("_climate"));
 		topic.concat(unique_id);
 		topic.concat(F("/config"));
-		WStringStream* response = network->getResponseStream();
+		WStringStream* response = network->getMQTTResponseStream();
 		response->flush();
 		char str_temp[6];
 		dtostrf(this->temperaturePrecision->getDouble(), 3, 1, str_temp);
