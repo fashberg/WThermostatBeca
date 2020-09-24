@@ -73,22 +73,23 @@ void setup() {
 
 
     // networkDevice 
+    network->log()->trace(F("Loading Network (%d)"), ESP.getFreeHeap());
     networkDevice = new WNetworkDev(network, APPLICATION);
-    network->log()->trace(F("Loading ClockDevice"));
     network->addDevice(networkDevice);
+    network->log()->trace(F("Loading Network Done (%d)"), ESP.getFreeHeap());
 
     // KaClock - time sync
+    network->log()->trace(F("Loading Clock (%d)"), ESP.getFreeHeap());
     wClock = new WClock(network, APPLICATION);
-    network->log()->trace(F("Loading ClockDevice"));
     network->addDevice(wClock);
     wClock->setOnTimeUpdate([]() { becaDevice->sendActualTimeToBecaRequested(true); });
     wClock->setOnError([](const char *error) {
         network->log()->error(F("Clock Error: %s"), error);
     });
-    network->log()->trace(F("Loading ClockDevice Done"));
+    network->log()->trace(F("Loading Clock Done (%d)"), ESP.getFreeHeap());
 
     // Communication between ESP and Beca-Mcu
-    network->log()->trace(F("Loading BecaDevice"));
+    network->log()->trace(F("Loading BecaDevice (%d)"), ESP.getFreeHeap());
     becaDevice = new WBecaDevice(network, wClock);
     becaDevice->setMqttSendChangedValues(true);
     network->addDevice(becaDevice);
@@ -104,17 +105,17 @@ void setup() {
         network->setDesiredModeStation();
         return true;
     });
-    network->log()->trace(F("Loading BecaDevice Done"));
+    network->log()->trace(F("Loading BecaDevice Done (%d)"), ESP.getFreeHeap());
 
     // add MQTTLog
-    network->log()->trace(F("Loading LogDevice"));
+    network->log()->trace(F("Loading LogDevice (%d)"), ESP.getFreeHeap());
     logDevice = new WLogDevice(network);
     network->addDevice(logDevice);
-    network->log()->trace(F("Loading LogDevice Done"));
+    network->log()->trace(F("Loading LogDevice Done (%d)"), ESP.getFreeHeap());
 
     if (network->getSettings()->settingsNeedsUpdate()){
         network->deleteSettingsOld();
-        network->log()->trace(F("Writing Config"));
+        network->log()->trace(F("Writing Config (%d)"), ESP.getFreeHeap());
         #ifndef DEBUG
         network->getSettings()->save();
         #else
@@ -127,7 +128,9 @@ void setup() {
         return becaDevice->sendMqttHassAutodiscover(removeDiscovery);
     });
 #endif
+    network->log()->trace(F("Starting Webserver Done (%d)"), ESP.getFreeHeap());
     network->startWebServer();
+    network->log()->trace(F("Starting Webserver Done (%d)"), ESP.getFreeHeap());
 
 }
 

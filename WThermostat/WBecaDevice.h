@@ -153,10 +153,10 @@ TODO
 
 const unsigned char COMMAND_START[] = {0x55, 0xAA};
 const char AR_COMMAND_END = '\n';
-const String SCHEDULES = "schedules"; 
-const String MCUCOMMAND = "mcucommand"; 
-const char* SCHEDULES_MODE_OFF = "off";
-const char* SCHEDULES_MODE_AUTO = "auto";
+const String SCHEDULES = "schedules";
+const String MCUCOMMAND = "mcucommand";
+const char* SCHEDULES_MODE_OFF PROGMEM = "off";
+const char* SCHEDULES_MODE_AUTO PROGMEM = "auto";
 // HOLD_MODE is an alias for SCHEDULE_MODE - Just Different Names/attributes
 // special for HASS
 const char* HOLD_STATE_MANUAL PROGMEM = "manual";
@@ -226,6 +226,13 @@ const char* PROP_STATE PROGMEM = "state";
 const char* TITL_STATE PROGMEM = "State";
 const char* PROP_MCUID PROGMEM = "mcuId";
 
+const char* ATTYPE_SCHEDULESMODE PROGMEM = "ThermostatSchedulesModeProperty";
+const char* ATTYPE_HOLDSTATE PROGMEM = "ThermostatHoldStateProperty";
+const char* ATTYPE_MODE PROGMEM = "ThermostatModeProperty";
+const char* ATTYPE_FANMODE PROGMEM = "FanModeProperty";
+const char* ATTYPE_ACTION PROGMEM = "ThermostatActionProperty";
+const char* ATTYPE_HEATINGCOOLING PROGMEM = "HeatingCoolingProperty";
+
 
 const char* ID_PAGE_SCHEDULE PROGMEM = "schedules";
 const char* TITLE_PAGE_SCHEDULE PROGMEM = "Configure Schedules";
@@ -278,6 +285,7 @@ public:
 		this->stateNotifyInterval=60000;
 		this->onConfigurationRequest=nullptr;
 		this->onPowerButtonOn=nullptr;
+		network->log()->trace(F("Beca start (%d)"), ESP.getFreeHeap());
 		startMcuInitialize();
 		/* properties */
 
@@ -291,6 +299,7 @@ public:
 			}
 		}
 
+		network->log()->trace(F("Beca settings (%d)"), ESP.getFreeHeap());
 		// read beca bits 
 		this->becaBits1 = network->getSettings()->setByte(PROP_BECABITS1,
 			(network->getSettingsOld() && network->getSettingsOld()->existsSetting(PROP_BECABITS1) ? network->getSettingsOld()->getByte(PROP_BECABITS1) : 0x00));
@@ -308,7 +317,7 @@ public:
 		if (this->supportingHeatingRelay->getBoolean() && this->supportingCoolingRelay->getBoolean()) {
 			this->supportingCoolingRelay->setBoolean(false);
 		}
-
+		network->log()->trace(F("Beca settings switchBackToAuto (%d)"), ESP.getFreeHeap());
 		// switch back property
 		this->switchBackToAuto = new WProperty(PROP_SWITCHBACKTOAUTO, TITL_SWITCHBACKTOAUTO, BOOLEAN);
 		this->switchBackToAuto->setBoolean(!(this->becaBits1->getByte() & BECABITS1_SWITCHBACKOFF));
@@ -317,6 +326,7 @@ public:
 		this->switchBackToAuto->setMqttSendChangedValues(true);
 		this->switchBackToAuto->setOnChange(std::bind(&WBecaDevice::saveSettings, this, std::placeholders::_1));
 		this->addProperty(switchBackToAuto);
+		network->log()->trace(F("Beca settings switchBackToAuto done (%d)"), ESP.getFreeHeap());
 
 		// Floor Sensor 
 		this->floorSensor = new WProperty(PROP_FLOORSENSOR, nullptr, BOOLEAN);
@@ -339,25 +349,34 @@ public:
     	this->actualTemperature->setReadOnly(true);
 		this->actualTemperature->setMqttSendChangedValues(true);
     	this->addProperty(actualTemperature);
+		network->log()->trace(F("Beca settings actualTemperature done (%d)"), ESP.getFreeHeap());
+
     	this->targetTemperature = new WTargetTemperatureProperty(PROP_TARGETTEMPERATURE, TITL_TARGETTEMPERATURE);//, 12.0, 28.0);
     	this->targetTemperature->setMultipleOf(getTemperaturePrecision());
     	this->targetTemperature->setOnChange(std::bind(&WBecaDevice::setTargetTemperature, this, std::placeholders::_1));
     	this->targetTemperature->setOnValueRequest([this](WProperty* p) {updateTargetTemperature();});
 		this->targetTemperature->setMqttSendChangedValues(true);
     	this->addProperty(targetTemperature);
+		network->log()->trace(F("Beca settings targetTemperature done (%d)"), ESP.getFreeHeap());
+
+
     	this->deviceOn = new WOnOffProperty(PROP_DEVICEON, TITL_DEVICEON);
     	this->deviceOn->setOnChange(std::bind(&WBecaDevice::deviceOnToMcu, this, std::placeholders::_1));
 		this->deviceOn->setMqttSendChangedValues(true);
     	this->addProperty(deviceOn);
+		network->log()->trace(F("Beca settings deviceOn done (%d)"), ESP.getFreeHeap());
+		
 		this->schedulesMode = new WProperty(PROP_SCHEDULESMODE, TITL_SCHEDULESMODE, STRING);
-		this->schedulesMode->setAtType("ThermostatSchedulesModeProperty");
+		this->schedulesMode->setAtType(ATTYPE_SCHEDULESMODE);
 		this->schedulesMode->addEnumString(SCHEDULES_MODE_OFF);
 		this->schedulesMode->addEnumString(SCHEDULES_MODE_AUTO);
 		this->schedulesMode->setOnChange(std::bind(&WBecaDevice::schedulesModeToMcu, this, std::placeholders::_1));
 		this->schedulesMode->setMqttSendChangedValues(true);
 		this->addProperty(schedulesMode);
+		network->log()->trace(F("Beca settings schedulesMode done (%d)"), ESP.getFreeHeap());
+
 		this->holdState = new WProperty(PROP_HOLDSTATE, nullptr, STRING);
-		this->holdState->setAtType("ThermostatHoldStateProperty");
+		this->holdState->setAtType(ATTYPE_HOLDSTATE);
 		this->holdState->addEnumString(HOLD_STATE_MANUAL);
 		this->holdState->addEnumString(HOLD_STATE_SCHEDULER);
 		this->holdState->addEnumString(HOLD_STATE_ECO);
@@ -367,16 +386,24 @@ public:
 		this->holdState->setMqttSendChangedValues(true);
 		this->holdState->setVisibility(MQTT);
 		this->addProperty(holdState);
+		network->log()->trace(F("Beca settings holdState done (%d)"), ESP.getFreeHeap());
+
     	this->ecoMode = new WOnOffProperty(PROP_ECOMODE, TITL_ECOMODE);
     	this->ecoMode->setOnChange(std::bind(&WBecaDevice::ecoModeToMcu, this, std::placeholders::_1));
     	this->ecoMode->setVisibility(MQTT);
 		this->ecoMode->setMqttSendChangedValues(true);
     	this->addProperty(ecoMode);
+		network->log()->trace(F("Beca settings ecoMode done (%d)"), ESP.getFreeHeap());
+
     	this->locked = new WOnOffProperty(PROP_LOCK, TITL_LOCK);
     	this->locked->setOnChange(std::bind(&WBecaDevice::lockedToMcu, this, std::placeholders::_1));
     	this->locked->setVisibility(MQTT);
 		this->locked->setMqttSendChangedValues(true);
     	this->addProperty(locked);
+		network->log()->trace(F("Beca settings locked done (%d)"), ESP.getFreeHeap());
+
+
+		network->log()->trace(F("Beca settings model (%d)"), ESP.getFreeHeap());
     	//Model
     	this->actualFloorTemperature = nullptr;
     	this->thermostatModel = network->getSettings()->setByte(PROP_THERMOSTATMODEL,
@@ -391,7 +418,7 @@ public:
 			}
     	} else if (getThermostatModel() == MODEL_BAC_002_ALW) {
     		this->systemMode = new WProperty(PROP_SYSTEMMODE, TITL_SYSTEMMODE, STRING);
-        	this->systemMode->setAtType("ThermostatModeProperty");
+        	this->systemMode->setAtType(ATTYPE_MODE);
 			this->systemMode->addEnumString(SYSTEM_MODE_COOL);
         	this->systemMode->addEnumString(SYSTEM_MODE_HEAT);
         	this->systemMode->addEnumString(SYSTEM_MODE_FAN);
@@ -399,7 +426,7 @@ public:
 			this->systemMode->setMqttSendChangedValues(true);
         	this->addProperty(systemMode);
     		this->fanMode = new WProperty(PROP_FANMODE, TITL_FANMODE, STRING);
-        	this->fanMode->setAtType("FanModeProperty");
+        	this->fanMode->setAtType(ATTYPE_FANMODE);
         	this->fanMode->addEnumString(FAN_MODE_NONE);
         	this->fanMode->addEnumString(FAN_MODE_LOW);
         	this->fanMode->addEnumString(FAN_MODE_MEDIUM);
@@ -409,6 +436,7 @@ public:
 			this->fanMode->setMqttSendChangedValues(true);
         	this->addProperty(fanMode);
     	}
+		network->log()->trace(F("Beca settings model done (%d)"), ESP.getFreeHeap());
 		/* 
 		* New OverAllMode for easier integration
 		* https://iot.mozilla.org/schemas/#ThermostatModeProperty
@@ -416,7 +444,7 @@ public:
 		*/
 
     	this->mode = new WProperty(PROP_MODE, TITL_MODE, STRING);
-    	this->mode->setAtType("ThermostatModeProperty"); 
+    	this->mode->setAtType(ATTYPE_MODE); 
     	this->mode->addEnumString(MODE_OFF);
 		if (getThermostatModel() == MODEL_BHT_002_GBLW) {
 			this->mode->addEnumString(MODE_AUTO);
@@ -432,7 +460,7 @@ public:
     	this->addProperty(mode);
 
 		this->action = new WProperty(PROP_ACTION, TITL_ACTION, STRING);
-		this->action->setAtType("ThermostatactionProperty"); 
+		this->action->setAtType(ATTYPE_ACTION); 
 		this->action->addEnumString(ACTION_OFF);
 		this->action->addEnumString(ACTION_HEATING);
 		if (isSupportingHeatingRelay() || isSupportingCoolingRelay()) this->action->addEnumString(ACTION_IDLE);
@@ -455,7 +483,7 @@ public:
 		this->state = nullptr;
     	if ((isSupportingHeatingRelay()) || (isSupportingCoolingRelay())) {
     		this->state = new WProperty(PROP_STATE, TITL_STATE, STRING);
-    		this->state->setAtType("HeatingCoolingProperty");
+    		this->state->setAtType(ATTYPE_HEATINGCOOLING);
     		this->state->setReadOnly(true);
     		this->state->addEnumString(STATE_OFF);
     		if (isSupportingHeatingRelay()) this->state->addEnumString(STATE_HEATING);
@@ -473,6 +501,8 @@ public:
 		this->mcuId = new WProperty(PROP_MCUID, nullptr, STRING);
 		this->mcuId->setReadOnly(true);
 		this->addProperty(mcuId);
+
+		network->log()->trace(F("Beca settings page schedule (%d)"), ESP.getFreeHeap());
 		// Pages
 		WPage * schedulePage=new WPage(ID_PAGE_SCHEDULE, TITLE_PAGE_SCHEDULE);
 		schedulePage->setPrintPage([this,schedulePage](AsyncWebServerRequest* request, AsyncResponseStream* page) {
@@ -481,7 +511,7 @@ public:
 			page->print(FPSTR(HTTP_CONFIG_SCHTAB_HEAD));
 			for (char *period=(char*)SCHEDULES_PERIODS; *period > 0; period++){
 				page->print(F("<tr>"));
-				page->printf("<td>Period %c</td>", *period);
+				page->printf(PSTR("<td>Period %c</td>"), *period);
 				for (char *day=(char*)SCHEDULES_DAYS; *day > 0; day++){
 					char keyH[4];
 					char keyT[4];
@@ -522,6 +552,7 @@ public:
 			}
 		});
 		this->addPage(schedulePage);
+		network->log()->trace(F("Beca settings page schedule done (%d)"), ESP.getFreeHeap());
 
 		// Pages reinit		
 		WPage * reinitPage=new WPage(ID_PAGE_REINIT, TITLE_PAGE_REINIT);
@@ -544,6 +575,8 @@ public:
 			receivedStates[i] = false;
 		}
 		this->schedulesDataPoint = 0x00;
+
+		network->log()->trace(F("Beca all done (%d)"), ESP.getFreeHeap());
 	}
 
     virtual void printConfigPage(AsyncWebServerRequest *request, AsyncResponseStream* page) {
