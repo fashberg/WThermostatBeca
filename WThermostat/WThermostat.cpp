@@ -132,6 +132,8 @@ void setup() {
     network->startWebServer();
     network->log()->trace(F("Starting Webserver Done (%d)"), ESP.getFreeHeap());
 
+    initStatic();
+
 }
 
 void loop() {
