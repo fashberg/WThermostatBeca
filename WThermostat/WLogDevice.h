@@ -47,6 +47,7 @@ public:
 		this->providingConfigPage = true;
 		this->configNeedsReboot = false;
 		this->mainDevice = false;
+		this->visibility = MQTT;
 		
 		/* properties */
 

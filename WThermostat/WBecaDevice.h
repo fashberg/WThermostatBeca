@@ -786,7 +786,7 @@ public:
     	command.toLowerCase();
 		unsigned char cmd[command.length()/2];
     	if ((command.length() > 1) && (command.length() % 2 == 0)) {
-			int i;
+			unsigned int i;
     		for (i = 0; i < (command.length() / 2); i++) {
     			unsigned char chValue = getIndex(command.charAt(i * 2)) * 0x10
     					+ getIndex(command.charAt(i * 2 + 1));
@@ -799,7 +799,7 @@ public:
     void commandCharsToSerial(unsigned int length, unsigned char* command) {
     	int chkSum = 0;
     	if (length > 2) {
-    		for (int i = 0; i < length; i++) {
+    		for (unsigned int i = 0; i < length; i++) {
     			unsigned char chValue = command[i];
     			chkSum += chValue;
     			Serial.print((char) chValue);
@@ -949,12 +949,12 @@ public:
 					break;
 				}
 			}
-		} else return -1;
+		}
+		return -1;
 	}
 
 	int getSchedulesStartAddress(const char* key, byte period) {
 		if (strlen(key) == 3) {
-			byte startAddr = 255;
 			if (key[0] == SCHEDULES_DAYS[0]) {
 				return 0;
 			} else if (key[0] == SCHEDULES_DAYS[1]) {
@@ -962,7 +962,8 @@ public:
 			} else if (key[0] == SCHEDULES_DAYS[2]) {
 				return 36;
 			}
-		} else return -1;
+		}
+		return -1;
 	}
 
 	String getSchedulesValue(const char* key) {
@@ -1695,7 +1696,7 @@ private:
 							unsigned int len=0;
 							len = ((byte)receivedCommand[4] <<8) + (byte)receivedCommand[5];
 							char buf[len+1];
-							for (int i=0;i<len;i++){
+							for (unsigned int i=0;i<len;i++){
 								buf[i]=receivedCommand[6+i];
 							}
 							buf[len]=0;
@@ -1750,7 +1751,9 @@ private:
 			}
 		} else if ((this->currentSchedulePeriod != -1) && (schedulesMode->equalsString(SCHEDULES_MODE_AUTO))) {
 			double temp = (double) schedules[this->currentSchedulePeriod + 2] / getTemperatureFactor();
-			byte weekDay;
+			byte weekDay = wClock->getWeekDay();
+			weekDay += getSchedulesDayOffset();
+			weekDay = weekDay % 7;
 			String p = String(weekDay == 0 ? SCHEDULES_DAYS[2] : (weekDay == 6 ? SCHEDULES_DAYS[1] : SCHEDULES_DAYS[0]));
 			p.concat(SCHEDULES_PERIODS[this->currentSchedulePeriod]);
 			network->log()->trace((String(PSTR("We take temperature from period '%s', Schedule temperature is "))+String(temp)).c_str() , p.c_str());
@@ -2014,7 +2017,7 @@ private:
 	}
 
 	bool hasDevicesWithHassAutodiscoverSupport(byte device){
-		for (int i=0; i<sizeof(devicesWithHassAutodiscoverSupport); i++){
+		for (unsigned int i=0; i<sizeof(devicesWithHassAutodiscoverSupport); i++){
 			if (devicesWithHassAutodiscoverSupport[i]==device) return true;
 		}
 		return false;
