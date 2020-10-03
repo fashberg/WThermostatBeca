@@ -342,7 +342,6 @@ public:
 			this->temperaturePrecision->setDouble(0.5f);
 		}
 		this->temperaturePrecision->setReadOnly(true);
-		this->temperaturePrecision->setVisibility(ALL);
 
 
     	this->actualTemperature = new WTemperatureProperty(PROP_ACTUALTEMPERATURE, TITL_ACTUALTEMPERATURE);
@@ -444,6 +443,7 @@ public:
 		*/
 
     	this->mode = new WProperty(PROP_MODE, TITL_MODE, STRING);
+		this->mode->setVisibility(MQTT);
     	this->mode->setAtType(ATTYPE_MODE); 
     	this->mode->addEnumString(MODE_OFF);
 		if (getThermostatModel() == MODEL_BHT_002_GBLW) {
@@ -499,6 +499,7 @@ public:
 
 
 		this->mcuId = new WProperty(PROP_MCUID, nullptr, STRING);
+		this->mcuId->setVisibility(MQTT);
 		this->mcuId->setReadOnly(true);
 		this->addProperty(mcuId);
 
@@ -1806,6 +1807,7 @@ private:
     }
 
     void setTargetTemperature(WProperty* property) {
+		Serial.printf("setTargetTemperature\n");
 		if (schedulesMode->equalsString(SCHEDULES_MODE_OFF)){
 			// only set targetTemperatureManualMode and targetTemperatureManualModeToMcu() if current mode is Manual
 			if (!WProperty::isEqual(targetTemperatureManualMode, this->targetTemperature->getDouble(), 0.01)) {
