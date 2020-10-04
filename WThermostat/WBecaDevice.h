@@ -389,14 +389,14 @@ public:
 
     	this->ecoMode = new WOnOffProperty(PROP_ECOMODE, TITL_ECOMODE);
     	this->ecoMode->setOnChange(std::bind(&WBecaDevice::ecoModeToMcu, this, std::placeholders::_1));
-    	this->ecoMode->setVisibility(MQTT);
+    	this->ecoMode->setVisibility(ALL);
 		this->ecoMode->setMqttSendChangedValues(true);
     	this->addProperty(ecoMode);
 		network->log()->trace(F("Beca settings ecoMode done (%d)"), ESP.getFreeHeap());
 
     	this->locked = new WOnOffProperty(PROP_LOCK, TITL_LOCK);
     	this->locked->setOnChange(std::bind(&WBecaDevice::lockedToMcu, this, std::placeholders::_1));
-    	this->locked->setVisibility(MQTT);
+    	this->locked->setVisibility(ALL);
 		this->locked->setMqttSendChangedValues(true);
     	this->addProperty(locked);
 		network->log()->trace(F("Beca settings locked done (%d)"), ESP.getFreeHeap());
@@ -443,7 +443,7 @@ public:
 		*/
 
     	this->mode = new WProperty(PROP_MODE, TITL_MODE, STRING);
-		this->mode->setVisibility(MQTT);
+		this->mode->setVisibility(ALL);
     	this->mode->setAtType(ATTYPE_MODE); 
     	this->mode->addEnumString(MODE_OFF);
 		if (getThermostatModel() == MODEL_BHT_002_GBLW) {
@@ -499,7 +499,7 @@ public:
 
 
 		this->mcuId = new WProperty(PROP_MCUID, nullptr, STRING);
-		this->mcuId->setVisibility(MQTT);
+		this->mcuId->setVisibility(ALL);
 		this->mcuId->setReadOnly(true);
 		this->addProperty(mcuId);
 
@@ -605,7 +605,7 @@ public:
 
 		//Checkbox with support for relay
 		int rsMode=(this->isSupportingHeatingRelay() ? 1 :  (this->isSupportingCoolingRelay() ? 2 : 0));
-		page->printf_P(HTTP_COMBOBOX_BEGIN, F("Relais connected to GPIO Inputs:"), "rs");
+		page->printf_P(HTTP_COMBOBOX_BEGIN, F("Relay connected to GPIO Inputs:"), "rs");
 		page->printf_P(HTTP_COMBOBOX_ITEM, "_", (rsMode == 0 ? HTTP_SELECTED : ""), F("No Hardware Hack"));
 		page->printf_P(HTTP_COMBOBOX_ITEM, "h", (rsMode == 1 ? HTTP_SELECTED : ""), F("Heating-Relay at GPIO 5"));
 		page->printf_P(HTTP_COMBOBOX_ITEM, "c", (rsMode == 2 ? HTTP_SELECTED : ""), F("Cooling-Relay at GPIO 5"));
@@ -1807,7 +1807,6 @@ private:
     }
 
     void setTargetTemperature(WProperty* property) {
-		Serial.printf("setTargetTemperature\n");
 		if (schedulesMode->equalsString(SCHEDULES_MODE_OFF)){
 			// only set targetTemperatureManualMode and targetTemperatureManualModeToMcu() if current mode is Manual
 			if (!WProperty::isEqual(targetTemperatureManualMode, this->targetTemperature->getDouble(), 0.01)) {
