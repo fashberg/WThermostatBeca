@@ -42,7 +42,7 @@ Steps are in general:
 
 * After you have pressed "Save configuration" the thermostat reboots and tries to connect to the configured network
 * Now you have to find out the IP-Address of the device.
-  * Try to open `http://&lt;hostname&gt;.&lt;domainname&gt;/` - if your router (DHCP+DNS) supports it. The Hostname is what you have configured before
+  * Try to open `http://<hostname>.<domainname>/` - if your router (DHCP+DNS) supports it. The Hostname is what you have configured before
   * Alternative: Connect to your router and check for the thermostat in Hostlist or check your DHCP-Server leases table
   * Alternative: After restart, the thermostat sends MQTT messages to topics 'devices/thermostat', 'devices/clock' and 'devices/logging' to let you know the IP and MQTT topic of the device. The json messages are looking like:
 
@@ -59,14 +59,31 @@ Steps are in general:
 ## 3. Configure thermostat device (model selection)
 
 * Go to 'Configure device'
-* Choose your thermostat model
-* Choose, if heating or cooling relay monitor is supported, hw modification need to work, see <https://github.com/klausahrenberg/WThermostatBeca/issues/17#issuecomment-552078026>
-* Choose if floor sensor values should be reported (enable if you have connected floor sensor)
-* Choose if the thermostat should switch back from manual heating mode to schedule mode at the next scheduled period change
-* Choose workday and weekend start in your region
+* Choose your thermostat **model**
+* Choose, if heating or cooling **relay monitor hardware hack** should be enabled. Hardware modification necessary to work, see <https://github.com/klausahrenberg/WThermostatBeca/issues/17#issuecomment-552078026>
+* **Relay State Calculation**: The WiFi-Module does not know without the Hardware Hack if the Realy is Opened or Closed.
+   But we can calculate the state, based on the measured temperaturs.
+   Set this paramter to the same value which is confired at thermostat settings (BHT-002: Option Code 2). Value is between 1 and 5 degree Celsius, factory default is 1.
+   Does not apply if state of Relay is configured to Hardware-Hack.
+setting to calculate the state of the Heating Relay
+* Choose if **floor sensor** values should be reported (enable if you have floor sensor connected and are running in 'AL'-Mode). See also next section
+* Choose if the thermostat should **switch back from manual heating mode** to schedule mode at the next scheduled period change
+* Choose **workday and weekend** start in your region
 * Press 'Save Configuration' and wait for reboot of device.
 
 ![homeassistant](docs/images/Setup_Thermostat.png)  
+
+### External Temperature Sensor
+
+You can connect one external NTC temperature sensor (type 10K, 3950) to BHT-002 thermostats, for GB-Model it's included.
+In settings menu of MCU (option 4) you can switch between internal (IN), external (OU) and All (AL). See [BHT-002-Manual.pdf](./docs/BHT-002-Manual-long.pdf).
+
+* IN-Mode: MCU reports only temperature of internal sensor and uses it for thermostat room-temperature. Value "floorTemperature" shows 0.00, or last measured value of OU- or AL-Mode (even after restart or re-powering).
+* OU-Mode: MCU reports only temperature of external sensor and uses it for thermostat room-temperature. WThermostat Values "temperature" and "floorTemperature" are the same (external sensor).
+* AL-Mode: MCU reports both temperatures, uses internal sensor for room-temperature and external sensor for maximum floor temperature overheating protection. Values "temperature" and "floorTemperature" are both valid with its measured values.
+  * It's not possible to change MCU behavior to other modes, e.g. using external temperature sensor to control relays and only display value of internal sensor is not possible.
+  * See [Issue #27](https://github.com/fashberg/WThermostatBeca/issues/27) with Workaround by @IanAdd with Home Assistant controlled Heating/Idle state depending on floorTemperature
+  * Hint: Long pressing the rightest button for 5 seconds (while device switched on) the displays shows external temperature.
 
 ## 4. Configure clock settings
 

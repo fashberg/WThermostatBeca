@@ -106,12 +106,13 @@ class WClock : public WDevice {
         this->visibility = MQTT;
 
         if (network->getSettingsOld()){
-            if (network->getSettingsOld()->getNetworkSettingsVersion()==NETWORKSETTINGS_PRE_FAS114){
-                network->log()->notice(F("Reading WClockSettings PRE_FAS114"));
-                network->getSettingsOld()->setString(PROP_NTPSERVER, 32, "");
-                network->getSettingsOld()->setString(PROP_TIMEZONE, 6, "");
-                network->getSettingsOld()->setString(PROP_TIMEDST, 14, "");
-                network->getSettingsOld()->setString(PROP_TIMESTD, 14, "");
+            if (network->getSettingsOld()->getNetworkSettingsVersion()==NETWORKSETTINGS_PRE_FAS114
+             || network->getSettingsOld()->getApplicationSettingsVersion()==network->getSettingsOld()->getApplicationSettingsCurrent()-1){
+                network->log()->notice(F("Reading WClockSettings PRE_FAS114/FLAG_OPTIONS_APPLICATION-1"));
+                network->getSettingsOld()->setString(PROP_NTPSERVER, 32, DEFAULT_NTP_SERVER);
+                network->getSettingsOld()->setString(PROP_TIMEZONE, 6, DEFAULT_TIME_ZONE);
+                network->getSettingsOld()->setString(PROP_TIMEDST, 14, DEFAULT_TIME_DST);
+                network->getSettingsOld()->setString(PROP_TIMESTD, 14, DEFAULT_TIME_STD);
             }
         }
         this->ntpServer = network->getSettings()->setString(PROP_NTPSERVER, 32,
@@ -212,8 +213,10 @@ class WClock : public WDevice {
                 || (now > nextSync) 
             ) && (WiFi.status() == WL_CONNECTED)) {
             network->log()->trace(F("Time via NTP server '%s'"), ntpServer->c_str());
+            network->logHeap(PSTR("NTP Start"));
             lastTry = now;
             if (ntpClient.update()) {
+                network->logHeap(PSTR("NTP GotTime"));
                 uint32_t oldutc = getEpochTime();
                 ntpTime = ntpClient.getEpochTime();
                 //ntpTime = 1603587544; // DST-Test
@@ -477,12 +480,13 @@ class WClock : public WDevice {
     void printConfigPage(AsyncWebServerRequest *request, AsyncResponseStream* page) {
         network->log()->notice(F("Clock config page"));
         page->printf_P(HTTP_CONFIG_PAGE_BEGIN, getId());
-        page->printf_P(HTTP_TEXT_FIELD, "NTP server:", "ntp", "32", ntpServer->c_str());
-        page->printf_P(HTTP_TEXT_FIELD, "Timezone:", "tzone", "6", timeZoneConfig->c_str());
-        page->printf_P(HTTP_TEXT_FIELD, "TimeRule switch to Daylight Saving Time:", "tdst", "14", timeDST->c_str());
-        page->printf_P(HTTP_TEXT_FIELD, "TimeRule switch Back to Standard Time:", "tstd", "14", timeSTD->c_str());
+        page->printf_P(HTTP_TEXT_FIELD, "NTP server:", "ntp", 32, ntpServer->c_str());
+        page->printf_P(HTTP_TEXT_FIELD, "Timezone:", "tzone", 6, timeZoneConfig->c_str());
+        page->printf_P(HTTP_TEXT_FIELD, "TimeRule switch to Daylight Saving Time:", "tdst", 14, timeDST->c_str());
+        page->printf_P(HTTP_TEXT_FIELD, "TimeRule switch Back to Standard Time:", "tstd", 14, timeSTD->c_str());
         page->printf_P(HTTP_TEXT_CLOCK_HOWTO);
-        page->printf_P(HTTP_CONFIG_SAVE_BUTTON);
+        page->printf_P(HTTP_CONFIG_SAVEANDREBOOT_BUTTON);
+        page->printf_P(HTTP_HOME_BUTTON);
     }
 
     void saveConfigPage(AsyncWebServerRequest *request) {

@@ -15,6 +15,11 @@ const char* TITL_LOGLEVEL PROGMEM = "logLevel";
 const char* PROP_LOGLEVELWEB PROGMEM = "logLevelWeb";
 const char* PROP_LOGLEVELWEBBYTE PROGMEM = "logLevelWebByte";
 
+const char* PROP_LOGRES1 PROGMEM = "logres1";
+const char* PROP_LOGRES2 PROGMEM = "logres2";
+const char* PROP_LOGRES3 PROGMEM = "logres3";
+const char* PROP_LOGRES4 PROGMEM = "logres4";
+
 const char* ID_PAGE_LIVEWEBLOG PROGMEM = "weblog";
 const char* TITLE_PAGE_LIVEWEBLOG PROGMEM = "Live WebLog";
 
@@ -30,40 +35,51 @@ const char* LOG_MODE_VERBOSE PROGMEM = "verbose";
 const char* URI_WSLOG PROGMEM = "/wslog";
 
 const static char HTTP_WEBLOG[]         PROGMEM = R"=====(
-	<textarea readonly id="t1" cols="340" rows="25" wrap="off" name="t1" style="resize:vertical;width:98%;height:318px;padding:5px;overflow:auto;background:#1f1f1f;color:#65c115"></textarea>
+	<textarea readonly id="t1" cols="340" rows="25" wrap="off" name="t1" style="resize:vertical;width:98%;height:318px;padding:5px;overflow:auto;background:#1f1f1f;color:#65c115"></textarea><br>
+	Hints: Change LogLevel <a href="/logging" target="_l">here</a> and reinitialize Thermostat <a href="/thermostat_reinit" target="_l">there</a>. Use LogLevel Verbose to see all MCU communication.
 )=====";
 
 
 
 const static char HTTP_WEBLOG_SCRIPT[]             PROGMEM = R"=====(<script>
 	var ws = null;
+	var pt = null;
 	function ping() {
 		if (!ws) return;
 		if (ws.readyState !== 1) return;
 		ws.send("heartbeat");
-		setTimeout(ping, 3000);
+		pt=setTimeout(ping, 3000);
+	}
+	function msg(m){
+		eb('t1').value+=m;
+		eb('t1').scrollTop=99999;
 	}
 	function wsinit(){
-		ws = new WebSocket("ws://" + location.host + "/wslog", ["log"]);
+		try {
+			var url = "ws://" + location.host + "/wslog";
+			msg('Connecting to ' + url + '\n');
+			ws = new WebSocket(url, ["log"]);
+		} catch(e){
+			msg('Failed to connect\n');
+			setTimeout(function(){ wsinit(); }, 3000);
+			return;
+		}
 		ws.onopen = function(){
-			eb('t1').value+='Connected\n';
-			eb('t1').scrollTop=99999;
-			setInterval(function(){ping();}, 3000);
+			msg('Connected\n');
+			if (pt) clearTimeout(pt);
+			pt=setInterval(function(){ping();}, 3000);
 		}
 		ws.onmessage = function(e){
-			eb('t1').value+=e.data;
-			eb('t1').scrollTop=99999;
+			msg(e.data+'\n');
 		}
 		ws.onclose = function(e){
-			eb('t1').value+='Connection Closed! '+e.reason+'\n\n';
-			eb('t1').scrollTop=99999;
+			msg('WebSocket Connection Closed! '+e.reason+'\n\n');
+			delete ws;
 			setTimeout(function(){ wsinit(); }, 3000);
 		}
 		ws.onerror = function(err) {
-			eb('t1').value+='Error! '+err.message+'\n\n';
-			eb('t1').scrollTop=99999;
-			setTimeout(function(){ wsinit(); }, 3000);
-			ws.close();
+			msg('WebSocket Error! \n\n');
+			//ws.close();
 		}
 	}
 	wsinit();
@@ -89,6 +105,9 @@ public:
 			if (network->getSettingsOld()->getNetworkSettingsVersion()==NETWORKSETTINGS_PRE_FAS114){
 				network->log()->notice(F("Reading WLogSettings PRE_FAS114"));
 				network->getSettingsOld()->setByte(PROP_LOGLEVELBYTE, LOG_LEVEL_WARNING);
+			} else if (network->getSettingsOld()->getApplicationSettingsVersion()==network->getSettingsOld()->getApplicationSettingsCurrent()-1){
+				network->log()->notice(F("Reading WLogSettings FLAG_OPTIONS_APPLICATION -1"));
+				network->getSettingsOld()->setByte(PROP_LOGLEVELBYTE, LOG_LEVEL_WARNING);
 			}
 		}
 
@@ -99,7 +118,9 @@ public:
 		this->logLevelByte->setVisibility(NONE);
     	this->addProperty(logLevelByte);
 		setlogLevelByte(constrain(getlogLevelByte(),LOG_LEVEL_SILENT, LOG_LEVEL_VERBOSE ));
-		this->logLevelWebByte = new WProperty(PROP_LOGLEVELWEBBYTE, NULL, BYTE);
+
+		this->logLevelWebByte = network->getSettings()->setByte(PROP_LOGLEVELWEBBYTE,
+			(network->getSettingsOld() && network->getSettingsOld()->existsSetting(PROP_LOGLEVELWEBBYTE) ? network->getSettingsOld()->getByte(PROP_LOGLEVELWEBBYTE) : LOG_LEVEL_TRACE));
 		setlogLevelWebByte(LOG_LEVEL_TRACE);
 		this->logLevel = new WProperty(PROP_LOGLEVEL, TITL_LOGLEVEL, STRING, 8);
 		this->logLevel->setAtType(PROP_LOGLEVEL);
@@ -123,6 +144,12 @@ public:
 		this->logLevelWeb->addEnumString(LOG_MODE_VERBOSE);
 		this->logLevelWeb->setVisibility(MQTT);
 		this->addProperty(logLevelWeb);
+
+		// some reserved Bytes
+		network->getSettings()->setByte(PROP_LOGRES1, 255);
+		network->getSettings()->setByte(PROP_LOGRES2, 255);
+		network->getSettings()->setByte(PROP_LOGRES3, 255);
+		network->getSettings()->setByte(PROP_LOGRES4, 255);
 
 		// first apply stored Byte value from EEPROM
 		this->setlogLevelMqtt(getlogLevelByte());
@@ -148,7 +175,7 @@ public:
     	page->printf_P(HTTP_CONFIG_PAGE_BEGIN, getId());
     	//ComboBox with model selection
 
-		page->printf_P(HTTP_COMBOBOX_BEGIN, F("MQTT Log Mode (Permanent):"), "lm");
+		page->printf_P(HTTP_COMBOBOX_BEGIN, F("MQTT Log Mode:"), "lm");
 		page->printf_P(HTTP_COMBOBOX_ITEM, "0", (getlogLevelByte() == LOG_LEVEL_SILENT  ? HTTP_SELECTED : ""), F("Logging Disabled"));
 		page->printf_P(HTTP_COMBOBOX_ITEM, "1", (getlogLevelByte() == LOG_LEVEL_FATAL   ? HTTP_SELECTED : ""), F("Fatal Messages"));
 		page->printf_P(HTTP_COMBOBOX_ITEM, "2", (getlogLevelByte() == LOG_LEVEL_ERROR   ? HTTP_SELECTED : ""), F("Error Messages"));
@@ -158,7 +185,7 @@ public:
 		page->printf_P(HTTP_COMBOBOX_ITEM, "6", (getlogLevelByte() == LOG_LEVEL_VERBOSE ? HTTP_SELECTED : ""), F("Verbose Messages"));
 		page->printf_P(HTTP_COMBOBOX_END);
 
-		page->printf_P(HTTP_COMBOBOX_BEGIN, F("Web Log Mode (Is set to Trace at next reboot):"), "lw");
+		page->printf_P(HTTP_COMBOBOX_BEGIN, F("Web Log Mode:"), "lw");
 		page->printf_P(HTTP_COMBOBOX_ITEM, "0", (getlogLevelWebByte() == LOG_LEVEL_SILENT  ? HTTP_SELECTED : ""), F("Logging Disabled"));
 		page->printf_P(HTTP_COMBOBOX_ITEM, "1", (getlogLevelWebByte() == LOG_LEVEL_FATAL   ? HTTP_SELECTED : ""), F("Fatal Messages"));
 		page->printf_P(HTTP_COMBOBOX_ITEM, "2", (getlogLevelWebByte() == LOG_LEVEL_ERROR   ? HTTP_SELECTED : ""), F("Error Messages"));
@@ -169,6 +196,7 @@ public:
 		page->printf_P(HTTP_COMBOBOX_END);
 
     	page->printf_P(HTTP_CONFIG_SAVE_BUTTON);
+		page->printf_P(HTTP_HOME_BUTTON);
     }
     void saveConfigPage(AsyncWebServerRequest *request) {
 		network->log()->notice(F("Log Beca config save lm=%s/%d"), getValueOrEmpty(request, "lm").c_str(), getValueOrEmpty(request, "lm").toInt());
@@ -180,7 +208,7 @@ public:
     }
 
     void loop(unsigned long now) {
-        /* noop */
+		wslog.cleanupClients();
     }
 
     void handleUnknownMqttCallback(String stat_topic, String partialTopic, String payload, unsigned int length) {
@@ -261,12 +289,10 @@ public:
 
 	void sendLog(int level, const char* message) {
 
-		if (level>=getlogLevelWebByte()){
-			for (unsigned int i=1; i<=wslog.count();i++){
-				wslog.client(i)->printf(PSTR("%s: %s\n"), logLevelByteToString(level), message);
-			}
+		if (level<=getlogLevelWebByte()){
+			wslog.printfAll(PSTR("%s: %s"), logLevelByteToString(level), message);
 		}
-		if (level>=getlogLevelByte()){
+		if (level<=getlogLevelByte()){
 			String t = (String)network->getMqttTopic()+ "/" + MQTT_TELE +"/log" ;
 			//network->log()->verbose(F("sendLog (%s)"), t.c_str());
 			if (network->isMqttConnected()){
@@ -278,9 +304,12 @@ public:
 	
 
 	void wsOnEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventType type, void * arg, uint8_t *data, size_t len){
+		if (!client) return;
+		if (client->status()!=WS_CONNECTED) return;
+		if (!client->canSend()) return;
 		if (type == WS_EVT_CONNECT){
 			client->printf(PSTR("Hello WebSocket Client #%u\n"), client->id());
-			client->printf(PSTR("Now you see all logs for logSeverity>=%s\n"), logLevelWeb->c_str());
+			client->printf(PSTR("Now you see all logs for logSeverity %s (or more important)\n"), logLevelWeb->c_str());
 			client->ping();
 		} else if (type == WS_EVT_DATA){
 			AwsFrameInfo * info = (AwsFrameInfo*)arg;

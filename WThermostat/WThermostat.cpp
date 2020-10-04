@@ -34,7 +34,7 @@
 #define SERIALSPEED 9600
 #endif
 
-const byte FLAG_OPTIONS_APPLICATION = 0xF0;
+const byte FLAG_OPTIONS_APPLICATION = 0xF1;
 
 WNetwork *network;
 #ifndef MINIMAL
@@ -73,23 +73,23 @@ void setup() {
 
 
     // networkDevice 
-    network->log()->trace(F("Loading Network (%d)"), ESP.getFreeHeap());
+    network->log()->trace(F("Loading Network (%d)"), ESP.getMaxFreeBlockSize());
     networkDevice = new WNetworkDev(network, APPLICATION);
     network->addDevice(networkDevice);
-    network->log()->trace(F("Loading Network Done (%d)"), ESP.getFreeHeap());
+    network->log()->trace(F("Loading Network Done (%d)"), ESP.getMaxFreeBlockSize());
 
     // KaClock - time sync
-    network->log()->trace(F("Loading Clock (%d)"), ESP.getFreeHeap());
+    network->log()->trace(F("Loading Clock (%d)"), ESP.getMaxFreeBlockSize());
     wClock = new WClock(network, APPLICATION);
     network->addDevice(wClock);
     wClock->setOnTimeUpdate([]() { becaDevice->sendActualTimeToBecaRequested(true); });
     wClock->setOnError([](const char *error) {
         network->log()->error(F("Clock Error: %s"), error);
     });
-    network->log()->trace(F("Loading Clock Done (%d)"), ESP.getFreeHeap());
+    network->log()->trace(F("Loading Clock Done (%d)"), ESP.getMaxFreeBlockSize());
 
     // Communication between ESP and Beca-Mcu
-    network->log()->trace(F("Loading BecaDevice (%d)"), ESP.getFreeHeap());
+    network->log()->trace(F("Loading BecaDevice (%d)"), ESP.getMaxFreeBlockSize());
     becaDevice = new WBecaDevice(network, wClock);
     becaDevice->setMqttSendChangedValues(true);
     network->addDevice(becaDevice);
@@ -105,17 +105,17 @@ void setup() {
         network->setDesiredModeStation();
         return true;
     });
-    network->log()->trace(F("Loading BecaDevice Done (%d)"), ESP.getFreeHeap());
+    network->log()->trace(F("Loading BecaDevice Done (%d)"), ESP.getMaxFreeBlockSize());
 
     // add MQTTLog
-    network->log()->trace(F("Loading LogDevice (%d)"), ESP.getFreeHeap());
+    network->log()->trace(F("Loading LogDevice (%d)"), ESP.getMaxFreeBlockSize());
     logDevice = new WLogDevice(network);
     network->addDevice(logDevice);
-    network->log()->trace(F("Loading LogDevice Done (%d)"), ESP.getFreeHeap());
+    network->log()->trace(F("Loading LogDevice Done (%d)"), ESP.getMaxFreeBlockSize());
 
     if (network->getSettings()->settingsNeedsUpdate()){
         network->deleteSettingsOld();
-        network->log()->trace(F("Writing Config (%d)"), ESP.getFreeHeap());
+        network->log()->trace(F("Writing Config (%d)"), ESP.getMaxFreeBlockSize());
         #ifndef DEBUG
         network->getSettings()->save();
         #else
@@ -128,11 +128,13 @@ void setup() {
         return becaDevice->sendMqttHassAutodiscover(removeDiscovery);
     });
 #endif
-    network->log()->trace(F("Starting Webserver Done (%d)"), ESP.getFreeHeap());
+    network->log()->trace(F("Starting Webserver (%d)"), ESP.getMaxFreeBlockSize());
     network->startWebServer();
-    network->log()->trace(F("Starting Webserver Done (%d)"), ESP.getFreeHeap());
+    network->log()->trace(F("Starting Webserver Done (%d)"), ESP.getMaxFreeBlockSize());
 
+    network->log()->trace(F("Starting initStatic (%d)"), ESP.getMaxFreeBlockSize());
     initStatic();
+    network->log()->trace(F("Starting initStatic Done (%d)"), ESP.getMaxFreeBlockSize());
 
 }
 
