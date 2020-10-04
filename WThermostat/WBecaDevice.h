@@ -1795,12 +1795,9 @@ private:
 			}
 		} else if ((this->currentSchedulePeriod != -1) && (schedulesMode->equalsString(SCHEDULES_MODE_AUTO))) {
 			double temp = (double) schedules[this->currentSchedulePeriod + 2] / getTemperatureFactor();
-			byte weekDay = wClock->getWeekDay();
-			weekDay += getSchedulesDayOffset();
-			weekDay = weekDay % 7;
-			String p = String(weekDay == 0 ? SCHEDULES_DAYS[2] : (weekDay == 6 ? SCHEDULES_DAYS[1] : SCHEDULES_DAYS[0]));
-			p.concat(SCHEDULES_PERIODS[this->currentSchedulePeriod % 6]);
-			network->log()->verbose((String(PSTR("We take temperature from period '%s' (%d), Schedule temperature is "))+String(temp)).c_str() , p.c_str(), this->currentSchedulePeriod);
+			String p = String(currentSchedulePeriod>=36 ? SCHEDULES_DAYS[2] : (currentSchedulePeriod>=18 ? SCHEDULES_DAYS[1] : SCHEDULES_DAYS[0]));
+			p.concat(SCHEDULES_PERIODS[(this->currentSchedulePeriod %18) /3]);
+			network->log()->verbose((String(PSTR("We take temperature from period '%s', Schedule temperature is "))+String(temp)).c_str() , p.c_str());
 			targetTemperature->setDouble(temp);
 		} else {
 			targetTemperature->setDouble(targetTemperatureManualMode);
