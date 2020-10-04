@@ -574,10 +574,10 @@ public:
 					char keyT[4];
 					snprintf(keyH, 4, "%c%ch", *day, *period);
 					snprintf(keyT, 4, "%c%ct", *day, *period);
-					const char * valueH = getValueOrEmpty(request, keyH).c_str();
-					const char * valueT = getValueOrEmpty(request, keyT).c_str();
-					processSchedulesKeyValue(keyH, valueH);
-					processSchedulesKeyValue(keyT, valueT);
+					String valueH = getValueOrEmpty(request, keyH);
+					String valueT = getValueOrEmpty(request, keyT);
+					processSchedulesKeyValue(keyH, valueH.c_str());
+					processSchedulesKeyValue(keyT, valueT.c_str());
 				}
 			}
 			if (schedulesChanged) {
@@ -1799,8 +1799,8 @@ private:
 			weekDay += getSchedulesDayOffset();
 			weekDay = weekDay % 7;
 			String p = String(weekDay == 0 ? SCHEDULES_DAYS[2] : (weekDay == 6 ? SCHEDULES_DAYS[1] : SCHEDULES_DAYS[0]));
-			p.concat(SCHEDULES_PERIODS[this->currentSchedulePeriod]);
-			network->log()->trace((String(PSTR("We take temperature from period '%s', Schedule temperature is "))+String(temp)).c_str() , p.c_str());
+			p.concat(SCHEDULES_PERIODS[this->currentSchedulePeriod % 6]);
+			network->log()->verbose((String(PSTR("We take temperature from period '%s' (%d), Schedule temperature is "))+String(temp)).c_str() , p.c_str(), this->currentSchedulePeriod);
 			targetTemperature->setDouble(temp);
 		} else {
 			targetTemperature->setDouble(targetTemperatureManualMode);
@@ -1860,11 +1860,11 @@ private:
 				network->log()->trace((String(PSTR("onChangeTargetTemperature, temp: "))+String(targetTemperatureManualMode)).c_str());
 				targetTemperatureManualModeToMcu();
 				schedulesMode->setString(SCHEDULES_MODE_OFF);
-				updateRelaySimulation();
 			} else {
 				network->log()->trace((String(PSTR("setTargetTemperatureNoChange, temp: "))+String(this->targetTemperature->getDouble())).c_str());
 			}
 		}
+		updateRelaySimulation();
     }
 
     void targetTemperatureManualModeToMcu() {
