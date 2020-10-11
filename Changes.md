@@ -1,23 +1,28 @@
 # Changelog
 
-## Version 1.16-fas (BETA)
+## Version 1.16-fas
 
-* ecoMode temperature Fixed to 20 degrees (not changeable in MCU) #32
-* WebThings autodiscovery fix
-* IceBucketChallenge: Support for negative temperatures
-* Apple Captive Portal support
-* WiFi RSS Value property (/things/network/properties/rssi) #24
-* Case Insensitive true/false (HomeAssistant Uses "True" if boolean values are enabled) #32
-* Now thermostat and clock are also showing their information on Info-page
-* Real Support for BAC-002 on Home-Assistant
-  * HASS Climate Autodiscovery BAC-002
+* NewFeature: RelayStateCalculation - shows current state of heating/cooling
+* NewFeature: WLAN Signal Level (RSSI) visible (MQTT, Info-Page, HASS)
+* NewFeature: Full Support for BAC-002 with Home-Assistant autodiscovery
+* HASS Climate Autodiscovery BAC-002
   * removed 'auto' from Read/Write-Property ``mode`` (not supported by device). Valid Modes: ``["heat","cool","fan_only","off"]``
   * Read/Write-Property ``holdState`` with possible values ``["scheduler", "manual", "away"]`` - switches between Scheduler, Manual and Eco-Mode
   * Fixed fanMode behaviour (auto-mode now working, setting fan does not switches to fan_only)
   * Fixed manual configuration snippet in README.md
-* Typos
-* Gitpd support (<https://github.com/fashberg/WThermostatBeca#cloud-development-using-gitpod>)
-* Travis CI support (<https://travis-ci.org/github/fashberg/WThermostatBeca>)
+* NewFeature: Live WebLog in Browser (WebSockets)
+* NewFeature: Workaround for imprecise clock on LCD
+* NewFeature: All Information on Info-Page
+* Develpment: Gitpd support (<https://github.com/fashberg/WThermostatBeca#cloud-development-using-gitpod>)
+* Develpment: Travis CI support (<https://travis-ci.org/github/fashberg/WThermostatBeca>)
+* Develpment: platformio_override.ini documentation and sample
+* Small Fixes/Enhancements
+  * ecoMode temperature Fixed to 20 degrees (not changeable in MCU) #32
+  * WebThings autodiscovery fix
+  * IceBucketChallenge: Support for negative temperatures
+  * Apple Captive Portal support
+  * Case Insensitive true/false (HomeAssistant Uses "True" if boolean values are enabled) #32
+  * Typos
 
 ## Version 1.15-fas
 

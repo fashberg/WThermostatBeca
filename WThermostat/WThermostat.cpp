@@ -7,7 +7,7 @@
 #include "WLogDevice.h"
 #include "../lib/WAdapter/WAdapter/WNetworkDevice.h"
 #endif
-#define APPLICATION "Thermostat"
+#define APPLICATION "WThermostat"
 #ifndef VERSION
 #define VERSION "undefined" // gets defined in commandline
 #endif
