@@ -34,7 +34,9 @@ class MLStripper(HTMLParser):
       return self.text.getvalue()
 
 def upload(host, filename):
-
+  print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
+  print("UPLOADING {} to {}".format(filename, host))
+  print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
   url = 'http://%s/firmware' % (host)
   c = pycurl.Curl()
   c.setopt(c.URL, url)

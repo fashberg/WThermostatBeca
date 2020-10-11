@@ -56,14 +56,14 @@ Steps are in general:
 
 * Open the webpage of the thermostat in your favorite browser `http://<device_ip>/`
 
-## 3. Configure thermostat device (model selection)
+## 3. Configure thermostat device
 
 * Go to 'Configure device'
 * Choose your thermostat **model**
 * Choose, if heating or cooling **relay monitor hardware hack** should be enabled. Hardware modification necessary to work, see <https://github.com/klausahrenberg/WThermostatBeca/issues/17#issuecomment-552078026>
 * **Relay State Calculation**: The WiFi-Module does not know without the Hardware Hack if the Realy is Opened or Closed.
-   But we can calculate the state, based on the measured temperaturs.
-   Set this paramter to the same value which is confired at thermostat settings (BHT-002: Option Code 2). Value is between 1 and 5 degree Celsius, factory default is 1.
+   But we can calculate the state, based on the measured temperature.
+   Set this paramter to the same Deadzone/Deadband-Temperature value which is confired at thermostat settings (BHT-002: Option Code 2, BAC-002: Option Code C). Value is between 1 and 5 degree Celsius, factory default is 1.
    Does not apply if state of Relay is configured to Hardware-Hack.
 setting to calculate the state of the Heating Relay
 * Choose if **floor sensor** values should be reported (enable if you have floor sensor connected and are running in 'AL'-Mode). See also next section

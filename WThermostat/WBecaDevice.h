@@ -387,7 +387,7 @@ public:
     	this->targetTemperature = new WTargetTemperatureProperty(PROP_TARGETTEMPERATURE, TITL_TARGETTEMPERATURE);//, 12.0, 28.0);
     	this->targetTemperature->setMultipleOf(getTemperaturePrecision());
     	this->targetTemperature->setOnChange(std::bind(&WBecaDevice::onChangeTargetTemperature, this, std::placeholders::_1));
-    	this->targetTemperature->setOnValueRequest([this](WProperty* p) {updateTargetTemperature();});
+    	//this->targetTemperature->setOnValueRequest([this](WProperty* p) {updateTargetTemperature();});
 		this->targetTemperature->setMqttSendChangedValues(true);
     	this->addProperty(targetTemperature);
 		network->log()->trace(F("Beca settings targetTemperature done (%d)"), ESP.getMaxFreeBlockSize());
@@ -553,8 +553,8 @@ public:
 					char keyT[4];
 					snprintf(keyH, 4, "%c%ch", *day, *period);
 					snprintf(keyT, 4, "%c%ct", *day, *period);
-					this->network->log()->verbose(PSTR("Period %s / %s"), keyH, keyT);
-					page->printf(HTTP_CONFIG_SCHTAB_TD, 
+					//this->network->log()->verbose(PSTR("Period %s / %s"), keyH, keyT);
+					page->printf(HTTP_CONFIG_SCHTAB_TD,
 					*day, *period, this->getSchedulesValue(keyH).c_str(),
 					*day, *period, this->getSchedulesValue(keyT).c_str());
 				}
@@ -642,7 +642,7 @@ public:
 		page->printf_P(HTTP_COMBOBOX_END);
 
 		// Calculated Heating 
-		page->printf_P(HTTP_TEXT_FIELD_INTEGER, F("Relay State Calculation: DeadzoneTemperature"), "dz", 1, 1);
+		page->printf_P(HTTP_TEXT_FIELD_INTEGER, F("Relay State Calculation: Deadzone/Deadband-Temperature (set here same the same value as configured at Thermostat-Setup)"), "dz", 1, 1);
 
 		// FloorSensor 
 		page->printf_P(HTTP_CHECKBOX_OPTION, F("Floor Sensor enabled"),
@@ -1022,16 +1022,16 @@ public:
 			dtostrf(val, 4, 1, str_temp);
 			snprintf(buf, size-1, "%s", str_temp );
 		}
-		network->log()->verbose(PSTR("getSch %s->%s"), key, buf);
+		//network->log()->verbose(PSTR("getSch %s->%s"), key, buf);
 		return String(buf);
 	}
     void processSchedulesKeyValue(const char* key, const char* value) {
-		network->log()->verbose(PSTR("Process key '%s', value '%s'"), key, value);
+		//network->log()->verbose(PSTR("Process key '%s', value '%s'"), key, value);
 		byte period;
 		byte startAddr;
 		if ((period = getSchedulesPeriod(key))<0) return;
 		if ((startAddr = getSchedulesStartAddress(key, period))<0) return;
-		network->log()->verbose(PSTR("Process period: %d, startAddr: %d"), period, startAddr);
+		//network->log()->verbose(PSTR("Process period: %d, startAddr: %d"), period, startAddr);
 		if (key[2] == 'h') {
 			//hour
 			String timeStr = String(value);
@@ -1124,6 +1124,9 @@ public:
     		commandCharsToSerial(64, scheduleCommand);
     		//notify change
     		this->notifySchedules();
+			updateCurrentSchedulePeriod();
+			updateTargetTemperature();
+			updateModeAndAction();
     	}
     }
 
@@ -1198,6 +1201,7 @@ public:
     			unsigned char deviceOnCommand[] = { 0x55, 0xAA, 0x00, 0x06, 0x00, 0x05,
     												0x66, 0x04, 0x00, 0x01, dt};
     			commandCharsToSerial(11, deviceOnCommand);
+				updateTargetTemperature();
     		}
     	}
     }
@@ -1259,6 +1263,8 @@ public:
 				mcuInitialized=true;
 				this->mcuInitializeState=0;
 				network->log()->notice(F("mcuInitialized"));
+				updateTargetTemperature();
+				updateModeAndAction();
 				break;
 
 			}
@@ -1649,6 +1655,11 @@ private:
 									schedules[i] = newByte;
 								}
 								logIncomingCommand(this->thermostatModel == MODEL_BHT_002_GBLW ? "schedules_x65" : "schedules_x68", (newChanged ? LOG_LEVEL_TRACE : LOG_LEVEL_VERBOSE));
+								if (schedulesChanged){
+									updateCurrentSchedulePeriod();
+									updateTargetTemperature();
+									updateModeAndAction();
+								}
 								knownCommand = true;
 							} else if (receivedCommand[5] == 0x05) {
 								//Unknown permanently sent from MCU
@@ -1784,21 +1795,29 @@ private:
        		//notifyState();
      	}
     }
-
+	/* gets called:
+	 * If MCU sends changed manualTemperature
+	 * If MCU sends mode Change
+	 * If Scheduler Period Changed
+	 */
     void updateTargetTemperature() {
 		if (ecoMode->getBoolean()) {
+			targetTemperature->setSuppressOnChange();
 			if (getThermostatModel() == MODEL_BAC_002_ALW &&
 			 (this->systemMode->equalsString(SYSTEM_MODE_COOL) || this->systemMode->equalsString(SYSTEM_MODE_FAN))){
 				targetTemperature->setDouble(ECOMODETEMP_COOL);
 			} else {
 				targetTemperature->setDouble(ECOMODETEMP);
 			}
+			updateRelaySimulation();
 		} else if ((this->currentSchedulePeriod != -1) && (schedulesMode->equalsString(SCHEDULES_MODE_AUTO))) {
 			double temp = (double) schedules[this->currentSchedulePeriod + 2] / getTemperatureFactor();
 			String p = String(currentSchedulePeriod>=36 ? SCHEDULES_DAYS[2] : (currentSchedulePeriod>=18 ? SCHEDULES_DAYS[1] : SCHEDULES_DAYS[0]));
 			p.concat(SCHEDULES_PERIODS[(this->currentSchedulePeriod %18) /3]);
-			network->log()->verbose((String(PSTR("We take temperature from period '%s', Schedule temperature is "))+String(temp)).c_str() , p.c_str());
+			network->log()->notice((String(PSTR("We take temperature from period '%s', Schedule temperature is "))+String(temp)).c_str() , p.c_str());
+			targetTemperature->setSuppressOnChange();
 			targetTemperature->setDouble(temp);
+			updateRelaySimulation();
 		} else {
 			targetTemperature->setDouble(targetTemperatureManualMode);
 		}
@@ -1841,15 +1860,20 @@ private:
 				this->schedulesMode->setString(SCHEDULES_MODE_AUTO);
 			}
 			if (this->currentSchedulePeriod!=newPeriod){
+				this->currentSchedulePeriod = newPeriod;
+				network->log()->notice(PSTR("SchedulePeriod Changed"));
 				updateTargetTemperature();
 			}
-			this->currentSchedulePeriod = newPeriod;
     	} else {
 			this->currentSchedulePeriod = -1;
     	}
     }
 
     void onChangeTargetTemperature(WProperty* property) {
+		if (schedulesMode->equalsString(SCHEDULES_MODE_AUTO)){
+			network->log()->trace(PSTR("Got new targetTemperature: Switching from Schdule to Manual"));
+			schedulesMode->setString(SCHEDULES_MODE_OFF);
+		}
 		if (schedulesMode->equalsString(SCHEDULES_MODE_OFF)){
 			// only set targetTemperatureManualMode and targetTemperatureManualModeToMcu() if current mode is Manual
 			if (!WProperty::isEqual(targetTemperatureManualMode, this->targetTemperature->getDouble(), 0.01)) {
