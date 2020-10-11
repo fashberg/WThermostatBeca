@@ -34,11 +34,10 @@ Also also sold through Moes or Qiumi.
 
 * No Cloud dependencies!
 * Enables thermostat to communicate via MQTT and/or Mozilla WebThings
-* Autodiscovery for Home Assistant via MQTT _(fas)_
 * Autodiscovery for WebThings via mDNS
 * Configuration of connection, device parameters and schedules via web interface
-* Provides NTP, time zone handling and Daylight-Saving-Calculation _(fas)_ to set the clock of thermostat
-* Provides Fallback to Access Point mode if requested using panel-buttons _(fas)_
+* Provides NTP, time zone handling and Daylight-Saving-Calculation to set the clock of thermostat
+* Provides Fallback to Access Point mode if requested using panel-buttons
 * Reading and setting of all parameters via MQTT
 * Reading and setting of main parameters via WebThings
 * Only BHT-002-GxLW: actualFloorTemperature (external temperature sensor)
@@ -46,7 +45,20 @@ Also also sold through Moes or Qiumi.
 * Reading and setting of time schedules via MQTT
 * Reading and setting of Schedules via Web-GUI
 * Automatic switching back to temperature-scheduling from manual mode next schedule interval (optional)
-* Logging to MQTT _(fas)_
+* **FAS-Fork enhancements**
+  * RelayStateCalculation - shows current state of heating/cooling - without soldering _(fas)_
+  * Autodiscovery for Home Assistant via MQTT _(fas)_
+  * Logging to MQTT _(fas)_
+  * Logging to WebBrowser using Websockets _(fas)_
+  * Captive Portal support for setup _(fas)_
+  * show password in cleartext for setup _(fas)_
+  * TimeBug Workaround (precicion fixed to 1 sec) _(fas)_
+  * All State Information at status page _(fas)_
+  * GitPod-Support _(fas)_
+  * PlatformIO Direct OTA-Upload to device _(fas)_
+  * Eco-Mode fixed to 20 degrees _(fas)_
+  * RSSI Information (Info-Page, MQTT and Home-Assistant Support) _(fas)_
+  * More detailed Documentation _(fas)_
 
 _(fas)_: Only available in -fas version
 
@@ -72,18 +84,6 @@ The BHT-002-GA/GB/GC versions only differs in relays-wiring.
   * One Relay - potential free (dry contact)
   * Relay on PIN 1 - PIN 2 (dry contacts)
   * Product Spec says Max Power: 3 A
-
-### External Temperature Sensor
-
-You can connect one external NTC temperature sensor (type 10K, 3950) to BHT-002 thermostats, for GB-Model it's included.
-In settings menu of MCU (option 4) you can switch between internal (IN), external (OU) and All (AL). See [BHT-002-Manual.pdf](./docs/BHT-002-Manual-long.pdf).
-
-* IN-Mode: MCU reports only temperature of internal sensor and uses it for thermostat room-temperature. Value "floorTemperature" shows 0.00, or last measured value of OU- or AL-Mode (even after restart or re-powering).
-* OU-Mode: MCU reports only temperature of external sensor and uses it for thermostat room-temperature. WThermostat Values "temperature" and "floorTemperature" are the same (external sensor).
-* AL-Mode: MCU reports both temperatures, uses internal sensor for room-temperature and external sensor for maximum floor temperature overheating protection. Values "temperature" and "floorTemperature" are both valid.
-  * It's not possible to change MCU behavior to other modes, e.g. using external temperature sensor to control relays and only display value of internal sensor is not possible.
-  * See [Issue #27](https://github.com/fashberg/WThermostatBeca/issues/27) with Workaround by @IanAdd with Home Assistant controlled Heating/Idle state depending on floorTemperature
-  * Hint: Long pressing the rightest button for 5 seconds (while device switched on) the displays shows external temperature.
 
 ### Hardware Installation
 
@@ -147,16 +147,9 @@ Schedule Screen:
 
 ![setup_schedules](docs/images/Setup_Schedules.png)  
 
-## Integration in WebThings
+Live WebLog Screen:
 
-Since version 0.96 this firmware supports Mozilla WebThings directly. With webthings you can control the thermostat via the Gateway - inside and also outside of your home network. No clunky VPN, dynDNS solutions needed to access your home devices. I recommend to run the gateway in parallel to an MQTT server and for example Node-Red. Via MQTT you can control the thermostat completely and logic can be done by Node-Red. WebThings is used for outside control of main parameters.  
-Add the device to the gateway via '+' icon. After that you have the new nice and shiny icon in the dashboard:  
-![webthing_icon](docs/images/Webthing_Icon.png)  
-The icon shows the actual temperature and heating state.
-
-There is also a detailed view available:
-
-![webthing](docs/images/Webthing_Complete.png)  
+![weblog_screen](docs/images/weblog.png)  
 
 ## Integration in Home Assistant
 
@@ -332,6 +325,17 @@ climate:
 ```
 
 See <https://www.home-assistant.io/integrations/climate.mqtt/> for more information.
+
+## Integration in WebThings
+
+Since version 0.96 this firmware supports Mozilla WebThings directly. With webthings you can control the thermostat via the Gateway - inside and also outside of your home network. No clunky VPN, dynDNS solutions needed to access your home devices. I recommend to run the gateway in parallel to an MQTT server and for example Node-Red. Via MQTT you can control the thermostat completely and logic can be done by Node-Red. WebThings is used for outside control of main parameters.  
+Add the device to the gateway via '+' icon. After that you have the new nice and shiny icon in the dashboard:  
+![webthing_icon](docs/images/Webthing_Icon.png)  
+The icon shows the actual temperature and heating state.
+
+There is also a detailed view available:
+
+![webthing](docs/images/Webthing_Complete.png)  
 
 ## Device-Functions
 
@@ -529,7 +533,7 @@ git submodule update
 * Click Build
   * Binary Firmware can be found in build_output\firmware\wthermostat-1.xx-fas.bin (or -debug or -minimal)
 
-All dependant arduino-libraries (DNSServer, EEPROM (for esp8266), ESP8266HTTPClient, ESP8266mDNS, ESP8266WebServer, ESP8266WiFi, Hash, NTPClient, Time.) will be downloaded automatically (defined in platform.ini) and the necessary WAdapter library from <https://github.com/fashberg/WAdapter> (git submodule).
+All dependant arduino-libraries (DNSServer, EEPROM (for esp8266), ESP8266HTTPClient, ESP8266mDNS, AsyncWebServer, ESP8266WiFi, Hash, NTPClient, Time.) will be downloaded automatically (defined in platform.ini) and the necessary WAdapter library from <https://github.com/fashberg/WAdapter> (git submodule).
 
 ### Cloud Development using Gitpod
 
