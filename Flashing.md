@@ -74,7 +74,7 @@ Following connections were working for me (refer to ESP-12E pinout):
 - Black: ESP-GND and ESP-GPIO15 connected to Programmer-GND
 - Green: ESP-RX connected to Programmer-TX
 - Yellow: ESP-TX connected to Programmer-RX
-- Blue right: ESP-GPIO0, must be connected with GND during power up
+- Blue right: ESP-GPIO0, must be connected with GND during power up to set device into programming mode
 - Blue left: ESP-Reset, connect to GND to restart the ESP or connect to Programmer-RTS, Programmer can reset then automatically.
 
 ![Flashing connection](docs/images/Flashing_Tywe3S_Detail.jpg)
