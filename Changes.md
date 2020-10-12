@@ -1,5 +1,10 @@
 # Changelog
 
+## Version 1.17-fas
+
+* Fix Relay State Calculation #26 - thanks IATkachenko
+* Fix reported targetTemperature for Schdule Mode #50
+
 ## Version 1.16-fas
 
 * NewFeature: RelayStateCalculation - shows current state of heating/cooling

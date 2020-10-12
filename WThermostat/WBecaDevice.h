@@ -1201,6 +1201,7 @@ public:
     			unsigned char deviceOnCommand[] = { 0x55, 0xAA, 0x00, 0x06, 0x00, 0x05,
     												0x66, 0x04, 0x00, 0x01, dt};
     			commandCharsToSerial(11, deviceOnCommand);
+				updateCurrentSchedulePeriod();
 				updateTargetTemperature();
     		}
     	}
@@ -1604,11 +1605,12 @@ private:
 							if (commandLength == 0x05) {
 								//manualMode?
 								newB = (receivedCommand[10] == 0x01);
-								changed = ((changed) || (newChanged=((newB && !schedulesMode->equalsString(SCHEDULES_MODE_OFF)) || (!newB && !schedulesMode->equalsString(SCHEDULES_MODE_AUTO)))));
+								changed = (changed || (newChanged=((!newB && schedulesMode->equalsString(SCHEDULES_MODE_OFF)) || (newB && schedulesMode->equalsString(SCHEDULES_MODE_AUTO)))));
 								schedulesMode->setString(newB ? SCHEDULES_MODE_OFF : SCHEDULES_MODE_AUTO);
 								if (newChanged){
 									network->log()->trace("Manual Mode newChanged to %s", (newB ? "on" : "off"));
 									holdFromScheduler();
+									updateCurrentSchedulePeriod();
 									updateTargetTemperature();
 									updateModeAndAction();
 								}
@@ -1870,13 +1872,17 @@ private:
     }
 
     void onChangeTargetTemperature(WProperty* property) {
+		network->log()->trace(PSTR("Got new targetTemperature"));
+		bool force=false;
 		if (schedulesMode->equalsString(SCHEDULES_MODE_AUTO)){
 			network->log()->trace(PSTR("Got new targetTemperature: Switching from Schdule to Manual"));
+			schedulesMode->setSuppressOnChange();
 			schedulesMode->setString(SCHEDULES_MODE_OFF);
+			force=true;
 		}
 		if (schedulesMode->equalsString(SCHEDULES_MODE_OFF)){
 			// only set targetTemperatureManualMode and targetTemperatureManualModeToMcu() if current mode is Manual
-			if (!WProperty::isEqual(targetTemperatureManualMode, this->targetTemperature->getDouble(), 0.01)) {
+			if (force || !WProperty::isEqual(targetTemperatureManualMode, this->targetTemperature->getDouble(), 0.01)) {
 				targetTemperatureManualMode = this->targetTemperature->getDouble();
 				network->log()->trace((String(PSTR("onChangeTargetTemperature, temp: "))+String(targetTemperatureManualMode)).c_str());
 				targetTemperatureManualModeToMcu();
@@ -1933,7 +1939,8 @@ private:
 				network->log()->notice(F("RelaySimulation: State OFF"));
 				this->state->setString(STATE_OFF);
 				updateModeAndAction();
-			} else if ((actual < oldActualTemperature || target>oldTargetTemperature) && actual <= (target - dz)){
+			//} else if ((actual < oldActualTemperature || target>oldTargetTemperature) && actual <= (target - dz)){
+			} else if ((actual > oldActualTemperature && actual < target ) || ( target > oldTargetTemperature && actual <= (target - dz) ) ){
 				this->state->setString(STATE_HEATING);
 				network->log()->notice(F("RelaySimulation: State HEATING"));
 				updateModeAndAction();
@@ -1946,7 +1953,9 @@ private:
 				network->log()->notice(F("RelaySimulation: State OFF"));
 				this->state->setString(STATE_OFF);
 				updateModeAndAction();
-			} else if ((actual > oldActualTemperature || target<oldTargetTemperature) && actual >= (target + dz)){
+			//} else if ((actual > oldActualTemperature || target<oldTargetTemperature) && actual >= (target + dz)){
+			} else if ((actual < oldActualTemperature && actual > target ) || ( target < oldTargetTemperature && actual >= (target + dz) ) ){
+		
 				if (this->systemMode->equalsString(SYSTEM_MODE_FAN)){
 					this->state->setString(STATE_FAN);
 					network->log()->notice(F("RelaySimulation: State FAN"));
@@ -1963,6 +1972,7 @@ private:
 
     void schedulesModeToMcu(WProperty* property) {
     	if (!this->receivingDataFromMcu) {
+			network->log()->trace(F("schedulesModeToMcu %s"), property->c_str());
         	//55 AA 00 06 00 05 04 04 00 01 01
         	byte dt = (schedulesMode->equalsString(SCHEDULES_MODE_OFF) ? 0x01 : 0x00);
         	unsigned char deviceOnCommand[] = { 0x55, 0xAA, 0x00, 0x06, 0x00, 0x05,
@@ -1975,6 +1985,9 @@ private:
 				this->schedulesMode->setString(SCHEDULES_MODE_AUTO);
 			}
 			holdStateRequest(property);
+			updateCurrentSchedulePeriod();
+			updateTargetTemperature();
+			updateModeAndAction();
         }
     }
 
