@@ -8,7 +8,7 @@
 
 Fork of <https://github.com/klausahrenberg/WThermostatBeca> with some new features.
 
-Replaces original Tuya firmware on Beca thermostat with ESP8266 WiFi module.
+Replaces original Tuya firmware on Beca/Moes/Qiumi thermostat with ESP8266 WiFi module.
 
 ## Supported Devices
 
@@ -25,8 +25,6 @@ The firmware has been tested or reported to work with following devices:
   * also known as BTH-3000L-ABLW, BTH-3000L-GBLW, BTH-3000L-GCLW
 * BAC-1000-ALW WiFi Thermostat for Conditioning (heating, cooling, ventilation)
   * also known as BAC-002-ALW
-
-Also also sold through Moes or Qiumi.
 
 ![homeassistant](docs/images/bac-002-wifi.jpg)
 
