@@ -1,5 +1,9 @@
 # Changelog
 
+## Version 1.18.beta1-fas
+
+* Fixed Relay State Calculation #26 again
+
 ## Version 1.17-fas
 
 * Fix Relay State Calculation #26 - thanks IATkachenko

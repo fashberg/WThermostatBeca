@@ -1939,8 +1939,7 @@ private:
 				network->log()->notice(F("RelaySimulation: State OFF"));
 				this->state->setString(STATE_OFF);
 				updateModeAndAction();
-			//} else if ((actual < oldActualTemperature || target>oldTargetTemperature) && actual <= (target - dz)){
-			} else if ((actual > oldActualTemperature && actual < target ) || ( target > oldTargetTemperature && actual <= (target - dz) ) ){
+			} else if ((actual != oldActualTemperature || target!=oldTargetTemperature) && actual <= (target - dz)){
 				this->state->setString(STATE_HEATING);
 				network->log()->notice(F("RelaySimulation: State HEATING"));
 				updateModeAndAction();
@@ -1953,8 +1952,7 @@ private:
 				network->log()->notice(F("RelaySimulation: State OFF"));
 				this->state->setString(STATE_OFF);
 				updateModeAndAction();
-			//} else if ((actual > oldActualTemperature || target<oldTargetTemperature) && actual >= (target + dz)){
-			} else if ((actual < oldActualTemperature && actual > target ) || ( target < oldTargetTemperature && actual >= (target + dz) ) ){
+			} else if ((actual != oldActualTemperature || target != oldTargetTemperature) && actual >= (target + dz)){
 		
 				if (this->systemMode->equalsString(SYSTEM_MODE_FAN)){
 					this->state->setString(STATE_FAN);
