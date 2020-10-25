@@ -23,27 +23,45 @@ Pre-Built binaries can be downloaded at [releases-page](https://github.com/fashb
 
 ### NOTE
 
-:warning: If you get the message below while using tuya-convert you probably have a newer tuya firmware installed which protects your devices from getting upgraded over the air with non-tuya-servers. In this case you have to use Option 2 (opening and then  soldering or using the pogo-adapter).
+:warning: **Nearly all devices are now shipped with a new Firmware which cannot be upgraded Over The Air with non-tuya-servers.**
+ In this case you have to use Option 2 (opening and then soldering or using the pogo-adapter).
+
+If you start tuya-convert procedure and the WiFi Icon on the device starts blinking very fast while talking to your tuya-convert, then it seems you have to new Firmware. You will see no error in the console, but you will get this messages in your logfile:
+
+**Logfile: tuya-convert/scripts/smarthack-psk.log**
 
 ```log
 could not establish sslpsk socket: [SSL: DECRYPTION_FAILED_OR_BAD_RECORD_MAC] de
 cryption failed or bad record mac (_ssl.c:1056)
 ```
 
-Links:
+Links Regarting new Tuya-Firmware:
 
 - <https://github.com/ct-Open-Source/tuya-convert/wiki/Collaboration-document-for-PSK-Identity-02>
 - <https://github.com/klausahrenberg/WThermostatBeca/issues/114#issuecomment-691165619>
 
 ---
 
+### Tuya Convert - only for devices with old Tuya-Firmware
+
 This method does not require any kind of soldering or disassembly of the device.
 You should be able to flash (maybe only older) Beca Thermostats (BHT-002 and BHT-6000 also) with [tuya-convert](https://github.com/ct-Open-Source/tuya-convert).
 
 You need Linux and a supported WiFi-Device which can be set to WiFi-Access-Point-Mode to run tuya-convert. Also Ubuntu running from USB stick works fine, or using a Raspberry works also great, but you need LAN, a 2nd WiFi or a Local-HDMI-Console to access the RasPi (because WiFi is used exclusively by tuya-convert).
 
-Follow the steps [here](https://github.com/ct-Open-Source/tuya-convert#procedure) to upload the firmware to your thermostat.  
-Download the wthermostat-1.xx-fas.bin binary from <https://github.com/fashberg/WThermostatBeca/releases> and place it in the ```/files/``` folder before starting the flash procedure.
+Steps to flash device running pre 2020 tuya-firmware using tuya-convert:
+
+1. Prepare Tuya-Convert, see <https://github.com/ct-Open-Source/tuya-convert#procedure>
+
+2. Download the wthermostat-1.xx-fas.bin binary from <https://github.com/fashberg/WThermostatBeca/releases> and place it in the ```/files/``` folder before starting the flash procedure.
+
+3. Connect device to 230 Volt
+
+4. Press Power Off Button (middle button)
+
+5. Press and Hold most right key until WiFi Icon starts to blink
+
+6. Device is now in tuya-update mode - start now ``sudo ./start_flash.sh``
 
 Video of this procedure: <https://youtu.be/fqfghJqnK_8>
 
