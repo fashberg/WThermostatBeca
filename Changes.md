@@ -1,8 +1,9 @@
 # Changelog
 
-## Version 1.18.beta1-fas
+## Version 1.18-fas
 
 * Fixed Relay State Calculation #26 again
+* Daylight Saving Bug #62 fixed
 
 ## Version 1.17-fas
 

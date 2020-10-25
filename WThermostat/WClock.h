@@ -20,6 +20,12 @@
 #include "../lib/WAdapter/WAdapter/WNetwork.h"
 #include "Arduino.h"
 
+//#define NTPTESTSTART 1585555170 // Full Hour Test
+//#define NTPTESTSTART (1585447200 - 70 - (1*60*60)) // DST Test Berlin
+//#define NTPTESTSTART (1603594800 - 70 - (2*60*60)) // STD Test Berlin
+//#define NTPTESTSTART (1586055600 - 70 - (11*60*60)) // STD Test Sydney
+//#define NTPTESTSTART (1601776800 - 70 - (10*60*60)) // DST Test Sydney
+
 const static char* DEFAULT_NTP_SERVER PROGMEM = "pool.ntp.org";
 const static char* DEFAULT_TIME_ZONE PROGMEM = "99";
 const static char* DEFAULT_TIME_DST PROGMEM = "0,3,0,2,120";
@@ -219,8 +225,9 @@ class WClock : public WDevice {
                 network->logHeap(PSTR("NTP GotTime"));
                 uint32_t oldutc = getEpochTime();
                 ntpTime = ntpClient.getEpochTime();
-                //ntpTime = 1603587544; // DST-Test
-                //ntpTime = 1585555170; // Full Hour Test
+                #ifdef NTPTESTSTART
+                ntpTime = NTPTESTSTART + (millis()/1000);
+                #endif
                 if (ntpTime > START_VALID_TIME) {
                     if (validTime->getBoolean()){
                         // don't save first diff
@@ -267,8 +274,11 @@ class WClock : public WDevice {
                 } else {
                     int32_t dstoffset = this->timeRuleDst.offset * SECS_PER_MIN;
                     int32_t stdoffset = this->timeRuleStd.offset * SECS_PER_MIN;
-                    if (Rtc.standard_time > Rtc.daylight_saving_time) { 
+                    
+                    if (Rtc.standard_time < Rtc.daylight_saving_time) { 
                         // Southern hemisphere
+                        network->log()->trace(F("This year switch to DST/STD: %d / %d (Southern)"),
+                        Rtc.daylight_saving_time, Rtc.standard_time);
                         if ((Rtc.utc_time >= (Rtc.standard_time - dstoffset)) && (Rtc.utc_time < (Rtc.daylight_saving_time - stdoffset))) {
                             newTz = stdoffset;  // Standard Time
                         } else {
@@ -276,6 +286,8 @@ class WClock : public WDevice {
                         }
                     } else {
                         // Northern hemisphere
+                        network->log()->trace(F("This year switch to DST/STD: %d / %d (Northern)"),
+                        Rtc.standard_time, Rtc.daylight_saving_time);
                         if ((Rtc.utc_time >= (Rtc.daylight_saving_time - stdoffset)) && (Rtc.utc_time < (Rtc.standard_time - dstoffset))) {
                             newTz = dstoffset;  // Daylight Saving Time
                         } else {
@@ -323,10 +335,16 @@ class WClock : public WDevice {
     }
 
     unsigned long getEpochTime() {
+        #ifdef NTPTESTSTART
+        return NTPTESTSTART + (millis()/1000);
+        #endif
         return (lastNtpSync > 0 ? ntpClient.getEpochTime() : 0);
     }
 
     unsigned long getEpochTimeLocal() {
+        #ifdef NTPTESTSTART
+        return (lastNtpSync > 0 ? NTPTESTSTART + (millis()/1000) + getOffset() : 0);
+        #endif
         return (lastNtpSync > 0 ? ntpClient.getEpochTime() + getOffset() : 0);
     }
 
