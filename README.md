@@ -96,6 +96,9 @@ Pre-built binaries can be downloaded at [releases-page](https://github.com/fashb
 
 ## Software Installation
 
+:warning: **Nearly all devices are now shipped with a new Firmware which cannot be upgraded Over The Air with non-tuya-servers.**
+ In this case you cannot longer use tuya-convert and you have to open the device for soldering or use a 3d-printed pogo-adapter.
+
 You can install the firmware either
 
 * by using tuya-convert - no Hardware Modifications necessary

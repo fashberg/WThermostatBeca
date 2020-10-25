@@ -28,7 +28,7 @@ Pre-Built binaries can be downloaded at [releases-page](https://github.com/fashb
 
 If you start tuya-convert procedure and the WiFi Icon on the device starts blinking very fast while talking to your tuya-convert, then it seems you have to new Firmware. You will see no error in the console, but you will get this messages in your logfile:
 
-**Logfile: tuya-convert/scripts/smarthack-psk.log**
+#### Logfile: tuya-convert/scripts/smarthack-psk.log
 
 ```log
 could not establish sslpsk socket: [SSL: DECRYPTION_FAILED_OR_BAD_RECORD_MAC] de
