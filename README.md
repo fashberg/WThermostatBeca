@@ -62,7 +62,7 @@ _(fas)_: Only available in -fas version
 
 ## Hardware-Versions
 
-You need the WiFi Version! (W in product name suffix, like -GAL**W**). There is also a version without WLAN. See [Diagnose Can we add WiFi to Non-Wifi Thermostat bac-002.pdf](./docs/Diagnose%20Can%20we%20add%20WiFi%20to%20Non-Wifi%20Thermostat%20bac-002.pdf)
+You need the WiFi Version! (W in product name suffix, like -GAL**W**). There are also a versions without WLAN (Offline-Version and ZigBee-Version (-GALZBW)). See [Diagnose Can we add WiFi to Non-WiFi Thermostat bac-002.pdf](./docs/Diagnose%20Can%20we%20add%20WiFi%20to%20Non-WiFi%20Thermostat%20bac-002.pdf)
 
 The BHT Version is for heating only. The BAC-Version has modes Cooling, Heating and Ventilation.
 The BHT-002-GA/GB/GC versions only differs in relays-wiring.

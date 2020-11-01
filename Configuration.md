@@ -24,7 +24,7 @@ Steps are in general:
 * After you are connected to the Thermostat's WiFi open `http://192.168.4.1` in a web browser
   * On Android Smartphones this Page opens automatically as a captive portal
 * Go to 'Configure Network'
-* Fill out 'Hostname/Idx' (unique id of your choice), 'Wifi SSID' (only 2.4G), 'Password' for Wifi
+* Fill out 'Hostname/Idx' (unique id of your choice), 'WiFi SSID' (only 2.4G, Name is case sensitive), 'Password' for WiFi
 * If you don't want to use MQTT, press 'Save Configuration' and wait for reboot of device.
 
 ![homeassistant](docs/images/Setup_Network.png)  

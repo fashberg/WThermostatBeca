@@ -10,7 +10,7 @@
 # Needs pycurl
 #   - pip install pycurl
 #   - Windows: Install WHL-File (pip install <downloaded-whl>) from https://www.lfd.uci.edu/~gohlke/pythonlibs/#pycurl
-#       Which must match your python installation
+#       Which must match your python installation (python.exe --version)
 
 
 import sys
