@@ -1,5 +1,11 @@
 # Changelog
 
+## Version 1.19-fas
+
+* Fix/Enhancement #54: If enabled, all single Properties are sent out every notification interval, not only if changed
+* Fix #52: Documentation on SSID and renamed Wifi to WiFi
+* Fix #53 and #64: Boolean Values wrong
+
 ## Version 1.18-fas
 
 * Fixed Relay State Calculation #26 again

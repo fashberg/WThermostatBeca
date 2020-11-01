@@ -642,7 +642,7 @@ public:
 		page->printf_P(HTTP_COMBOBOX_END);
 
 		// Calculated Heating 
-		page->printf_P(HTTP_TEXT_FIELD_INTEGER, F("Relay State Calculation: Deadzone/Deadband-Temperature (set here the same same value as configured at Thermostat-Setup)"), "dz", 1, 1);
+		page->printf_P(HTTP_TEXT_FIELD_INTEGER, F("Relay State Calculation: Deadzone/Deadband-Temperature (set here the same value as configured at Thermostat-Setup)"), "dz", 1, 1);
 
 		// FloorSensor 
 		page->printf_P(HTTP_CHECKBOX_OPTION, F("Floor Sensor enabled"),
