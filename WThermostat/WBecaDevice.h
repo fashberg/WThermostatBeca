@@ -56,7 +56,7 @@ const static char MQTT_HASS_AUTODISCOVERY_CLIMATE[]         PROGMEM = R"=====(
 "curr_temp_tpl":"{{value_json.temperature}}",
 "pl_on":true,
 "pl_off":false,
-"min_temp":"10",
+"min_temp":5,
 "max_temp":"35",
 "temp_step":"%s",
 "modes":["heat","auto","off"]
