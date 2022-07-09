@@ -497,7 +497,7 @@ private:
 	}
 
 	WProperty* endTrue() {
-		WProperty* result = false;
+		WProperty* result = nullptr;
 		if (currentKey != "") {
 			buffer[bufferPos] = '\0';
 			//String value = String(buffer);
@@ -511,7 +511,7 @@ private:
 	}
 
 	WProperty* endFalse() {
-		WProperty* result = false;
+		WProperty* result = nullptr;
 		if (currentKey != "") {
 			buffer[bufferPos] = '\0';
 			//String value = String(buffer);
