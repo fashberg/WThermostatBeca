@@ -542,10 +542,10 @@ public:
 			this->network->log()->notice(PSTR("Schedules"));
 			page->printf_P(HTTP_CONFIG_PAGE_BEGIN, ((String)getId()+"_"+schedulePage->getId()).c_str());
 			page->print(FPSTR(HTTP_CONFIG_SCHTAB_HEAD));
-			for (char *period=(char*)SCHEDULES_PERIODS; *period > 0; period++){
+			for (char *period=const_cast<char*>(SCHEDULES_PERIODS); *period > 0; period++){
 				page->print(F("<tr>"));
 				page->printf(PSTR("<td>Period %c</td>"), *period);
-				for (char *day=(char*)SCHEDULES_DAYS; *day > 0; day++){
+				for (char *day=const_cast<char*>(SCHEDULES_DAYS); *day > 0; day++){
 					char keyH[4];
 					char keyT[4];
 					snprintf(keyH, 4, "%c%ch", *day, *period);
@@ -565,8 +565,8 @@ public:
 		schedulePage->setSubmittedPage([this,schedulePage](AsyncWebServerRequest* request, AsyncResponseStream* page) {
 			this->network->log()->notice(PSTR("submitted"));
 			schedulesChanged = false;
-			for (char *period=(char*)SCHEDULES_PERIODS; *period > 0; period++){
-				for (char *day=(char*)SCHEDULES_DAYS; *day > 0; day++){
+			for (char *period=const_cast<char*>(SCHEDULES_PERIODS); *period > 0; period++){
+				for (char *day=const_cast<char*>(SCHEDULES_DAYS); *day > 0; day++){
 					char keyH[4];
 					char keyT[4];
 					snprintf(keyH, 4, "%c%ch", *day, *period);
@@ -859,7 +859,7 @@ public:
 		network->logHeap("sending networkMode to MCU");
 		network->log()->trace(F("sending networkMode to Mcu: %d"), state);
 		unsigned char mcuCommand[] = { 0x55, 0xaa, 0x00, 0x03, 0x00, 0x01,
-				(unsigned char)state };
+				static_cast<unsigned char>(state) };
 		commandCharsToSerial(7, mcuCommand);
 		//  unsigned char configCommand[] = { 0x55, 0xAA, 0x00, 0x03, 0x00,
 		//		0x01, 0x00 };
@@ -1397,7 +1397,7 @@ protected:
 		return this->temperaturePrecision->getDouble();
 	}
 	float getTemperatureFactor() {
-		return (float) 1 / this->temperaturePrecision->getDouble();
+		return static_cast<float>(1 / this->temperaturePrecision->getDouble());
 	}
 
 private:
@@ -1577,7 +1577,7 @@ private:
 								//target Temperature for manual mode
 								//e.g. 24.5C: 55 aa 01 07 00 08 02 02 00 04 00 00 00 31
 								//                                    LENGT xx xx xx xx (longer values? (for 0.1?)) 
-								newValue = (float) receivedCommand[13] / getTemperatureFactor();
+								newValue = static_cast<float>(receivedCommand[13] / getTemperatureFactor());
 								changed = ((changed) || (newChanged=!WProperty::isEqual(targetTemperatureManualMode, newValue, 0.01)));
 								targetTemperatureManualMode = newValue;
 								if (changed) updateTargetTemperature();
@@ -1591,7 +1591,7 @@ private:
 							if (commandLength == 0x08) {
 								//actual Temperature
 								//e.g. 23C: 55 aa 01 07 00 08 03 02 00 04 00 00 00 2e
-								newValue = (float) (int8_t)receivedCommand[13] / getTemperatureFactor();
+								newValue = static_cast<float>(static_cast<int8_t>(receivedCommand[13]) / getTemperatureFactor());
 								changed = ((changed) || (newChanged=!actualTemperature->equalsDouble(newValue)));
 								actualTemperature->setDouble(newValue);
 								logIncomingCommand("actualTemperature_x03", (newChanged ? LOG_LEVEL_TRACE : LOG_LEVEL_VERBOSE));
@@ -1670,7 +1670,7 @@ private:
 							if (commandLength == 0x08) {
 								//MODEL_BHT_002_GBLW - actualFloorTemperature
 								//55 aa 01 07 00 08 66 02 00 04 00 00 00 00
-								newValue = (float) (int8_t)(receivedCommand[13]) / getTemperatureFactor();
+								newValue = static_cast<float>(static_cast<int8_t>(receivedCommand[13]) / getTemperatureFactor());
 								if (actualFloorTemperature != nullptr) {
 									changed = ((changed) || (newChanged=!actualFloorTemperature->equalsDouble(newValue)));
 									actualFloorTemperature->setDouble(newValue);

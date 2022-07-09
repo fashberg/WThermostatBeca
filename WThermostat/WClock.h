@@ -582,7 +582,7 @@ class WClock : public WDevice {
         if (strlen(ts)) {
             uint32_t tpos = 0;  // Parameter index
             int value = 0;
-            char* p = (char*)ts;  // Parameters like "1, 2,3 , 4 ,5, -120" or ",,,,,+240"
+            char* p = const_cast<char*>(ts);  // Parameters like "1, 2,3 , 4 ,5, -120" or ",,,,,+240"
             char* q = p;          // Value entered flag
             while (p && (tpos < 7)) {
                 if (p > q) {  // Any value entered
@@ -690,7 +690,7 @@ class WClock : public WDevice {
 
         year = 0;
         days = 0;
-        while ((unsigned)(days += (LEAP_YEAR(year+1970) ? 366 : 365)) <= time) {
+        while (static_cast<unsigned>((days += (LEAP_YEAR(year+1970) ? 366 : 365)) <= time)) {
             year++;
         }
         tm.year = year+1970;  // year is offset from 1970
