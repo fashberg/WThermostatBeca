@@ -12,7 +12,6 @@
 #include <ESP8266HTTPClient.h>
 #include <ESP8266WiFi.h>
 #include <NTPClient.h>
-#include <Time.h>
 #include <TimeLib.h>
 #include <WiFiUdp.h>
 
