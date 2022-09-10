@@ -12,3 +12,4 @@ docs/large/
 thermostat.code-workspace
 debug.log
 platformio_override.ini
+*.bin
