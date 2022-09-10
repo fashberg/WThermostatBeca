@@ -14,7 +14,12 @@ Import("env", "projenv")
 config = configparser.ConfigParser()
 config.read("platformio.ini")
 appversion = config.get("common", "appversion")
-config.get
+
+if os.path.exists('platformio_override.ini'):
+    config = configparser.ConfigParser()
+    config.read("platformio_override.ini")
+    appversion2 = config.get("common", "appversion")
+    if appversion2: appversion=appversion2
 
 OUTPUT_DIR = "build_output{}".format(os.path.sep)
 #print("name-firmware.py // appversion: {}".format(appversion))

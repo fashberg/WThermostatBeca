@@ -4,7 +4,7 @@
 [![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/v/release/fashberg/WThermostatBeca?include_prereleases&label=beta)](https://github.com/fashberg/WThermostatBeca/releases)
 [![GitHub download](https://img.shields.io/github/downloads/fashberg/WThermostatBeca/total.svg)](https://github.com/fashberg/WThermostatBeca/releases/latest)
 [![Gitpod ready-to-code](https://img.shields.io/badge/Gitpod-ready--to--code-blue?logo=gitpod)](https://gitpod.io/#https://github.com/fashberg/WThermostatBeca)
-[![travis-ci-status](https://api.travis-ci.org/fashberg/WThermostatBeca.svg?branch=master)](https://travis-ci.org/github/fashberg/WThermostatBeca)
+[![Github Actions](https://img.shields.io/github/workflow/status/fashberg/WThermostatBeca/Build)](https://github.com/fashberg/WThermostatBeca/actions)
 
 Fork of <https://github.com/klausahrenberg/WThermostatBeca> with some new features.
 
@@ -556,7 +556,7 @@ You can download the firmware by right-clicking in the Project-Explorer the file
 * Get latest version and dependant libraries.
 ``git pull ; git pull --recurse-submodules``
 * Upgrade PlatformIO:
-``platformio upgrade --dev ; platformio update``
+``platformio upgrade --dev ; platformio pkg update ; platformio pkg install``
 
 ### Special Build Versions
 

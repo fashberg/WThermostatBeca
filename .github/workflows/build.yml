@@ -1,0 +1,84 @@
+name: Build
+
+on: [push, pull_request, workflow_dispatch]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository and submodules
+      uses: actions/checkout@v2
+      with:
+        submodules: recursive
+    - name: Cache pip
+      uses: actions/cache@v2
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+    - name: Cache PlatformIO
+      uses: actions/cache@v2
+      with:
+        path: ~/.platformio
+        key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
+    - name: Set up Python
+      uses: actions/setup-python@v2
+    - name: Install PlatformIO
+      run: |
+        python -m pip install --upgrade pip
+        pip install --upgrade platformio
+    - name: Install Libraries
+      run: |
+        pio pkg install -e wthermostat
+    - name: Set env
+      shell: bash
+      run: |
+        echo "ref is: ${GITHUB_REF}"
+        if [[ "${GITHUB_REF}" = refs/tags/v* ]]; then
+          echo "Release mode"
+          echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" | sed "s#/#_#" >> $GITHUB_ENV
+        else
+          echo "Non-Release mode"
+          echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}-$(date +'%Y-%m-%d-%H-%M')-$(git rev-parse --short HEAD)" | sed "s#/#_#" >> $GITHUB_ENV
+        fi
+    - name: write-override
+      run: echo -e "[common]\nappversion = ${{ env.RELEASE_VERSION }}" > platformio_override.ini
+    - name: Build Firmware
+      env:
+        BUILDNAME: ${{ env.RELEASE_VERSION }}
+        CI: true
+      run: pio run -e wthermostat
+    - name: GZIP Firmware
+      run: gzip -9 "build_output/firmware/wthermostat-${{ env.RELEASE_VERSION }}.bin"
+    - name: Publish Firmware
+      uses: actions/upload-artifact@v3
+      with:
+        name: wthermostat-${{ env.RELEASE_VERSION }}
+        path: |
+          build_output/firmware/*.bin.gz
+    - name: Create Release
+      if: startsWith(github.ref, 'refs/tags/v')
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ env.RELEASE_VERSION }}
+        body: |
+          Changes in this Release
+          - First Change
+          - Second Change
+        draft: true
+        prerelease: true
+    - name: upload firmware
+      if: startsWith(github.ref, 'refs/tags/v')
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: "build_output/firmware/wthermostat-${{ env.RELEASE_VERSION }}.bin.gz"
+        asset_name: "wthermostat-${{ env.RELEASE_VERSION }}.bin.gz"
+        asset_content_type: application/gzip
