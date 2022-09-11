@@ -1,5 +1,24 @@
 # Changelog
 
+## Version 1.21-fas
+
+* reimplemented Away-Mode with Preset (Heating and A/C)
+* fixed scheduler-Mode with Preset 'Scheduler' (A/C)
+* updated docs and samples
+
+## Version 1.20-fas
+
+### Changes in this Release
+
+* HA 2022.9 compatibility #153, #146. Thanks to @labodj
+* Update to latest dependencies and compatibility @labodj/@fashberg
+* decreased minimum temp by @zawasp  / #98
+* removed away-mode @jressel01 #148
+
+### And Build CI updates
+
+* moved from travis-ci to github-actions @fashberg
+
 ## Version 1.19-fas
 
 * Fix/Enhancement #54: If enabled, all single Properties are sent out every notification interval, not only if changed

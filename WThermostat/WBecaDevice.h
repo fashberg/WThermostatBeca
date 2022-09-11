@@ -51,8 +51,10 @@ const static char MQTT_HASS_AUTODISCOVERY_CLIMATE[]         PROGMEM = R"=====(
 "temp_stat_tpl":"{{value_json.targetTemperature}}",
 "curr_temp_t":"~/stat/things/thermostat/properties",
 "curr_temp_tpl":"{{value_json.temperature}}",
-"pl_on":true,
-"pl_off":false,
+"pr_mode_cmd_t":"~/cmnd/things/thermostat/properties/preset",
+"pr_mode_stat_t":"~/stat/things/thermostat/properties",
+"pr_mode_val_tpl":"{{value_json.preset}}",
+"pr_modes":["away"],
 "min_temp":5,
 "max_temp":"35",
 "temp_step":"%s",
@@ -81,12 +83,10 @@ const static char MQTT_HASS_AUTODISCOVERY_AIRCO[]         PROGMEM = R"=====(
 "fan_mode_cmd_t":"~/cmnd/things/thermostat/properties/fanMode",
 "fan_mode_stat_t":"~/stat/things/thermostat/properties",
 "fan_mode_stat_tpl":"{{value_json.fanMode}}",
-"hold_cmd_t":"~/cmnd/things/thermostat/properties/holdState",
-"hold_stat_t":"~/stat/things/thermostat/properties",
-"hold_stat_tpl":"{{value_json.holdState}}",
-"hold_modes":["scheduler","manual","eco"],
-"pl_on":true,
-"pl_off":false,
+"pr_mode_cmd_t":"~/cmnd/things/thermostat/properties/preset",
+"pr_mode_stat_t":"~/stat/things/thermostat/properties",
+"pr_mode_val_tpl":"{{value_json.preset}}",
+"pr_modes":["away", "scheduler"],
 "min_temp":"10",
 "max_temp":"35",
 "temp_step":"%s",
@@ -178,6 +178,9 @@ const char* MODE_AUTO PROGMEM = "auto";
 const char* MODE_HEAT PROGMEM = "heat";
 const char* MODE_COOL PROGMEM = "cool";
 const char* MODE_FAN  PROGMEM = "fan_only";
+const char* PRESET_NONE PROGMEM = "none";
+const char* PRESET_AWAY PROGMEM = "away";
+const char* PRESET_SCHEDULER PROGMEM = "scheduler";
 const char* ACTION_OFF  PROGMEM = "off";
 const char* ACTION_COOLING  PROGMEM = "cooling";
 const char* ACTION_HEATING  PROGMEM = "heating";
@@ -227,6 +230,8 @@ const char* PROP_FANMODE PROGMEM = "fanMode";
 const char* TITL_FANMODE PROGMEM = "Fan";
 const char* PROP_MODE PROGMEM = "mode";
 const char* TITL_MODE PROGMEM = "Mode";
+const char* PROP_PRESET PROGMEM = "preset";
+const char* TITL_PRESET PROGMEM = "Preset";
 const char* PROP_ACTION PROGMEM = "action";
 const char* TITL_ACTION PROGMEM = "Action";
 const char* PROP_STATE PROGMEM = "state";
@@ -236,6 +241,7 @@ const char* PROP_MCUID PROGMEM = "mcuId";
 const char* ATTYPE_SCHEDULESMODE PROGMEM = "ThermostatSchedulesModeProperty";
 const char* ATTYPE_HOLDSTATE PROGMEM = "ThermostatHoldStateProperty";
 const char* ATTYPE_MODE PROGMEM = "ThermostatModeProperty";
+const char* ATTYPE_PRESET PROGMEM = "ThermostatPresetProperty";
 const char* ATTYPE_FANMODE PROGMEM = "FanModeProperty";
 const char* ATTYPE_ACTION PROGMEM = "ThermostatActionProperty";
 const char* ATTYPE_HEATINGCOOLING PROGMEM = "HeatingCoolingProperty";
@@ -489,6 +495,19 @@ public:
 		this->mode->setOnValueRequest([this](WProperty* p) {updateModeAndAction();});
 		this->mode->setMqttSendChangedValues(true);
     	this->addProperty(mode);
+
+		this->preset = new WProperty(PROP_PRESET, TITL_PRESET, STRING);
+		this->preset->setVisibility(ALL);
+		this->preset->setAtType(ATTYPE_PRESET); 
+		this->preset->addEnumString(PRESET_NONE);
+		this->preset->addEnumString(PRESET_AWAY);
+		if (getThermostatModel() == MODEL_BAC_002_ALW) {
+			this->preset->addEnumString(PRESET_SCHEDULER);
+		}
+		this->preset->setOnChange(std::bind(&WBecaDevice::presetToMcu, this, std::placeholders::_1));
+		this->preset->setOnValueRequest([this](WProperty* p) {updatePreset();});
+		this->preset->setMqttSendChangedValues(true);
+		this->addProperty(preset);
 
 		this->action = new WProperty(PROP_ACTION, TITL_ACTION, STRING);
 		this->action->setAtType(ATTYPE_ACTION); 
@@ -1416,6 +1435,7 @@ private:
     WProperty* actualTemperature;
     WProperty* actualFloorTemperature;
 	WProperty* mode;
+	WProperty* preset;
 	WProperty* action;
 	WProperty* schedulesMode;
 	WProperty* holdState;
@@ -2077,6 +2097,26 @@ private:
 		}
 	}
 
+
+	void presetToMcu(WProperty* property) {
+		network->log()->trace(F("presetToMcu %s"), property->c_str());
+		if (this->mode->equalsString(MODE_OFF)){
+			//noop
+		} else if (this->preset->equalsString(PRESET_AWAY)){
+			this->ecoMode->setBoolean(true);
+		} else if (getThermostatModel() == MODEL_BAC_002_ALW && this->preset->equalsString(PRESET_SCHEDULER)){
+			this->ecoMode->setBoolean(false);
+			this->schedulesMode->setString(SCHEDULES_MODE_AUTO);
+			this->holdState->setString(HOLD_STATE_SCHEDULER);
+		} else {
+			this->ecoMode->setBoolean(false);
+			if (getThermostatModel() == MODEL_BAC_002_ALW){
+				this->schedulesMode->setString(SCHEDULES_MODE_OFF);
+				this->holdState->setString(HOLD_STATE_MANUAL);
+			}
+		}
+	}
+
     void updateModeAndAction() {
 		if (!this->deviceOn->getBoolean()){
 			this->mode->setString(MODE_OFF);
@@ -2116,6 +2156,17 @@ private:
 			if (this->state->equalsString(STATE_OFF)){
 				this->action->setString(ACTION_IDLE);
 			} else this->action->setString(ACTION_HEATING);
+		}
+	}
+
+
+	void updatePreset() {
+		if (this->ecoMode->getBoolean()){
+			this->preset->setString(PRESET_AWAY);
+		} else if (getThermostatModel() == MODEL_BAC_002_ALW && this->schedulesMode->equalsString(SCHEDULES_MODE_AUTO)){
+			this->preset->setString(PRESET_SCHEDULER);
+		} else {
+			this->preset->setString(PRESET_NONE);
 		}
 	}
 

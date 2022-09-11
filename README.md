@@ -154,9 +154,15 @@ Live WebLog Screen:
 
 ## Integration in Home Assistant
 
-![homeassistant](docs/images/homeassistant.png)  ![hass_discovery](docs/images/hass_discovery.png)
+![homeassistant](docs/images/homeassistant.png)
+![homeassistant](docs/images/hass_detail.png)
+![hass_discovery](docs/images/hass_discovery.png)
 
 ### Controlling BAC in HomeAssistant
+
+* Use Operation to Switch between 'heat', 'cool', 'fan_only' and 'off'
+* Use Preset to switch between 'None' (manual), 'Scheduler' and 'eco'
+* Changing temp disables scheduler and switches to preset 'None'
 
 ![homeassistant](docs/images/hass-bac.png)
 
@@ -213,15 +219,14 @@ climate:
     temperature_state_template: "{{value_json.targetTemperature}}"
     current_temperature_topic: "home/room/stat/things/thermostat/properties"
     current_temperature_template: "{{value_json.temperature}}"
-    away_mode_command_topic: "home/room/cmnd/things/thermostat/properties/ecoMode"
-    away_mode_state_topic: "home/room/stat/things/thermostat/properties"
-    away_mode_state_template: "{{value_json.ecoMode}}"
     mode_command_topic: "home/room/cmnd/things/thermostat/properties/mode"
     mode_state_topic: "home/room/stat/things/thermostat/properties"
     mode_state_template: "{{value_json.mode}}"
-    payload_on: true
-    payload_off: false
     modes: [ "heat", "auto", "off" ]
+    preset_mode_command_topic: "home/room/cmnd/things/thermostat/properties/preset"
+    preset_mode_state_topic: "home/room/stat/things/thermostat/properties"
+    preset_mode_value_template: "{{value_json.preset}}"
+    preset_modes: ["away"]
     min_temp: 5
     max_temp: 35
     temp_step: 0.5
@@ -256,12 +261,6 @@ climate:
     fan_mode_command_topic: "home/bedroom/cmnd/things/thermostat/properties/fanMode"
     fan_mode_state_topic: "home/bedroom/stat/things/thermostat/properties"
     fan_mode_state_template: "{{value_json.fanMode}}"
-    hold_command_topic: "home/bedroom/cmnd/things/thermostat/properties/holdState"
-    hold_state_topic: "home/bedroom/stat/things/thermostat/properties"
-    hold_state_template: "{{value_json.holdState}}"
-    hold_modes: [ "scheduler", "manual","eco" ]
-    payload_on: true
-    payload_off: false
     modes: [ "heat", "cool", "fan_only", "off" ]
     min_temp: 16
     max_temp: 32
@@ -280,10 +279,10 @@ climate:
   temperature_command_topic: "home/wohnzimmer/cmnd/things/thermostat/properties/targetTemperature"
   temperature_state_topic: "home/wohnzimmer/stat/things/thermostat/properties"
   current_temperature_topic: "home/wohnzimmer/stat/things/thermostat/properties"
-  away_mode_command_topic: "home/wohnzimmer/cmnd/things/thermostat/properties/ecoMode"
-  away_mode_state_topic: "home/wohnzimmer/stat/things/thermostat/properties"
   mode_command_topic: "home/wohnzimmer/cmnd/things/thermostat/properties/mode"
   mode_state_topic: "home/wohnzimmer/stat/things/thermostat/properties"
+  preset_mode_command_topic: "home/wohnzimmer/cmnd/things/thermostat/properties/preset"
+  preset_mode_state_topic: "home/wohnzimmer/stat/things/thermostat/properties"
   <<: &commonbeca
     payload_available: "Online"
     payload_not_available: "Offline"
@@ -292,9 +291,9 @@ climate:
     current_temperature_template: "{{value_json.temperature}}"
     mode_state_template: "{{value_json.mode}}"
     away_mode_state_template: "{{value_json.ecoMode}}"
-    payload_on: true
-    payload_off: false
     modes: [ "heat", "auto", "off" ]
+    preset_mode_value_template: "{{value_json.preset}}"
+    preset_modes: ["away"]
     min_temp: 5
     max_temp: 35
     temp_step: 0.5
@@ -310,6 +309,8 @@ climate:
   away_mode_state_topic: "home/flur/stat/things/thermostat/properties"
   mode_command_topic: "home/flur/cmnd/things/thermostat/properties/mode"
   mode_state_topic: "home/flur/stat/things/thermostat/properties"
+  preset_mode_command_topic: "home/flur/cmnd/things/thermostat/properties/preset"
+  preset_mode_state_topic: "home/flur/stat/things/thermostat/properties"
   <<: *commonbeca
 - platform: mqtt
   name: WC_Thermostat
@@ -322,6 +323,8 @@ climate:
   away_mode_state_topic: "home/wc/stat/things/thermostat/properties"
   mode_command_topic: "home/wc/cmnd/things/thermostat/properties/mode"
   mode_state_topic: "home/wc/stat/things/thermostat/properties"
+  preset_mode_command_topic: "home/wc/cmnd/things/thermostat/properties/preset"
+  preset_mode_state_topic: "home/wc/stat/things/thermostat/properties"
   <<: *commonbeca
 ```
 
@@ -340,7 +343,7 @@ There is also a detailed view available:
 
 ## Device-Functions
 
-### Json structures
+### JSON structures
 
 The software provides different messages:
 
@@ -481,6 +484,10 @@ mosquitto_sub -h mqtt -v -t "home/test/tele/log/#"
 mosquitto_pub -t "home/test/cmnd/things/thermostat/mcucommand" -m "55 aa 00 1c 00 08 01 14 09 0c 10 30 0f 06"
 
 ```
+
+### MQTT Explorer
+
+For MQTT Troubleshooting i suggest MQTT Explorer, which can be found at <https://github.com/thomasnordquist/MQTT-Explorer>
 
 ## How it works
 
