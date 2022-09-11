@@ -4,7 +4,9 @@
     "recommendations": [
         "bierner.github-markdown-preview",
         "davidanson.vscode-markdownlint",
-        "ms-vscode.cpptools-extension-pack",
         "platformio.platformio-ide"
+    ],
+    "unwantedRecommendations": [
+        "ms-vscode.cpptools-extension-pack"
     ]
 }

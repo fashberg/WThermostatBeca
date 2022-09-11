@@ -1,7 +1,7 @@
 #!/usr/bin/python
 #
 # espupload by Theo Arends - 20170930
-# Modified for WTHermostat by Folke Ashberg - 202010
+# Modified for WThermostat by Folke Ashberg - 202010
 #
 # Uploads binary file to OTA server
 #
