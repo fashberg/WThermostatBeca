@@ -44,6 +44,11 @@ jobs:
         fi
     - name: write-override
       run: echo -e "[common]\nappversion = ${{ env.RELEASE_VERSION }}" > platformio_override.ini
+    - name: Run Checks
+      env:
+        BUILDNAME: ${{ env.RELEASE_VERSION }}
+        CI: true
+      run: pio check -e wthermostat
     - name: Build Firmware
       env:
         BUILDNAME: ${{ env.RELEASE_VERSION }}
