@@ -512,7 +512,7 @@ Often the answer is: Because all internal routines (reading temperature, control
 
 Flash the original firmware (see installation). Write me a message with your exact model and which parameter was not correct. Maybe your MQTT-server received some unknown messages - this would be also helpful for me. Again: I have tested this only with model BHT-002-GBLW. If you have another device, don't expect that this is working directly.
 
-## Build this firmware from source
+## Build this firmware from source and contributing
 
 For building from sources and coding i suggest VS Code and PlatformIO. You can also use Gitpod.
 
@@ -530,11 +530,25 @@ git submodule update
 ```
 
 * Open the folder 'WThermostatBeca' in VS Code
-* Go to PlatformIO Icon
-* Click Build
-  * Binary Firmware can be found in build_output\firmware\wthermostat-1.xx-fas.bin (or -debug or -minimal)
+* Go to PlatformIO Alien Icon on the left
+* Open in Tree "wthermostat" and click General/Build
+  * Binary Firmware can be found in build_output/firmware/wthermostat-1.xx-fas.bin (or -debug or -minimal)
 
 All dependant arduino-libraries (DNSServer, EEPROM (for esp8266), ESP8266HTTPClient, ESP8266mDNS, AsyncWebServer, ESP8266WiFi, Hash, NTPClient, Time.) will be downloaded automatically (defined in platform.ini) and the necessary WAdapter library from <https://github.com/fashberg/WAdapter> (git submodule).
+
+You probably want to specify your own Port-Settings. Copy ``platformio_override.sample.ini`` to ``platformio_override.ini`` and define your stuff.
+
+#### Environments wthermostat / wthermostat-minimal / wthermostat-debug and bin.gz
+
+There are 3 environments:
+
+1. wthermostat: this is the default production environment.
+
+2. wthermostat-minimal: this is the minimal version. No MQTT and no Thermostat Support, meant for OTA Upgrading when standard is too small. After flashing minimal do an upgrade to normal.
+
+3. wthermostat-debug: this is the debug/development version.  DO NOT FLASH TO THERMOSTAT HARDWARE! There is debugging output to serial interface which will confuse Thermostat-MCU. Upload to USB-Connected development ESP8266 board (Node MCU or Wemos D1 Mini pro) and monitor the output in vscode/pio-monitor.
+
+bin vs bin.gz: You can directly upload a gzipped (compressed) firmware via OTA
 
 ### Cloud Development using Gitpod
 
@@ -556,10 +570,20 @@ You can download the firmware by right-clicking in the Project-Explorer the file
 * Get latest version and dependant libraries.
 ``git pull ; git pull --recurse-submodules``
 * Upgrade PlatformIO:
-``platformio upgrade --dev ; platformio pkg update ; platformio pkg install``
+``platformio upgrade --dev``
+* Upgrade Dependencies:
+``platformio pkg update ; platformio pkg install``
+* Build wthermostat:
+``pio run -e wthermostat``
+* Check/Lint wthermostat:
+``pio check -e wthermostat``
+* upload wthermostat via ip:
+``python pio/espupload.py -u <IpOfDevice> -f $SOURCE``
 
-### Special Build Versions
+### GitHub Actions, Pull-Requests
 
-* -Minimal environment: minimal version without thermostat, MQTT or WebThings support. Use only for intermediate Updating
-* -Debug environment: DO NOT FLASH TO THERMOSTAT. There is debugging output to serial interface which will confuse MCU
-  * Upload to USB-Connected development ESP8266 board (Node MCU or Wemos D1 Mini pro)
+After every push or pull-request the code is build automatically on github.
+
+Check out [/actions](/actions), you can also download the built-firmware for each commit at the bottom of the "Summary" at "Artifacts".
+
+Feel free the request a [PR](/pulls).
