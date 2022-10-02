@@ -34,7 +34,7 @@ The surface is very sensitive for scratches.
 
 ## 3. Wiring
 
-This images are showing the GA-Version, which has two Relays:
+This images are showing the **GA-Version**, which has two Relays:
 
 1. Relay 1/Output 1 (Close) is active if powered on and the room temperature is warm enough so the valve should close
 2. Relay 2/Output 2 (Open) is active if powered on and the room temperature is to cold so the valve should open to heat the room
@@ -42,6 +42,25 @@ This images are showing the GA-Version, which has two Relays:
 Often you only need Output 2 (Open) and Input 3 (N) and 4 (L)
 
 ![install-003](docs/images/install-003.jpg)
+
+### Hardware Versions GA, GB and GC
+
+- GA - Water-Heating
+  - Two Relays for opening and closing valve
+  - Only one Relay will be closed at the same time
+  - Closing Relay PIN 1 - PIN 3 (N or L)
+  - Opening Relay PIN 2 - PIN 3 (N or L)
+  - Product Spec says Max Power: 3 A (labeled is 5 A)
+- GB - Electric-Heating
+  - Connect Heating between PIN 1 and PIN 2
+  - Product Spec says Max Power: 16 A
+- GC - Water/Gas Boiler
+  - One Relay - potential free (dry contact)
+  - Relay on PIN 1 - PIN 2 (dry contacts)
+  - Product Spec says Max Power: 3 A
+
+Overview of Hardware Versions
+![install-003b-versions](docs/images/hwversions.png)  
 
 ## 4. Screw the plate to the wall
 
