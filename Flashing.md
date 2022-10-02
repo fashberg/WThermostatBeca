@@ -72,13 +72,28 @@ See: <https://github.com/ct-Open-Source/tuya-convert/issues/113>
 
 ## Option 2: Flashing device manually
 
+Important Information:
+
+- No Main Power!
+  
+  Remove Mains while Flashing
+
+- Enough 3.3 Volt Power
+
+  Flashing requires lot of power. Some USB-to-TTL adapters do not deliver enough Power to keep voltage at 3.3 V. Check out some Adapters i have tested below
+
+- MCU to WiFi-Module (TYWE3S) communication during flashing
+
+  Probably MCU is sending traffic to WiFi-Module during flashing which brakes communication.
+  Check this thread <https://github.com/fashberg/WThermostatBeca/issues/115>
+
 ### 2.1. Check your device
 
 Compatible devices look inside like this. On the top left you can see the ESP8266 module (TYWE3S)
 
 ![Thermostat WiFi inside](docs/images/bac-002-wifi-inside.jpg)
 
-The following picture shows an BHT-002GA with __NO WIFI__ - no chance to flash or to enhance.
+The following picture shows an BHT-002GA with _NO WIFI__ - no chance to flash or to enhance.
 See my detailed diagnosis on this at [Diagnose Can we add WiFi to Non-WiFi Thermostat bac-002.pdf](./docs/Diagnose%20Can%20we%20add%20WiFi%20to%20Non-Wifi%20Thermostat%20bac-002.pdf), this document also show a little bit about communication between MCU und ESP.
 ![Thermostat no WiFi inside](docs/images/bac-002-no-wifi-inside.jpg)
 
