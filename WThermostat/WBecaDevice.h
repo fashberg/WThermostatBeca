@@ -1774,7 +1774,7 @@ private:
 								buf[i]=receivedCommand[6+i];
 							}
 							buf[len]=0;
-							this->mcuId->setString(buf);
+							this->mcuId->setString(buf); 
 							if (mcuInitializeState==2) mcuInitializeState++;
 							network->log()->notice(F("Product ID: '%s'"), buf);
 
@@ -2227,7 +2227,9 @@ private:
 		htmlTableRowEnd(page);
 
 		htmlTableRowTitle(page, F("MCU-ID:"));
-		page->print(this->mcuId->c_str());
+		char * mcuid=htmlEscape(this->mcuId->c_str());
+		page->print(mcuid);
+		free(mcuid);
 		htmlTableRowEnd(page);
 
 		htmlTableRowTitle(page, F("Device On:"));
