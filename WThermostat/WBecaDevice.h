@@ -129,6 +129,17 @@ const static char MQTT_HASS_AUTODISCOVERY_SENSORRSSI[]         PROGMEM = R"=====
 "unit_of_measurement":"dBm"
 }
 )=====";
+const static char MQTT_HASS_AUTODISCOVERY_SENSORIP[]         PROGMEM = R"=====(
+{
+"name":"%s IP",
+"unique_id":"%s",
+"dev":{"ids":["%s"]},
+"~":"%s",
+"stat_t":"~/stat/things/thermostat/properties",
+"val_tpl":"{{value_json.ip}}",
+"icon":"mdi:ip-network"
+}
+)=====";
 
 const static char PAGE_BECA_JS[]           PROGMEM = R"=====(
 TODO
@@ -1387,6 +1398,23 @@ public:
 		topic.concat(F("/config"));
 		if (!removeDiscovery){
 			response->printf_P(MQTT_HASS_AUTODISCOVERY_SENSORRSSI,
+				network->getIdx(),
+				unique_id.c_str(),
+				network->getMacAddress().c_str(),
+				network->getMqttTopic()
+			);
+		}
+		if (!network->publishMqtt(topic.c_str(), response, true)) return false;
+		response->flush();
+		return true;
+		
+		unique_id = (String)network->getIdx();
+		unique_id.concat(F("_ip"));
+		topic=F("homeassistant/sensor/"); 
+		topic.concat(unique_id);
+		topic.concat(F("/config"));
+		if (!removeDiscovery){
+			response->printf_P(MQTT_HASS_AUTODISCOVERY_SENSORIP,
 				network->getIdx(),
 				unique_id.c_str(),
 				network->getMacAddress().c_str(),
