@@ -1,5 +1,11 @@
 # Changelog
 
+## Version 1.22-fas
+
+* Fixes invalid JSON responses/escaping (fixes #153)
+* Fixes MQTT-Reconnect
+* Doc updates
+
 ## Version 1.21-fas
 
 * reimplemented Away-Mode with Preset (Heating and A/C)
