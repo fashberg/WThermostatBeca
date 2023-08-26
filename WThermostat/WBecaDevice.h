@@ -1406,7 +1406,6 @@ public:
 		}
 		if (!network->publishMqtt(topic.c_str(), response, true)) return false;
 		response->flush();
-		return true;
 		
 		unique_id = (String)network->getIdx();
 		unique_id.concat(F("_ip"));
