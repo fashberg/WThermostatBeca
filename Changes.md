@@ -4,6 +4,7 @@
 
 * Support for static IP-Addresses - thanks to @N-b-dy
 * Support for current IP-Address sensor for Home Assistant - thanks to @Henry-Sir
+* Fix for new Home Assistant Autodiscovery format  (fixes [#205](https://github.com/fashberg/WThermostatBeca/issues/205))
 
 ## Version 1.22-fas
 

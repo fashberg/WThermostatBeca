@@ -34,9 +34,9 @@ const static char HTTP_CONFIG_SCHTAB_FOOT[]         PROGMEM = R"=====(
 // LWT = Last Will & Testament
 const static char MQTT_HASS_AUTODISCOVERY_CLIMATE[]         PROGMEM = R"=====(
 {
-"name":"%s",
+"name":null,
 "unique_id": "%s",
-"dev":{"ids":["%s"],"name":"%s","mdl":"%s","sw":"%s","mf":"WThermostatBeca"},
+"dev":{"ids":["%s"],"name":"%s","mdl":"%s","sw":"%s","mf":"WThermostatBeca","cu":"http://%s/config/"},
 "~": "%s",
 "avty_t":"~/tele/LWT",
 "pl_avail":"Online",
@@ -63,9 +63,9 @@ const static char MQTT_HASS_AUTODISCOVERY_CLIMATE[]         PROGMEM = R"=====(
 )=====";
 const static char MQTT_HASS_AUTODISCOVERY_AIRCO[]         PROGMEM = R"=====(
 {
-"name":"%s",
+"name":null,
 "unique_id": "%s",
-"dev":{"ids":["%s"],"name":"%s","mdl":"%s","sw":"%s","mf":"WThermostatBeca"},
+"dev":{"ids":["%s"],"name":"%s","mdl":"%s","sw":"%s","mf":"WThermostatBeca","cu":"http://%s/config/"},
 "~": "%s",
 "avty_t":"~/tele/LWT",
 "pl_avail":"Online",
@@ -95,7 +95,7 @@ const static char MQTT_HASS_AUTODISCOVERY_AIRCO[]         PROGMEM = R"=====(
 )=====";
 const static char MQTT_HASS_AUTODISCOVERY_SENSOR[]         PROGMEM = R"=====(
 {
-"name":"%s Temperature",
+"name":"Temperature",
 "unique_id":"%s",
 "device_class":"temperature",
 "dev":{"ids":["%s"]},
@@ -107,7 +107,7 @@ const static char MQTT_HASS_AUTODISCOVERY_SENSOR[]         PROGMEM = R"=====(
 )=====";
 const static char MQTT_HASS_AUTODISCOVERY_SENSORFLOOR[]         PROGMEM = R"=====(
 {
-"name":"%s Temperature Floor",
+"name":"Temperature Floor",
 "unique_id":"%s",
 "device_class":"temperature",
 "dev":{"ids":["%s"]},
@@ -119,7 +119,7 @@ const static char MQTT_HASS_AUTODISCOVERY_SENSORFLOOR[]         PROGMEM = R"====
 )=====";
 const static char MQTT_HASS_AUTODISCOVERY_SENSORRSSI[]         PROGMEM = R"=====(
 {
-"name":"%s WiFi RSSI",
+"name":"WiFi RSSI",
 "unique_id":"%s",
 "device_class":"signal_strength",
 "dev":{"ids":["%s"]},
@@ -131,7 +131,7 @@ const static char MQTT_HASS_AUTODISCOVERY_SENSORRSSI[]         PROGMEM = R"=====
 )=====";
 const static char MQTT_HASS_AUTODISCOVERY_SENSORIP[]         PROGMEM = R"=====(
 {
-"name":"%s IP",
+"name":"IP",
 "unique_id":"%s",
 "dev":{"ids":["%s"]},
 "~":"%s",
@@ -1332,29 +1332,29 @@ public:
 		if (!removeDiscovery){
 			if (getThermostatModel() == MODEL_BHT_002_GBLW ){
 				response->printf_P(MQTT_HASS_AUTODISCOVERY_CLIMATE,
-					network->getIdx(),
 					unique_id.c_str(),
 					network->getMacAddress().c_str(),
 					network->getIdx(),
 					network->getApplicationName().c_str(),
 					network->getFirmwareVersion().c_str(),
+					network->getDeviceIp().toString().c_str(),
 					network->getMqttTopic(),
 					str_temp 
 				);
 			} else if (getThermostatModel() == MODEL_BAC_002_ALW ){
 				response->printf_P(MQTT_HASS_AUTODISCOVERY_AIRCO,
-					network->getIdx(),
 					unique_id.c_str(),
 					network->getMacAddress().c_str(),
 					network->getIdx(),
 					network->getApplicationName().c_str(),
 					network->getFirmwareVersion().c_str(),
+					network->getDeviceIp().toString().c_str(),
 					network->getMqttTopic(),
 					str_temp 
 				);
 			}
 		}
-		if (!network->publishMqtt(topic.c_str(), response, true)) return false;
+		network->publishMqtt(topic.c_str(), response, true);
 		response->flush();
 
 		unique_id = (String)network->getIdx();
@@ -1364,13 +1364,12 @@ public:
 		topic.concat(F("/config"));
 		if (!removeDiscovery){
 				response->printf_P(MQTT_HASS_AUTODISCOVERY_SENSOR,
-				network->getIdx(),
 				unique_id.c_str(),
 				network->getMacAddress().c_str(),
 				network->getMqttTopic()
 			);
 		}
-		if (!network->publishMqtt(topic.c_str(), response, true)) return false;
+		network->publishMqtt(topic.c_str(), response, true);
 		response->flush();
 
 		if (this->floorSensor->getBoolean()){
@@ -1381,13 +1380,12 @@ public:
 			topic.concat(F("/config"));
 			if (!removeDiscovery){
 				response->printf_P(MQTT_HASS_AUTODISCOVERY_SENSORFLOOR,
-					network->getIdx(),
 					unique_id.c_str(),
 					network->getMacAddress().c_str(),
 					network->getMqttTopic()
 				);
 			}
-			if (!network->publishMqtt(topic.c_str(), response, true)) return false;
+			network->publishMqtt(topic.c_str(), response, true);
 			response->flush();
 		}
 
@@ -1398,13 +1396,12 @@ public:
 		topic.concat(F("/config"));
 		if (!removeDiscovery){
 			response->printf_P(MQTT_HASS_AUTODISCOVERY_SENSORRSSI,
-				network->getIdx(),
 				unique_id.c_str(),
 				network->getMacAddress().c_str(),
 				network->getMqttTopic()
 			);
 		}
-		if (!network->publishMqtt(topic.c_str(), response, true)) return false;
+		network->publishMqtt(topic.c_str(), response, true);
 		response->flush();
 		
 		unique_id = (String)network->getIdx();
@@ -1414,13 +1411,12 @@ public:
 		topic.concat(F("/config"));
 		if (!removeDiscovery){
 			response->printf_P(MQTT_HASS_AUTODISCOVERY_SENSORIP,
-				network->getIdx(),
 				unique_id.c_str(),
 				network->getMacAddress().c_str(),
 				network->getMqttTopic()
 			);
 		}
-		if (!network->publishMqtt(topic.c_str(), response, true)) return false;
+		network->publishMqtt(topic.c_str(), response, true);
 		response->flush();
 		return true;
 	}
