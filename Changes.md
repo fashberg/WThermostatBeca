@@ -1,5 +1,10 @@
 # Changelog
 
+## Version 1.23-fas
+
+* Support for static IP-Addresses - thanks to @N-b-dy
+* Support for current IP-Address sensor for Home Assistant - thanks to @Henry-Sir
+
 ## Version 1.22-fas
 
 * Fixes invalid JSON responses/escaping (fixes #153)
