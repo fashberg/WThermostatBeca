@@ -37,10 +37,10 @@ jobs:
         echo "ref is: ${GITHUB_REF}"
         if [[ "${GITHUB_REF}" = refs/tags/v* ]]; then
           echo "Release mode"
-          echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" | sed "s#/#_#" >> $GITHUB_ENV
+          echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" | sed "s#/#_#g" >> $GITHUB_ENV
         else
           echo "Non-Release mode"
-          echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}-$(date +'%Y-%m-%d-%H-%M')-$(git rev-parse --short HEAD)" | sed "s#/#_#" >> $GITHUB_ENV
+          echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}-$(date +'%Y-%m-%d-%H-%M')-$(git rev-parse --short HEAD)" | sed "s#/#_#g" >> $GITHUB_ENV
         fi
     - name: write-override
       run: echo -e "[common]\nappversion = ${{ env.RELEASE_VERSION }}" > platformio_override.ini
